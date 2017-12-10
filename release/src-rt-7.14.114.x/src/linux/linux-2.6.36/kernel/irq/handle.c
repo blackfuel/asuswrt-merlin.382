@@ -445,8 +445,8 @@ irqreturn_t BCMFASTPATH handle_IRQ_event(unsigned int irq, struct irqaction *act
 		action = action->next;
 	} while (action);
 
-	if (status & IRQF_SAMPLE_RANDOM)
-		add_interrupt_randomness(irq);
+	add_interrupt_randomness(irq, status);
+
 	local_irq_disable();
 
 	return retval;
