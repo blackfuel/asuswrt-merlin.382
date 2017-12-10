@@ -6585,7 +6585,7 @@ minidlna-configure:
 		-I$(TOP)/libvorbis/include -I$(TOP)/shared" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections \
 		-L$(TOP)/zlib -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections \
-		-L$(TOP)/zlib -L$(TOP)/sqlite/.libs -L$(TOP)/jpeg -L$(TOP)/libvorbis/lib/.libs \
+		-L$(TOP)/zlib -L$(TOP)/sqlite/.libs -L$(TOP)/jpeg/.libs -L$(TOP)/libvorbis/lib/.libs \
 		-L$(TOP)/libogg/src/.libs -L$(TOP)/libexif/libexif/.libs -L$(TOP)/flac/src/libFLAC/.libs \
 		-L$(TOP)/ffmpeg/libavutil -L$(TOP)/ffmpeg/libavcodec -L$(TOP)/ffmpeg/libavformat \
 		-L$(TOP)/libid3tag/.libs" \
