@@ -1868,8 +1868,20 @@ static int ftdi_process_packet(struct tty_struct *tty,
 	   are only processed once.  */
 	status = packet[0] & FTDI_STATUS_B0_MASK;
 	if (status != priv->prev_status) {
-		priv->diff_status |= status ^ priv->prev_status;
-		wake_up_interruptible(&priv->delta_msr_wait);
+                char diff_status = status ^ priv->prev_status;
+                priv->diff_status |= diff_status;
+        
+                if (diff_status & FTDI_RS0_RLSD) {
+                        struct tty_struct *tty;
+ 
+                        tty = tty_port_tty_get(&port->port);
+                        if (tty)
+                                usb_serial_handle_dcd_change(port, tty,
+                                                status & FTDI_RS0_RLSD);
+                        tty_kref_put(tty);
+                }
+
+                wake_up_interruptible(&priv->delta_msr_wait);
 		priv->prev_status = status;
 	}
 

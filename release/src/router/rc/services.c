@@ -13619,12 +13619,11 @@ void stop_Tor_proxy(void)
 	remove("/tmp/torlog");
 
 #if (defined(RTCONFIG_JFFS2)||defined(RTCONFIG_BRCM_NAND_JFFS2))
-	if (f_exists("/tmp/.tordb/cached-microdesc-consensus") &&
-	    !f_exists("/jffs/.tordb/cached-microdesc-consensus"))
-	{
-		//logmessage("Tor", "Backing up database");
-		eval("cp", "-fa", "/tmp/.tordb", "/jffs/.tordb");
-	}
+	//logmessage("Tor", "Backing up database");
+	eval("/bin/sh", "-c", 	"if [ -d /tmp/.tordb ] ; then "
+				"  mkdir -p /jffs/.tordb ; "
+				"  cp -afu /tmp/.tordb/* /jffs/.tordb/ ;"
+				"fi");
 #endif
 }
 
@@ -13648,22 +13647,6 @@ void start_Tor_proxy(void)
 	if ((fp = fopen("/tmp/torrc", "w")) == NULL)
 		return;
 
-#if (defined(RTCONFIG_JFFS2)||defined(RTCONFIG_BRCM_NAND_JFFS2))
-	if (stat("/jffs/.tordb/cached-microdesc-consensus", &mdstat_jffs) != -1) {
-		if(difftime(time(NULL), mdstat_jffs.st_mtime) > 60*60*24*7) {
-			logmessage("Tor", "Removing stale DB backup");
-			eval("rm", "-rf", "/jffs/.tordb");
-		} else if (!f_exists("/tmp/.tordb/cached-microdesc-consensus")) {
-			_dprintf("Tor: restore microdescriptor directory\n");
-			pw = getpwuid(mdstat_jffs.st_uid);
-			if ((pw) && (strcmp(pw->pw_name, "tor"))){
-				eval("chown", "-R", "tor.tor","/jffs/.tordb");
-			}
-			eval("cp", "-fa", "/jffs/.tordb", "/tmp/.tordb");
-			sleep(1);
-		}
-	}
-#endif
 	if ((Socksport = nvram_get("Tor_socksport")) == NULL)	Socksport = "9050";
 	if ((Transport = nvram_get("Tor_transport")) == NULL)   Transport = "9040";
 	if ((Dnsport = nvram_get("Tor_dnsport")) == NULL)   	Dnsport = "9053";
@@ -13683,6 +13666,18 @@ void start_Tor_proxy(void)
 	fclose(fp);
 	use_custom_config("torrc", "/tmp/torrc");
 	run_postconf("torrc", "/tmp/torrc");
+
+#if (defined(RTCONFIG_JFFS2)||defined(RTCONFIG_BRCM_NAND_JFFS2))
+	//logmessage("Tor", "Restoring database");
+	eval("/bin/sh", "-c", 	"mkdir -p /tmp/.tordb ; "
+				"cp -afu /jffs/.tordb/* /tmp/.tordb/ ; "
+				"chown tor:tor /tmp/.tordb ; "
+				"chown -h tor:tor /tmp/.tordb ; "
+				"chown -R tor:tor /tmp/.tordb/* ; "
+				"chmod u=rwx,g-rwx,o-rwx /tmp/.tordb ; "
+				"chmod -R u+rw,g-rwx,o-rwx /tmp/.tordb/*");
+	sleep(1);
+#endif
 
 	_eval(Tor_argv, NULL, 0, &pid);
 }

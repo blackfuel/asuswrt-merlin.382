@@ -3575,12 +3575,6 @@ fi; \
 	else \
 		echo "CONFIG_LINUX_MTD=$(LINUX_MTD)" >>$(1); \
 	fi; \
-	sed -i "/CONFIG_NF_CONNTRACK_EVENTS/d" $(1); \
-	if [ "$(BWDPI)" = "y" ] || [ "$(HND_ROUTER)" = "y" ]; then \
-		echo "CONFIG_NF_CONNTRACK_EVENTS=y" >>$(1); \
-	else \
-		echo "# CONFIG_NF_CONNTRACK_EVENTS is not set" >>$(1); \
-	fi; \
 	if [ "$(BWDPI)" = "y" ]; then \
 		sed -i "/CONFIG_NET_SCH_HTB/d" $(1); \
 		echo "CONFIG_NET_SCH_HTB=y" >>$(1); \

@@ -102,7 +102,7 @@ static int squashfs_fill_super(struct super_block *sb, void *data, int silent)
 		goto failure;
 	}
 
-	msblk->devblksize = sb_min_blocksize(sb, BLOCK_SIZE);
+	msblk->devblksize = sb_min_blocksize(sb, SQUASHFS_DEVBLK_SIZE);
 	msblk->devblksize_log2 = ffz(~msblk->devblksize);
 
 	mutex_init(&msblk->read_data_mutex);

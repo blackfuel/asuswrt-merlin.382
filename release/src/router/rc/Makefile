@@ -1057,9 +1057,11 @@ ifneq ($(wildcard ./prebuild/ate-broadcom.o),)
 ate-broadcom.o:
 	@-cp -f ./prebuild/ate-broadcom.o .
 endif
+ifeq ($(BUILD_NAME), RT-AC5300)
 ifneq ($(wildcard ./prebuild/ate.o),)
 ate.o:
 	@-cp -f ./prebuild/ate.o .
+endif
 endif
 ifeq ($(BUILD_NAME),$(filter $(BUILD_NAME),RT-AC68U RT-AC3200))
 ifneq ($(wildcard ./prebuild/cfe.o),)

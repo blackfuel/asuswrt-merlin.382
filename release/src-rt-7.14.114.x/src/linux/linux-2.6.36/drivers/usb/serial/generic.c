@@ -491,6 +491,15 @@ void usb_serial_handle_dcd_change(struct usb_serial_port *usb_port,
 	struct tty_port *port = &usb_port->port;
 
 	dbg("%s - port %d, status %d", __func__, usb_port->number, status);
+        if (tty) {
+               struct tty_ldisc *ld = tty_ldisc_ref(tty);
+
+               if (ld) {
+                       if (ld->ops->dcd_change)
+                               ld->ops->dcd_change(tty, status, NULL);
+                       tty_ldisc_deref(ld);
+               }
+        }
 
 	if (status)
 		wake_up_interruptible(&port->open_wait);
