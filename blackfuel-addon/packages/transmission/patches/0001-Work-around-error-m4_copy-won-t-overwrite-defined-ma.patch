@@ -1,0 +1,29 @@
+From 860d9e977d765f6680b5c07b7bb4b17dec435fa5 Mon Sep 17 00:00:00 2001
+From: Eric Petit <eric@lapsus.org>
+Date: Sun, 12 Mar 2017 06:20:14 +0100
+Subject: [PATCH] Work around "error: m4_copy: won't overwrite defined macro:
+ glib_DEFUN" on Xenial, copied from
+ https://github.com/Alexpux/MINGW-packages/issues/1351
+
+---
+ m4/glib-gettext.m4 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/m4/glib-gettext.m4 b/m4/glib-gettext.m4
+index 01db6de..cb0ddfa 100644
+--- a/m4/glib-gettext.m4
++++ b/m4/glib-gettext.m4
+@@ -36,8 +36,8 @@ dnl We go to great lengths to make sure that aclocal won't
+ dnl try to pull in the installed version of these macros
+ dnl when running aclocal in the glib directory.
+ dnl
+-m4_copy([AC_DEFUN],[glib_DEFUN])
+-m4_copy([AC_REQUIRE],[glib_REQUIRE])
++m4_copy_force([AC_DEFUN],[glib_DEFUN])
++m4_copy_force([AC_REQUIRE],[glib_REQUIRE])
+ dnl
+ dnl At the end, if we're not within glib, we'll define the public
+ dnl definitions in terms of our private definitions.
+-- 
+2.7.4
+

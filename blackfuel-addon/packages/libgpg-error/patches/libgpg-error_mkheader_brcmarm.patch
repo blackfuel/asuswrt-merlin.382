@@ -1,0 +1,13 @@
+diff -u -B -N -r -x '*.rej' -x '*.orig' -x .directory a/src/mkheader.c b/src/mkheader.c
+--- a/src/mkheader.c
++++ b/src/mkheader.c
+@@ -90,6 +90,9 @@
+     {"armv7-unknown-linux-gnueabihf"  },
+     {"armv5-unknown-linux-musleabi"   },
+     {"armv6-unknown-linux-musleabihf" },
++    {"arm-openwrt-linux-gnu", "arm-unknown-linux-gnueabi"},
++    {"arm-brcm-linux-uclibcgnueabi", "arm-unknown-linux-gnueabi"},
++    {"arm-unknown-linux-gnu", "arm-unknown-linux-gnueabi"},
+ 
+     { NULL }
+   };

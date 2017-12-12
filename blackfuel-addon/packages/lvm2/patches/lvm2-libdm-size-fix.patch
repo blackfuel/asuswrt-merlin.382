@@ -1,0 +1,11 @@
+--- a/libdm/libdm-string.c
++++ b/libdm/libdm-string.c
+@@ -594,7 +594,7 @@
+ 			 * i.e.  2043M is more then 1.9949G prints <2.00G
+ 			 * This version is for 2 digits fixed precision */
+ 			d = 100. * (double) size / byte;
+-			if (!_close_enough(floorl(d), nearbyintl(d)))
++			if (!_close_enough(floor(d), nearbyint(d)))
+ 				prefix = "<";
+ 		}
+ 

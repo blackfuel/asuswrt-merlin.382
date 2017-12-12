@@ -1,0 +1,14 @@
+--- a/whois.c
++++ b/whois.c
+@@ -78,6 +78,11 @@
+ extern int optind;
+ #endif
+ 
++/* the AsusWRT C-runtime library does not have IDN support */
++#if !defined(HAVE_LIBIDN) && !defined(HAVE_LIBIDN2)
++#define AI_IDN 0
++#endif
++
+ int main(int argc, char *argv[])
+ {
+ #ifdef HAVE_GETOPT_LONG

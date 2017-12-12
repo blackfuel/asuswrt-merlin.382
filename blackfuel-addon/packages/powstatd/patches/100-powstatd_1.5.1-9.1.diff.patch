@@ -1,0 +1,2289 @@
+--- powstatd-1.5.1.orig/Makefile
++++ powstatd-1.5.1/Makefile
+@@ -36,7 +36,7 @@
+ # On the other hand, if you intend to run powstatd on a single machine
+ # (i.e., no slaves), or simply do not wish to bother with encrypted
+ # communication, make sure the following line is commented out.
+-#CFLGS	+= -DSECURE
++CFLGS	+= -DSECURE
+ 
+ # You probably shouldn't have to edit these variable definitions,
+ # although some inits look for status in /var/run/powerstatus rather
+--- powstatd-1.5.1.orig/xtea.c
++++ powstatd-1.5.1/xtea.c
+@@ -0,0 +1,78 @@
++/************************************************
++
++The Tiny Encryption Algorithm (TEA) by
++David Wheeler and Roger Needham of the
++Cambridge Computer Laboratory
++
++**** ANSI C VERSION (New Variant) ****
++
++Notes:
++
++TEA is a Feistel cipher with XOR and
++and addition as the non-linear mixing
++functions.
++
++Takes 64 bits of data in v[0] and v[1].
++Returns 64 bits of data in w[0] and w[1].
++Takes 128 bits of key in k[0] - k[3].
++
++TEA can be operated in any of the modes
++of DES. Cipher Block Chaining is, for example,
++simple to implement.
++
++n is the number of iterations. 32 is ample,
++16 is sufficient, as few as eight may be OK.
++The algorithm achieves good dispersion after
++six iterations. The iteration count can be
++made variable if required.
++
++Note this is optimised for 32-bit CPUs with
++fast shift capabilities. It can very easily
++be ported to assembly language on most CPUs.
++
++delta is chosen to be the real part of (the
++golden ratio Sqrt(5/4) - 1/2 ~ 0.618034
++multiplied by 2^32).
++
++This version has been amended to foil two
++weaknesses identified by David A. Wagner
++(daw@cs.berkeley.edu): 1) effective key
++length of old-variant TEA was 126 not 128
++bits 2) a related key attack was possible
++although impractical.
++
++************************************************/
++
++void encipher(unsigned long *const v,unsigned long *const w,
++const unsigned long *const k)
++{
++   register unsigned long       y=v[0],z=v[1],sum=0,delta=0x9E3779B9,n=32;
++
++   while(n-->0)
++      {
++                y+= (z<<4 ^ z>>5) + z ^ sum + k[sum&3];
++      sum += delta;
++      z+= (y<<4 ^ y>>5) + y ^ sum + k[sum>>11 & 3];
++      }
++
++   w[0]=y; w[1]=z;
++}
++
++void decipher(unsigned long *const v,unsigned long *const w,
++const unsigned long *const k)
++{
++   register unsigned long       y=v[0],z=v[1],sum=0xC6EF3720,
++                                delta=0x9E3779B9,n=32;
++
++   /* sum = delta<<5, in general sum = delta * n */
++
++   while(n-->0)
++      {
++                z-= (y<<4 ^ y>>5) + y ^ sum + k[sum>>11 & 3];
++      sum -= delta;
++                y-= (z<<4 ^ z>>5) + z ^ sum + k[sum&3];
++      }
++
++   w[0]=y; w[1]=z;
++}
++
+--- powstatd-1.5.1.orig/powstatd.c
++++ powstatd-1.5.1/powstatd.c
+@@ -98,7 +98,7 @@
+ #define MSHOW(s) ((s==MASTER)?"master":(s==SLAVE)?"slave":(s==SOLO)?"standalone":"ERROR")
+ 
+ /* Slaves. */
+-#define MAXSLAVES 2		/* No more than 2 machines on one UPS. */
++#define MAXSLAVES 20		/* No more than 20 machines on one UPS. */
+ int nslaves = 0;		/* Number of "extra" machines on this UPS. */
+ char slaves[MAXSLAVES][MAXLINELEN + 1];		/* Slave names. */
+ 
+--- powstatd-1.5.1.orig/debian/compat
++++ powstatd-1.5.1/debian/compat
+@@ -0,0 +1 @@
++7
+--- powstatd-1.5.1.orig/debian/changelog
++++ powstatd-1.5.1/debian/changelog
+@@ -0,0 +1,171 @@
++powstatd (1.5.1-9.1) unstable; urgency=low
++
++  * Non-maintainer upload.
++  * Add build-arch and build-indep build rules
++  * Fix pending l10n issues. Debconf translations:
++    - Spanish (Omar Campagne).  Closes: #602015
++
++ -- Christian Perrier <bubulle@debian.org>  Sun, 08 Jan 2012 19:22:53 +0100
++
++powstatd (1.5.1-9) unstable; urgency=low
++
++  * Debconf translations: 
++    - Danish, thanks to Joe Dalton (Closes: #600027).
++
++ -- Peter S Galbraith <psg@debian.org>  Wed, 13 Oct 2010 13:16:54 -0400
++
++powstatd (1.5.1-8) unstable; urgency=low
++
++  * Debconf translations: 
++    - Spanish, thanks to Omar Campagne (Closes: #579717).
++
++ -- Peter S Galbraith <psg@debian.org>  Tue, 12 Oct 2010 08:34:56 -0400
++
++powstatd (1.5.1-7) unstable; urgency=low
++
++  * Debconf translations:
++    - Japanese, thanks to Hideki Yamane (Debian-JP) (Closes: #559381).
++  * Bump Standards-Version to 3.8.3, debhelper 7
++  
++ -- Peter S Galbraith <psg@debian.org>  Thu, 03 Dec 2009 21:22:29 -0500
++
++powstatd (1.5.1-6.1) unstable; urgency=low
++
++  * Non-maintainer upload.
++  * Fix pending l10n issues. Debconf translations:
++    - Swedish. Closes: #487600
++    - Russian. Closes: #502891
++    - Basque. Closes: #503059
++    - Italian. Closes: #487600
++
++ -- Christian Perrier <bubulle@debian.org>  Fri, 24 Oct 2008 06:09:55 +0200
++
++powstatd (1.5.1-6) unstable; urgency=low
++
++  * Bug fix: powstatd-crypt transitional package removed, thanks to Ondrej
++    Certik (Closes: #477535).
++  * Debconf translations:
++    - Portuguese from raduz - Portuguese Translation Team (Closes: #432774).
++    - Dutch, thanks to cobaco (aka Bart Cornelis) (Closes: #448931).
++
++ -- Peter S Galbraith <psg@debian.org>  Sat, 26 Apr 2008 22:08:51 -0400
++
++powstatd (1.5.1-5.1) unstable; urgency=low
++
++  * Non-maintainer upload to fix pending l10n issues.
++  * Debconf translations:
++    - Czech added. Closes: #358846
++    - German added. Closes: #402955
++  * Call debconf-updatepo in the clean target to guarantee up-to-date PO(T)
++    files
++  * Add a very basic LSB header to the powstatd init script (other
++    init script do not have it as they're not registered as such and
++    I don't want to investigate why during a NMU)
++
++ -- Christian Perrier <bubulle@debian.org>  Sun, 28 Jan 2007 09:08:10 +0100
++
++powstatd (1.5.1-5) unstable; urgency=low
++
++  * Added French debconf templates translation".
++    Thanks to Sylvain Archenault (Closes: #353140).
++
++ -- Peter S Galbraith <psg@debian.org>  Fri, 17 Feb 2006 17:57:56 -0500
++
++powstatd (1.5.1-4) unstable; urgency=low
++
++  * Bug fix: "powstatd: Please switch to gettext-based debconf templates",
++    thanks to Thomas Huriaux (Closes: #351389).  I followed the directives
++    in po-debconf(7) as suggested by Thomas.
++
++ -- Peter S Galbraith <psg@debian.org>  Sat,  4 Feb 2006 22:34:57 -0500
++
++powstatd (1.5.1-3) unstable; urgency=low
++
++  * Enable cryptographic communication between master and slave.  This
++    package now replaces powstatd-crypt (Closes: #239963).  Those who use
++    this package with slaves now need to edit /etc/powstatd.conf and add a
++    common password directive.  See powstatd(8).
++  * Bug fix: Increase the number of possible slaves from 2 to 20, thanks
++    to Christoph Martin (Closes: #232271).
++  * Bump Standards-Version to 3.6.2
++
++ -- Peter S Galbraith <psg@debian.org>  Sat,  3 Apr 2004 21:59:53 -0500
++
++powstatd (1.5.1-1) unstable; urgency=low
++
++  * New upstream version (bug fix release).
++
++ -- Peter S Galbraith <psg@debian.org>  Mon, 30 Apr 2001 09:46:32 -0400
++
++powstatd (1.5-1) unstable; urgency=low
++
++  * New upstream version:
++     Fix spoof attack vulnerability.
++     Handle UPS that requires a BREAK signal on TxD for shutdown.
++     (closes: #79486)
++  * powstatd.conf.TrippLite merged upstream as powstatd.conf.tpl
++  * Standards-Version: 3.5.2 (Removed suidmanager from rules, but have yet
++    to implement building without debugging symbols). 
++  
++ -- Peter S Galbraith <psg@debian.org>  Wed, 28 Feb 2001 13:33:40 -0500
++
++powstatd (1.4.1-4) frozen unstable; urgency=low
++
++  * Updated package description to say it _does_ work with new 
++    CyberPower Power SL models.  No new code at all.
++
++ -- Peter S Galbraith <psg@debian.org>  Wed,  2 Feb 2000 15:58:16 -0500
++
++powstatd (1.4.1-3) unstable; urgency=low
++
++  * Updated package description to say it doesn't work with new 
++    CyberPower Power SL models.
++
++ -- Peter S Galbraith <psg@debian.org>  Thu, 13 Jan 2000 16:42:30 -0500
++
++powstatd (1.4.1-2) unstable; urgency=low
++
++  * Upstream source included my nit patch without new version number.
++
++ -- Peter S Galbraith <psg@debian.org>  Wed, 22 Dec 1999 11:30:08 -0500
++
++powstatd (1.4.1-1) unstable; urgency=low
++
++  * New upstream version: fixed bug with secure mode timestamping.
++  * 'powstatd -k' used from a slave now returns EXIT_FAILURE.
++  * updated to Standards-Version 3.1.1 with Build-Depends.
++  
++ -- Peter S Galbraith <psg@debian.org>  Thu, 16 Dec 1999 09:24:03 -0500
++
++powstatd (1.4-1) unstable; urgency=low
++
++  * split into powstatd package and non-us powstatd-crypt package for xtea
++    encryption between master and slave. 
++  * Multiple-slave bug fix; secure cryptographic communication protocol 
++    to protect slave machines from malicious shutdowns.
++    closes: #47456
++  * Added powstatd.conf example for TrippLite Internet Office 500 UPS
++    from Mark Zimmerman.
++  
++ -- Peter S Galbraith <psg@debian.org>  Tue,  7 Dec 1999 11:26:41 -0500
++
++powstatd (1.3-2) unstable; urgency=low
++
++  * Move /usr/sbin/powstatd to /sbin/powstatd (addresses #47454)
++
++ -- Peter S Galbraith <psg@debian.org>  Mon, 25 Oct 1999 15:30:11 -0400
++
++powstatd (1.3-1) unstable; urgency=low
++
++  * New upstream release 
++    bug fix only: Don't initiate shutdown when UPS indicate LOW at startup.
++
++ -- Peter S Galbraith <psg@debian.org>  Fri, 17 Sep 1999 10:06:23 -0400
++
++powstatd (1.2-1) unstable; urgency=low
++
++  * Initial Release.
++
++ -- Peter S Galbraith <psg@debian.org>  Thu, 16 Sep 1999 11:27:51 -0400
++
++
+--- powstatd-1.5.1.orig/debian/dirs
++++ powstatd-1.5.1/debian/dirs
+@@ -0,0 +1,2 @@
++sbin
++etc/init.d
+--- powstatd-1.5.1.orig/debian/powstatd.templates
++++ powstatd-1.5.1/debian/powstatd.templates
+@@ -0,0 +1,15 @@
++Template: powstatd/cryptpassword
++Type: note
++_Description: Notice for powstatd master/slave UPS users
++ This message is displayed because the configuration file
++ /etc/powstatd.conf indicates that a master/slave UPS configuration is used
++ but a password directive is not found in /etc/powstatd.conf
++ .
++ Since version 1.5.1-3, the powstatd package uses cryptography to
++ communicate between master and slave units (as was previously done using
++ the powstatd-crypt package). An identical password directive is needed in
++ the master file as well as all the slaves, e.g. a line such as
++ .
++ password MyPasswordHere
++ .
++ See powstatd(8) for details.
+--- powstatd-1.5.1.orig/debian/control
++++ powstatd-1.5.1/debian/control
+@@ -0,0 +1,34 @@
++Source: powstatd
++Section: admin
++Priority: extra
++Maintainer: Peter S Galbraith <psg@debian.org>
++Build-Depends: debhelper (>= 7), groff, po-debconf
++Standards-Version: 3.8.3
++
++Package: powstatd
++Architecture: any
++Depends: ${shlibs:Depends}, ${misc:Depends}, debconf
++Replaces: powstatd-crypt (<< 1.5.1-3)
++Conflicts: powstatd-crypt (<< 1.5.1-3), ups-monitor
++Provides: powstatd-crypt, ups-monitor
++Description: Configurable UPS monitoring daemon
++ Assuming you have a relay-based "dumb" UPS that corresponds with your
++ machine via a serial connection, you should be able to configure powstatd
++ in just a few minutes. It is easily configured, and can be expected to
++ support most "dumb" UPS supplies.
++ .
++ UPS models known to work: 
++  CyberPower PowerSL series
++  CyberPower Power2000 1500VA
++  CyberPower Power99 325VA, 400VA, 500VA and 720VA
++  Some older CyberPower 385VA and 450VA models
++  TrippLite Internet Office 500 UPS
++  Various older APC units.  
++ .
++ Powstatd can also be configured to allow a master machine to control
++ (Via a network connection) up to 20 (by default) additional slave
++ machines connected to the same UPS. This allows you to run several
++ machines off the same UPS, with only one of the machines actually
++ reading the UPS status over the serial line.  This version of powstatd
++ uses secure cryptography to communicate between master and slave(s),
++ replacing the older powstatd-crypt Debian package.
+--- powstatd-1.5.1.orig/debian/powstatd.config
++++ powstatd-1.5.1/debian/powstatd.config
+@@ -0,0 +1,14 @@
++#!/bin/sh -e
++
++action=$1
++version=$2
++
++test -f /etc/powstatd.conf || exit 0
++if grep -q "slave" /etc/powstatd.conf || ! grep -q "watch .*tty" /etc/powstatd.conf && ! grep -q "password" /etc/powstatd.conf; then
++
++    . /usr/share/debconf/confmodule
++    db_input high powstatd/cryptpassword || true
++    db_go || true
++fi
++
++exit 0
+--- powstatd-1.5.1.orig/debian/powerfail
++++ powstatd-1.5.1/debian/powerfail
+@@ -0,0 +1,75 @@
++#! /bin/sh
++#
++# powerfail	This script is run when the UPS tells the system the power has
++#		gone. Tell everybody and start the shutdown based on the
++#		failure type.  This script will also being run when the power
++#		comes up again.
++#
++#
++# Based on genpower's /etc/init.d/powerfail file:
++# 	Version:      v1.2
++# 	Author:       Tom Webster <webster@kaiwan.com>
++# 	Modified-By:  Brian White <bcwhite@pobox.com>
++#
++# This is basically a script that embeds the funtionality of powstatd
++# scripts as modified from genpower by Peter S. Galbraith <psg@debian.org>
++#
++
++failtime=+5	# shutdown delay from initial power failure
++lowtime=now	# shutdown delay from low-battery warning
++
++failmsg="Power failure: system operating on batteries."
++lowmsg="Battery failure -- EMERGENCY SHUTDOWN"
++okaymsg="LINE POWER RESTORED -- RESUMING NORMAL OPERATION"
++
++# Set the path.
++PATH=/sbin:/etc:/bin:/usr/bin
++
++# Set location of file containing PID of running shutdowns
++spidpath="/var/run/shutdown.pid"
++
++# See what happened.
++case "$1" in
++
++    start)
++	# Called with a powerfail event, check to see if a shutdown is running
++	if [ -f $spidpath ]
++	then
++	    # Shutdown is running, kill it to process the new event
++	    shutdown -c >/dev/null 2>&1
++	fi
++	shutdown -h $failtime "$failmsg" &
++	;;
++
++    now)
++	# Battery is low
++	# Check to see if a shutdown is running
++	if [ -f $spidpath ]
++	then
++	    # Shutdown is running, kill it to process the new event
++	    shutdown -c >/dev/null 2>&1
++	fi
++	shutdown -h $lowtime "$lowmsg" &
++	;;
++
++    stop)
++	# Ok, power is good again. Say so on the console.
++	if [ -f $spidpath ]
++	then
++	    # Only cancel if shutdown is running (system boot will call this)
++	    shutdown -c "$okaymsg"
++	fi
++	;;
++
++    *)
++	echo "Usage: /etc/init.d/powerfail {start|now|stop}"
++	echo " start means: shutdown in $failtime minutes due to power failure"
++	echo " now means: shutdown NOW due to eminent UPS battery failure"
++	echo " stop means: cancel shutdown before power is back online."
++	exit 1
++	;;
++
++esac
++
++
++exit 0
+--- powstatd-1.5.1.orig/debian/powstatd.init
++++ powstatd-1.5.1/debian/powstatd.init
+@@ -0,0 +1,76 @@
++#! /bin/sh
++# skeleton	example file to build /etc/init.d/ scripts.
++#		This file should be used to construct scripts for /etc/init.d.
++#
++#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
++#		Modified for Debian GNU/Linux
++#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
++#
++# Version:	@(#)skeleton  1.6  11-Nov-1996  miquels@cistron.nl
++#
++# This file by Peter S Galbraith <psg@debian.org> for the powstatd package.
++
++### BEGIN INIT INFO
++# Provides:          powstatd
++# Required-Start:    $local_fs $remote_fs $syslog
++# Required-Stop:     $local_fs $remote_fs $syslog
++# Default-Start:     2 3 4 5
++# Default-Stop:      0 1 6
++# Short-Description: powstats UPS monitoring daemon
++### END INIT INFO
++
++PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin
++DAEMON=/sbin/powstatd
++NAME=powstatd
++DESC="UPS Monitoring Daemon"
++
++test -f $DAEMON || exit 0
++test -f /etc/powstatd.conf || exit 0
++if grep '^#!Unconfigured!' /etc/powstatd.conf >/dev/null; then
++   echo "$NAME: unconfigured.  See \"man 8 powstatd\" for help about configuration."
++   exit 0
++fi
++
++set -e
++
++case "$1" in
++  start)
++    echo -n "Starting $DESC: $NAME"
++    if $DAEMON > /dev/null 2>&1
++    then
++        echo "."
++    else
++        echo "... failed."
++    fi
++    ;;
++  stop)
++    echo -n "Stopping $DESC: $NAME"
++    start-stop-daemon --stop --oknodo --quiet --exec $DAEMON
++    echo "."
++    ;;
++  poweroff)
++    # This is called from /etc/init.d/halt
++    #  `/sbin/powstatd -k` queries the UPS for powerline status and 
++    #  sends the kill signal to the UPS only if there is a powerline failure.
++    echo -n "Checking to see if UPS should be shut down..."
++    if $DAEMON -k > /dev/null 2>&1
++    then
++        echo " Done."
++    else
++        echo " No."
++    fi
++    ;;
++  force-reload|restart)
++    echo -n "Restarting $DESC: $NAME"
++    start-stop-daemon --stop --oknodo --quiet --exec $DAEMON
++    sleep 1
++    $DAEMON
++    echo "."
++    ;;
++  *)
++    echo "Usage: /etc/init.d/$NAME {start|stop|poweroff|restart|force-reload}"
++    exit 0
++    ;;
++esac
++
++exit 0
+--- powstatd-1.5.1.orig/debian/powstatd.init.with-state-file
++++ powstatd-1.5.1/debian/powstatd.init.with-state-file
+@@ -0,0 +1,77 @@
++#! /bin/sh
++# skeleton	example file to build /etc/init.d/ scripts.
++#		This file should be used to construct scripts for /etc/init.d.
++#
++#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
++#		Modified for Debian GNU/Linux
++#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
++#
++# Version:	@(#)skeleton  1.6  11-Nov-1996  miquels@cistron.nl
++#
++# This file by Peter S Galbraith <psg@debian.org> for the powstatd package.
++
++PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin
++DAEMON=/sbin/powstatd
++NAME=powstatd
++DESC="UPS Monitoring Daemon"
++
++# Location of status file indicating whether power failure is occurring
++statpath="/var/lib/powstatd/power_is_failing"
++
++test -f $DAEMON || exit 0
++test -f /etc/powstatd.conf || exit 0
++if grep '^#!Unconfigured!' /etc/powstatd.conf >/dev/null; then
++   echo "$NAME: unconfigured.  See /etc/powstatd.conf"
++   exit 0
++fi
++
++set -e
++
++case "$1" in
++  start)
++    rm -f $statpath
++    echo -n "Starting $DESC: $NAME"
++    if $DAEMON > /dev/null 2>&1
++    then
++        echo "."
++    else
++        echo "... failed."
++    fi
++    ;;
++  stop)
++    echo -n "Stopping $DESC: $NAME"
++    start-stop-daemon --stop --quiet --exec $DAEMON
++    echo "."
++    ;;
++  poweroff)
++    # This is called from /etc/init.d/halt
++    # Check to see if the powerfail script created the status file
++    # (indicating a real power failure) because we don't want to send the
++    # kill signal to the UPS on a regular system halt.
++    if [ -f $statpath ]
++    then
++        rm -f $statpath
++        echo -n "Checking to see if UPS should be shut down..."
++        if $DAEMON -k > /dev/null 2>&1
++        then
++            echo " Done."
++        else
++            echo " No."
++        fi
++    fi
++    ;;
++  force-reload|restart)
++    echo -n "Restarting $DESC: $NAME"
++    rm -f $statpath
++    start-stop-daemon --stop --quiet --exec $DAEMON
++    sleep 1
++    $DAEMON
++    echo "."
++    ;;
++  *)
++    echo "Usage: /etc/init.d/$NAME {start|stop|poweroff|restart|force-reload}"
++    exit 0
++    ;;
++esac
++
++exit 0
+--- powstatd-1.5.1.orig/debian/copyright
++++ powstatd-1.5.1/debian/copyright
+@@ -0,0 +1,34 @@
++This package was debianized by Peter S Galbraith psg@debian.org on
++Thu, 09 Dec 1999 11:37:55 -0400.
++
++This source archive contains powstatd sources from:
++
++  ftp://dollar.biz.uiowa.edu/pub/segre/powstatd-1.5.1.tgz
++
++combined with the public-domain ANSI C implementation of TEA, the 
++Tiny Encryption Algorithm, from
++
++  ftp://vader.eeng.brad.ac.uk/pub/crypto/xtea.c 
++
++Powstatd web page:     http://dollar.biz.uiowa.edu/powstatd 
++TEA web page:          http://vader.brad.ac.uk/tea/tea.shtml
++
++Copyright for powstatd:
++
++  Copyright (C) 1999 The University of Iowa
++  Author: Alberto Maria Segre
++          segre@cs.uiowa.edu
++          S378 Pappajohn Building
++          The University of Iowa
++          Iowa City, IA  52242-1000
++  License: GPL V2 or (at your option) any later version.
++           On Debian systems, the text of the GPL can be found here:
++           /usr/share/common-licenses/GPL-2
++
++Copyright for xtea.c:
++
++  The Tiny Encryption Algorithm (TEA) by David Wheeler and Roger Needham of
++  the Cambridge Computer Laboratory
++
++  License: public domain
++    `Placed in the Public Domain by David Wheeler and Roger Needham.'
+--- powstatd-1.5.1.orig/debian/powstatd.man.patch
++++ powstatd-1.5.1/debian/powstatd.man.patch
+@@ -0,0 +1,443 @@
++*** powstatd.man.orig	Sat Apr  3 21:58:22 2004
++--- powstatd.man	Sat Apr  3 21:47:05 2004
++***************
++*** 111,116 ****
++--- 111,122 ----
++  example, the NTP protocol) or valid status messages may be rejected. 
++  
++  .SH CONFIGURATION
+++ .B Important Note:
+++ This section has been modified from the upstream version in order to
+++ describe how the software is configured and installed on
+++ .B Debian
+++ systems.
+++ 
++  .I powstatd
++  is configured via a configuration file, 
++  .I /etc/powstatd.conf
++***************
++*** 119,161 ****
++  security option enabled,
++  .I powstatd
++  will require that file permissions on the configuration file deny rwx
++! access to "group" or "other").
++! 
++! To configure your UPS, follow these steps:
++! 
++! .B 0.  
++! Edit the Makefile to suit your installation. In particular, the secure
++! master/slave communication protocol is selected/deselected by making
++! the appropriate change to the definition of CFLGS in the
++! Makefile. Note that users outside the United States wishing to use the
++! secure communication protocol will first need to download the
++! public-domain ANSI C implementation of TEA, the
++  .I Tiny Encryption Algorithm, 
++  from
++  .I ftp://vader.eeng.brad.ac.uk/pub/crypto/xtea.c
++  
++! .B 1. 
++! Compile 
++! .I powstatd:
++! 
++! .in +3
++! % make 
++! .in -3
++! 
++! or, if you are compiling on a DEC Alpha platform:
++! 
++! .in +3
++! % make alpha
++! .in -3
++  
++! .B 2. 
++  Make sure your new UPS is completely charged and is connected to your
++  machine via the serial monitoring line provided by the UPS
++  manufacturer to your machine (if you did not get such a monitoring
++  line with your UPS, see the the UPS-HOWTO for information on how to
++  make one).
++  
++! .B 3. 
++  In order to configure 
++  .I powstatd,
++  make sure your machine 
++--- 125,148 ----
++  security option enabled,
++  .I powstatd
++  will require that file permissions on the configuration file deny rwx
++! access to "group" or "other").  Note that the
++! .B Debian package powstatd
++! is compiled with secure cryptography using the public-domain ANSI C
++! implementation of TEA, the
++  .I Tiny Encryption Algorithm, 
++  from
++  .I ftp://vader.eeng.brad.ac.uk/pub/crypto/xtea.c
++  
++! To configure your UPS, follow these steps:
++  
++! .B 1. 
++  Make sure your new UPS is completely charged and is connected to your
++  machine via the serial monitoring line provided by the UPS
++  manufacturer to your machine (if you did not get such a monitoring
++  line with your UPS, see the the UPS-HOWTO for information on how to
++  make one).
++  
++! .B 2. 
++  In order to configure 
++  .I powstatd,
++  make sure your machine 
++***************
++*** 165,182 ****
++  via the serial monitoring line). Instead, plug a desk light or radio
++  into the UPS.
++  
++! .B 4. 
++! Determine what serial line is connected to your UPS and create an
++! initial copy of 
++  .I /etc/powstatd.conf 
++  (you can look at the sample powstatd.conf.* files included in the 
++! distribution) containing a single line specifying the serial line, e.g.:
++  
++  .in +3
++  watch ttyS0
++  .in -3
++  
++! .B 5. 
++  As root, run 
++  .I powstatd
++  in test mode (you'll have to be root to have
++--- 152,173 ----
++  via the serial monitoring line). Instead, plug a desk light or radio
++  into the UPS.
++  
++! .B 3. 
++! Determine what serial line is connected to your UPS and edit it into
++! the configuration file
++  .I /etc/powstatd.conf 
++  (you can look at the sample powstatd.conf.* files included in the 
++! Debian distribution in 
++! .I /usr/share/doc/powstatd/
++! or
++! .I /usr/share/doc/powstatd-crypt/
++! ) at the line specifying the serial line, e.g.:
++  
++  .in +3
++  watch ttyS0
++  .in -3
++  
++! .B 4. 
++  As root, run 
++  .I powstatd
++  in test mode (you'll have to be root to have
++***************
++*** 238,244 ****
++  
++  until you get the OK status reading.
++  
++! .B 6. 
++  Repeat step 4, but this time pull the plug on the UPS and then
++  reinsert it after a few seconds. Observe changes in the values for the
++  input lines; it should be easy to determine what line corresponds to
++--- 229,235 ----
++  
++  until you get the OK status reading.
++  
++! .B 5. 
++  Repeat step 4, but this time pull the plug on the UPS and then
++  reinsert it after a few seconds. Observe changes in the values for the
++  input lines; it should be easy to determine what line corresponds to
++***************
++*** 280,286 ****
++  .TE
++  .in -3
++  
++! .B 7. 
++  At this point, you should know the power failure and low battery
++  signals.  Now we must determine the appropriate UPS shutdown
++  signal. Fortunately, for most UPS systems, there are only 4 possible
++--- 271,277 ----
++  .TE
++  .in -3
++  
++! .B 6. 
++  At this point, you should know the power failure and low battery
++  signals.  Now we must determine the appropriate UPS shutdown
++  signal. Fortunately, for most UPS systems, there are only 4 possible
++***************
++*** 311,317 ****
++  be too impatient here or you won't know which signal is responsible
++  for actually turning the UPS off.
++  
++! .B 8. 
++  At this point configuration should be complete. For example, for
++  the Cyberpower Power99 325/385/450/500VA models, a reasonable 
++  .I /etc/powstatd.conf 
++--- 302,308 ----
++  be too impatient here or you won't know which signal is responsible
++  for actually turning the UPS off.
++  
++! .B 7. 
++  At this point configuration should be complete. For example, for
++  the Cyberpower Power99 325/385/450/500VA models, a reasonable 
++  .I /etc/powstatd.conf 
++***************
++*** 328,334 ****
++  .fi
++  .in -3
++  
++! .B 9. 
++  If you have other machines running off the same UPS, include one or
++  more slave entries specifying their names in the master's configuration file:
++  
++--- 319,325 ----
++  .fi
++  .in -3
++  
++! .B 8. 
++  If you have other machines running off the same UPS, include one or
++  more slave entries specifying their names in the master's configuration file:
++  
++***************
++*** 350,365 ****
++  .fi
++  .in -3
++  
++! If you intend to run more than 2 slaves off a very large UPS, you will
++  need to adjust the MAXSLAVES parameter in the source code accordingly
++  and then recompile.
++  
++  If 
++  .I powstatd
++  is compiled with the appropriate security option enabled, encryption
++! is used to protect slaves from malicious shutdown messages. An
++! identical password directive should therefore appear in both master
++! and slave configuration files:
++  
++  .in +3
++  .nf
++--- 341,356 ----
++  .fi
++  .in -3
++  
++! If you intend to run more than 20 slaves off a very large UPS, you will
++  need to adjust the MAXSLAVES parameter in the source code accordingly
++  and then recompile.
++  
++  If 
++  .I powstatd
++  is compiled with the appropriate security option enabled, encryption
++! is used to protect slaves from malicious shutdown messages (This is true
++! on Debian systems).  An identical password directive should therefore
++! appear in both master and slave configuration files:
++  
++  .in +3
++  .nf
++***************
++*** 372,418 ****
++  will encrypt generate and check timestamps in order to foil replay
++  attacks.
++  
++! .B 10.
++! Make sure your inittab file contains appropriate lines to invoke
++! .I powstatd.fail, powstatd.low, 
++! and 
++! .I powstatd.ok:
++! 
++! .in +3
++! .nf
++! # UPS signals a power outage.
++! pf:12345:powerfail:/sbin/powstatd.fail
++! 
++! # UPS signals power restored before the shutdown kicks in.
++! pr:12345:powerokwait:/sbin/powstatd.ok
++  
++! # UPS signals low battery power: emergency shutdown.
++! pn:12345:powerfailnow:/sbin/powstatd.low
++! .fi
++! .in -3
++  
++! .B 11. 
++! Edit scripts 
++! .I powstatd.ok, powstatd.fail, 
++! and 
++! .I powstatd.low
++! to adjust time parameters, if desired. 
++! 
++! .B 12. 
++! "make install", then reboot the machine. If you don't want to reboot,
++! issue instead:
++  
++! .in +3
++! .nf
++! % /etc/rc.d/init.d/powstatd start
++! % /sbin/init q
++! .fi
++! .in -3
++  
++  .SS How It Works:
++  
++  .I powstatd 
++! is initiated as a daemon in runlevels 3 and 5.  
++  
++  A UPS can only be in one of three states; OK, FAIL, or LOW. Usually,
++  when the main power is on, the UPS is operating in the OK state; when
++--- 363,397 ----
++  will encrypt generate and check timestamps in order to foil replay
++  attacks.
++  
++! .B 9. 
++! Make sure your new /etc/powstatd.conf doesn't have a line like:
++! .RS
++! #!Unconfigured! Please customize the file as appropriate and remove this line
++! .RE
++! (all in one line) because the daemon starter script 
++! .I /etc/init.d/powstatd 
++! inspects 
++! .I /etc/powstatd.conf 
++! for this line to see if the daemon is properly configured and should be 
++! started or not.
++  
++! .B 10.
++! You may also want to edit /etc/init.d/powerfail at the line:
++!  failtime=+5 # shutdown delay from initial power failure
++  
++! It sets the shutdown delay to 5 minutes after power line failure detection.
++! You may want to increase that if your UPS has lots of power to spare, or
++! reduce it.
++  
++! .B 11.
++! Reboot, or simply start the deamon with the command:
++  
+++ .B # /etc/init.d/powstatd start
+++   
++  .SS How It Works:
++  
++  .I powstatd 
++! is initiated as a daemon in runlevels 2 to 5.  
++  
++  A UPS can only be in one of three states; OK, FAIL, or LOW. Usually,
++  when the main power is on, the UPS is operating in the OK state; when
++***************
++*** 435,449 ****
++  .I /etc/powerstatus 
++  tells init (which is configured by the
++  .I /etc/inittab 
++! file) to run one of three scripts: 
++! .I powstatd.fail, powstatd.ok, 
++! or 
++! .I powstatd.low
++  The init process then removes
++  .I /etc/powerstatus
++  so as not to be confused on subsequent interrupts.
++  
++! .B powstatd.fail
++  .RS 
++  initiates a timed 
++  .I shutdown -h 
++--- 414,429 ----
++  .I /etc/powerstatus 
++  tells init (which is configured by the
++  .I /etc/inittab 
++! file) to run the script
++! .B /etc/init.d/powerfail
++! with one of the arguments "start" (shutdown due to power line failure),
++! "now" (shutdown NOW due to eminent UPS battery failure) or "stop" (cancel
++! shutdown before power is back online).
++  The init process then removes
++  .I /etc/powerstatus
++  so as not to be confused on subsequent interrupts.
++  
++! .B /etc/init.d/powerfail start
++  .RS 
++  initiates a timed 
++  .I shutdown -h 
++***************
++*** 451,463 ****
++  shutdown can be cancelled.
++  .RE
++  
++! .B powstatd.ok
++  .RS 
++  cancels the running shutdown and notifies all users that power is restored
++  and no shutdown is imminent.
++  .RE
++  
++! .B powstatd.low
++  .RS
++  cancels the running shutdown and initiates an immediate 
++  .I shutdown -h
++--- 431,443 ----
++  shutdown can be cancelled.
++  .RE
++  
++! .B /etc/init.d/powerfail stop
++  .RS 
++  cancels the running shutdown and notifies all users that power is restored
++  and no shutdown is imminent.
++  .RE
++  
++! .B /etc/init.d/powerfail now
++  .RS
++  cancels the running shutdown and initiates an immediate 
++  .I shutdown -h
++***************
++*** 465,471 ****
++  will indeed shutdown (there is no recovery).
++  .RE
++  
++! Note that as you halt the machine, the shutdown sequence
++  invokes 
++  .I powstatd
++  one last time, but this time with the kill flag (-k), forcing the UPS
++--- 445,451 ----
++  will indeed shutdown (there is no recovery).
++  .RE
++  
++! Note that as you halt the machine, the shutdown sequence (/etc/init.d/halt)
++  invokes 
++  .I powstatd
++  one last time, but this time with the kill flag (-k), forcing the UPS
++***************
++*** 478,492 ****
++  .SS Troubleshooting:
++  
++  .B 1. 
++- If your machine doesn't seem to notice power status changes even
++- when the UPS daemon is signalling them, try adjusting the location of
++- the powerstatus file by changing the value of STATUS in the Makefile
++- and recompiling. Some versions of the init process look in
++- .I /var/log/powerstatus 
++- rather than the default 
++- .I /etc/powerstatus.
++- 
++- .B 2. 
++  If your machine keeps shutting down even when the power is on, you're
++  probably watching the wrong serial line. To recover, try rebooting in single
++  user mode (issue "linux 1" at the LILO prompt) and disable 
++--- 458,463 ----
++***************
++*** 504,510 ****
++  .\" .I powstatd
++  .\" instead.
++  
++! .B 3.  
++  Some older UPS systems as well as some homebuilt cable connections
++  (see the UPS HowTo) may require that UPS shutdown signals be sent on
++  the transmission line rather than on one of the signaling
++--- 475,481 ----
++  .\" .I powstatd
++  .\" instead.
++  
++! .B 2.  
++  Some older UPS systems as well as some homebuilt cable connections
++  (see the UPS HowTo) may require that UPS shutdown signals be sent on
++  the transmission line rather than on one of the signaling
++***************
++*** 542,547 ****
++--- 513,519 ----
++  .I powstatd.dumb
++  included in the distribution for an example of how to go about
++  handling this case.
+++ (Debian's init is fine in this respect.)
++  
++  .SH ACKNOWLEDGEMENTS
++  .P
+--- powstatd-1.5.1.orig/debian/powerfail.with-state-file
++++ powstatd-1.5.1/debian/powerfail.with-state-file
+@@ -0,0 +1,81 @@
++#! /bin/sh
++#
++# powerfail	This script is run when the UPS tells the system the power has
++#		gone. Tell everybody and start the shutdown based on the
++#		failure type.  This script will also being run when the power
++#		comes up again.
++#
++#
++# Based on genpower's /etc/init.d/powerfail file:
++# 	Version:      v1.2
++# 	Author:       Tom Webster <webster@kaiwan.com>
++# 	Modified-By:  Brian White <bcwhite@pobox.com>
++#
++# This is basically a script that embeds the funtionality of powstatd
++# scripts as modified from genpower by Peter S. Galbraith <psg@debian.org>
++#
++
++failtime=+5	# shutdown delay from initial power failure
++lowtime=now	# shutdown delay from low-battery warning
++
++failmsg="Power failure: system operating on batteries."
++lowmsg="Battery failure -- EMERGENCY SHUTDOWN"
++okaymsg="LINE POWER RESTORED -- RESUMING NORMAL OPERATION"
++
++# Set the path.
++PATH=/sbin:/etc:/bin:/usr/bin
++
++# Location of status file indicating whether power failure is occurring
++statpath="/var/lib/powstatd/power_is_failing"
++
++# Set location of file containing PID of running shutdowns
++spidpath="/var/run/shutdown.pid"
++
++# See what happened.
++case "$1" in
++
++    start)
++	# Called with a powerfail event, check to see if a shutdown is running
++	if [ -f $spidpath ]
++	then
++	    # Shutdown is running, kill it to process the new event
++	    shutdown -c >/dev/null 2>&1
++	fi
++        touch $statpath
++	shutdown -h $failtime "$failmsg" &
++	;;
++
++    now)
++	# Battery is low
++	# Check to see if a shutdown is running
++	if [ -f $spidpath ]
++	then
++	    # Shutdown is running, kill it to process the new event
++	    shutdown -c >/dev/null 2>&1
++	fi
++        touch $statpath
++	shutdown -h $lowtime "$lowmsg" &
++	;;
++
++    stop)
++	# Ok, power is good again. Say so on the console.
++	if [ -f $spidpath ]
++	then
++	    # Only cancel if shutdown is running (system boot will call this)
++	    shutdown -c "$okaymsg"
++	fi
++        rm -f $statpath
++	;;
++
++    *)
++	echo "Usage: /etc/init.d/powerfail {start|now|stop}"
++	echo " start means: shutdown in $failtime minutes due to power failure"
++	echo " now means: shutdown NOW due to eminent UPS battery failure"
++	echo " stop means: cancel shutdown before power is back online."
++	exit 1
++	;;
++
++esac
++
++
++exit 0
+--- powstatd-1.5.1.orig/debian/powstatd.conf
++++ powstatd-1.5.1/debian/powstatd.conf
+@@ -0,0 +1,45 @@
++# powstatd: a configurable UPS monitor.
++# Copyright (C) 1999 The University of Iowa
++# Author: Alberto Maria Segre
++#         segre@cs.uiowa.edu
++#         S378 Pappajohn Building
++#         The University of Iowa
++#         Iowa City, IA  52242-1000
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation; either version 2 of the
++# License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA
++
++# Sample configuration file; appropriate for Cyber Power Systems Power99,
++# Power2000 and PowerSL UPSes.
++
++#############################################################################
++#!Unconfigured! Please customize the file as appropriate and remove this line
++#############################################################################
++
++# Watch /dev/ttyS0
++watch ttyS0
++
++# CTS goes low when mains fail.
++fail cts 0
++# DCD goes low when battery is too low.
++low dcd 0
++
++# RTS must be set high at initialization.
++init rts 1
++
++# DTR is initially set low; pulling it high causes UPS to turn off if main
++# power is gone.
++init dtr 0
++kill dtr 1
+--- powstatd-1.5.1.orig/debian/rules
++++ powstatd-1.5.1/debian/rules
+@@ -0,0 +1,84 @@
++#!/usr/bin/make -f
++# Sample debian/rules that uses debhelper. GNU copyright 1997 by Joey Hess.
++
++# Uncomment this to turn on verbose mode.
++#export DH_VERBOSE=1
++
++# 64-bit architectures need to be compiled differently
++ARCH := $(shell dpkg --print-architecture | perl -pe chop)
++ALPHA =
++ifeq ($(ARCH),alpha)
++        ALPHA = alpha
++endif
++ifeq ($(ARCH),hppa)
++        ALPHA = alpha
++endif
++ifeq ($(ARCH),ia64)
++        ALPHA = alpha
++endif
++ifeq ($(ARCH),s390)
++        ALPHA = alpha
++endif
++
++build: build-arch build-indep
++build-arch: build-stamp
++build-indep: build-stamp
++build-stamp:
++	dh_testdir
++	$(MAKE) $(ALPHA) CFLGS="-DSECURE -O2 -g -Wall"
++	make doc
++	patch powstatd.8 < debian/powstatd.man.patch
++	gtbl powstatd.8 | groff -man -Tps > powstatd.ps
++	touch build-stamp
++
++clean:
++	dh_testdir
++	dh_testroot
++	rm -f build-stamp install-stamp powstatd.ps powstatd.8
++	[ ! -f Makefile ] || $(MAKE) clean
++	debconf-updatepo
++	dh_clean
++
++install: install-stamp
++install-stamp: build-stamp
++	dh_testdir
++	dh_testroot
++	dh_prep
++	dh_installdirs
++	install -m 755 powstatd debian/powstatd/sbin/
++	touch install-stamp
++
++# Build architecture-independent files here.
++binary-indep: build install
++# We have nothing to do by default.
++
++# Build architecture-dependent files here.
++binary-arch: build install
++	dh_testdir
++	dh_testroot
++	dh_installdocs ReadMe powstatd.conf.* powstatd.ps
++#	gzip --best -c ReadMe >  debian/powstatd/usr/doc/powstatd/ReadMe.gz
++	install -m 755 debian/powerfail debian/powstatd/etc/init.d/powerfail
++# chmod go-rwx /etc/powstatd.conf
++	install -m 600 debian/powstatd.conf debian/powstatd/etc/powstatd.conf
++	dh_installinit --init-script=powstatd
++	dh_installman -p powstatd powstatd.man
++	dh_installchangelogs History
++	dh_link etc/init.d/powstatd etc/init.d/ups-monitor
++	dh_installdebconf	
++	dh_strip
++	dh_compress
++	dh_fixperms
++# You may want to make some executables suid here.
++	chmod 600 debian/powstatd/etc/powstatd.conf
++	dh_installdeb
++	dh_shlibdeps
++	dh_gencontrol
++	dh_md5sums
++	dh_builddeb
++
++source diff:
++	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
++
++binary: binary-indep binary-arch
++.PHONY: build clean binary-indep binary-arch binary install
+--- powstatd-1.5.1.orig/debian/postinst
++++ powstatd-1.5.1/debian/postinst
+@@ -0,0 +1,27 @@
++#!/bin/sh
++#
++# postinst script for the powstatd package
++
++set -e
++. /usr/share/debconf/confmodule
++
++case "$1" in
++    configure)
++
++        # Versions prior to 1.5.1-3 used file readable by all, but no longer.
++        if [ -f /etc/powstatd.conf ]; then
++            chmod go-rwx /etc/powstatd.conf
++        fi
++
++        ;;
++
++    abort-upgrade|abort-remove|abort-deconfigure)
++        ;;
++    *)
++        echo "postinst called with unknown argument \`$1'" >&2
++        ;;
++esac
++
++#DEBHELPER#
++
++db_stop
+--- powstatd-1.5.1.orig/debian/README.Debian
++++ powstatd-1.5.1/debian/README.Debian
+@@ -0,0 +1,86 @@
++powstatd for Debian
++-------------------
++
++Powstatd for Debian came in two favours prior to version 1.5.1-3: the
++regular powstatd package and the powstatd-crypt package which encrypted
++communication between master and slave (when many computers are connected
++to the power supply of a UPS, but only one of them is connected to the
++serial line and knows when a shutdown should be done because of a power
++failure).  Since 1.5.1-3, the encryption is used in the powstatd package
++and the powstatd-crypt package was removed.
++
++If you are upgrading from an older version of powstatd (< 1.5.1-3) and use
++master/slave communication, then an identical password must appear in both
++master and slave /etc/powstatd.conf files.
++
++----------
++
++Quickstart:
++
++After installing the powstatd package, you must configure it by editing the
++file /etc/powstatd.conf to suit your UPS and serial line, and then remove
++the line:
++
++#!Unconfigured! Please customize the file as appropriate and remove this line
++
++The daemon /etc/init.d/powstatd won't start until that "Unconfigured"
++comment is removed.
++
++See the powstatd (8) man page for help on configuring /etc/powstatd.conf.
++The directory /usr/share/doc/powstatd/ contains a few powstatd.conf sample
++files.  If you get this software working with a different UPS models,
++please let me know and I will include your conf file as another example and
++I will forward it upstream.
++
++After your conf file is correctly setup, you may then start the powstatd
++daemon by executing, as root:
++
++# /etc/init.d/powstatd start
++
++You may also want to edit /etc/init.d/powerfail at the line:
++
++ failtime=+5     # shutdown delay from initial power failure
++
++It sets the shutdown delay to 5 minutes after power line failure detection.
++You may want to increase that if your UPS has lots of power to spare, or
++reduce it.
++
++----------
++
++The package differs from the upstream installation in a few ways:
++
++ _ Added the #!Unconfigured! comment in /etc/powstatd.conf to avoid
++   starting an unconfigured daemon. 
++
++ - Upstream wants /etc/inittab to have the following lines:
++
++    # UPS signals a power outage.
++    pf:12345:powerfail:/sbin/powstatd.fail
++    # UPS signals power restored before the shutdown kicks in.
++    pr:12345:powerokwait:/sbin/powstatd.ok
++    # UPS signals low battery power: emergency shutdown.
++    pn:12345:powerfailnow:/sbin/powstatd.low
++
++   On Debian, the calls are to a single script with differing arguments:
++
++    # What to do when the power fails/returns.
++    pf::powerwait:/etc/init.d/powerfail start
++    pn::powerfailnow:/etc/init.d/powerfail now
++    po::powerokwait:/etc/init.d/powerfail stop
++
++   I have therefore created a /etc/init.d/powerfail script which combines
++   the actions of the 3 upstream scripts.
++
++ - The scripts /etc/init.d/powstatd and /etc/init.d/powerfail are written
++   for Debian; We don't use the upstream /sbin/powstatd.{fail|low|ok}
++   scripts for compatibility with Debian's inittab. The upstream
++   /etc/init.d/powstatd script (to start and stop the powstatd daemon)
++   shuts down the UPS when called with the "stop" argument (by sending a
++   `powstatd -k` signal).  On Debian, we simply shut down the daemon on
++   "stop"; Killing the UPS is done in /etc/init.d/halt by calling the same
++   script (symlinked to "ups-monitor") with the "poweroff" option.
++
++
++Peter S Galbraith <psg@debian.org>, Mon, 23 Aug 1999 12:58:55 -0400
++
++ -- Peter S Galbraith <psg@debian.org>, Sun Apr  4 21:19:19 2004
+--- powstatd-1.5.1.orig/debian/po/fr.po
++++ powstatd-1.5.1/debian/po/fr.po
+@@ -0,0 +1,68 @@
++# French translation of powstatd.
++# Copyright (C) 2006 THE powstatd'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the powstatd package.
++# Sylvain Archenault <sylvain.archenault@laposte.net>, 2006.
++#
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd 1.5.1-4\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2006-02-10 18:12+0100\n"
++"Last-Translator: Sylvain Archenault <sylvain.archenault@laposte.net>\n"
++"Language-Team: French <debian-l10n-french@lists.debian.org>\n"
++"Language: fr\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=iso-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr ""
++"Remarque pour les utilisateurs d'onduleurs ma�tres ou esclave g�r�s par "
++"powstatd"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Le fichier de configuration ��/etc/powstatd.conf�� indique que la "
++"configuration des onduleurs ma�tre/esclave est utilis�e mais aucune "
++"directive de mot de passe n'a �t� trouv�e dans ��/etc/powstad.conf��"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Depuis la version 1.5.1-3, le paquet powstatd utilise la cryptographie pour "
++"communiquer avec les unit�s ma�tre et esclave (auparavant g�r�es par le "
++"paquet powstatd-crypt). Une directive de mot de passe identique est "
++"n�cessaire dans le fichier de configuration du p�riph�rique ma�tre, ainsi "
++"que dans tous les fichiers des p�riph�riques esclaves, par exemple une ligne "
++"telle que�:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MotDePasse"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr ""
++"Veuillez vous r�f�rer � la page de manuel de powstatd(8) pour de plus de "
++"d�tails."
+--- powstatd-1.5.1.orig/debian/po/it.po
++++ powstatd-1.5.1/debian/po/it.po
+@@ -0,0 +1,64 @@
++# ITALIAN TRANSLATION OF POWSTATD'S.PO-DEBCONF FILE
++# Copyright (C) 2007 THE POWSTATD'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the powstatd package.
++#
++# Vincenzo Campanella <vinz65@gmail.com>, 2008.
++msgid ""
++msgstr ""
++"Project-Id-Version: it\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2008-10-17 22:44+0200\n"
++"Last-Translator: Vincenzo Campanella <vinz65@gmail.com>\n"
++"Language-Team: Italian <tp@lists.linux.it>\n"
++"Language: it\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: KBabel 1.11.4\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Avviso per gli utenti di powstatd con UPS master/slave"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Questo messaggio viene mostrato poiché il file di configurazione \"/etc/"
++"powstatd.conf\" indica che è in uso una configurazione UPS master/slave, ma "
++"non è stata trovata alcuna direttiva relativa alla password in \"/etc/"
++"powstatd.conf\""
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"A partire dalla versione 1.5.1-3, il pacchetto powstatd usa la crittografia "
++"per comunicare fra unità master e slave (come era precedentemente fatto "
++"usando il pacchetto \"powstatd-crypt\"). Un'identica direttiva relativa alla "
++"password è necessaria nel file master come pure in tutti gli slave, e cioè "
++"una riga come"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MiaPasswordQui"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Per dettagli consultare powstatd(8)."
+--- powstatd-1.5.1.orig/debian/po/templates.pot
++++ powstatd-1.5.1/debian/po/templates.pot
+@@ -0,0 +1,54 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++#, fuzzy
++msgid ""
++msgstr ""
++"Project-Id-Version: PACKAGE VERSION\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: LANGUAGE <LL@li.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=CHARSET\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr ""
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr ""
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr ""
+--- powstatd-1.5.1.orig/debian/po/ru.po
++++ powstatd-1.5.1/debian/po/ru.po
+@@ -0,0 +1,63 @@
++# translation of ru.po to Russian
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++#
++# Yuri Kozlov <kozlov.y@gmail.com>, 2008.
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd NEW\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2008-10-20 20:51+0400\n"
++"Last-Translator: Yuri Kozlov <kozlov.y@gmail.com>\n"
++"Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
++"Language: ru\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: KBabel 1.11.4\n"
++"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
++"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Замечание для пользователей powstatd с главным/вспомогательным ИБП"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Внимание, в файле настройки /etc/powstatd.conf используется настройка "
++"главного/вспомогательного ИБП, но не указаны параметры установки пароля."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Начиная с версии 1.5.1-3, в пакете powstatd используется шифрованный обмен "
++"данными между главным и вспомогательными элементами (раньше это выполнялось "
++"пакетом powstatd-crypt). У всех элементов схемы в настройках должны быть "
++"заданы одинаковые пароли, например:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password ТутМойПароль"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Подробней, см. powstatd(8)."
+--- powstatd-1.5.1.orig/debian/po/ja.po
++++ powstatd-1.5.1/debian/po/ja.po
+@@ -0,0 +1,61 @@
++# Copyright (C) 2009 Peter S Galbraith <psg@debian.org>
++# This file is distributed under the same license as powstatd package.
++# Hideki Yamane (Debian-JP) <henrich@debian.or.jp>, 2009.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd 1.5.1-6.1\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2009-11-07 14:26+0900\n"
++"Last-Translator: Hideki Yamane (Debian-JP) <henrich@debian.or.jp>\n"
++"Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
++"Language: ja\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "powstatd マスター／スレーブ UPS ユーザへの注意"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"このメッセージは、以下の理由で表示しています: 設定ファイル /etc/powstatd."
++"conf でマスター／スレーブ UPS 構成に設定されていますが、/etc/powstatd.conf に"
++"パスワード指示子が見つかりません。"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"バージョン 1.5.1-3 以降、powstatd パッケージはマスターユニットとスレーブユ"
++"ニット間の通信を暗号化しています (以前は powstatd-crypt パッケージが行ってい"
++"ました)。同一のパスワード指示子を、マスターユニットと同様に全てのスレーブユ"
++"ニットのファイルにも記述しておく必要があります。例えば、以下のような行になり"
++"ます"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MyPasswordHere"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "詳細は powstatd(8) を参照してください。"
+--- powstatd-1.5.1.orig/debian/po/sv.po
++++ powstatd-1.5.1/debian/po/sv.po
+@@ -0,0 +1,63 @@
++# translation of powstatd_1.5.1-6_templates.po to swedish
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++#
++# Martin Bagge <martin.bagge@bthstudent.se>, 2008.
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd_1.5.1-6_templates\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2008-06-22 22:48+0200\n"
++"Last-Translator: Martin Bagge <martin.bagge@bthstudent.se>\n"
++"Language-Team: swedish <debian-l10n-swedish@lists.debian.org>\n"
++"Language: \n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: KBabel 1.11.4\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Powstatd master/slave UPS-användare bör observera"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Detta meddelande visas därför att konfigurationsfilen /etc/powstatd.conf "
++"indikerar att det finns en master/slave UPS i konfigurationen men ingen "
++"inställning för lösenord finns i /etc/powstatd.conf."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"I och med version 1.5.1-3 (och följande) så använder powstatsd kryptering "
++"för att kommunikationen mellan master och slave (funktionen fanns förut i "
++"paketet powstats-crypt). Inställningar för lösenord måste finnas i "
++"konfiguraitonsfilerna för såväl mastern som alla slaves. Raden ska se ut som "
++"följande"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MyPasswordHere"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Läs powstatd(8) för närmare detaljer."
+--- powstatd-1.5.1.orig/debian/po/POTFILES.in
++++ powstatd-1.5.1/debian/po/POTFILES.in
+@@ -0,0 +1 @@
++[type: gettext/rfc822deb] powstatd.templates
+--- powstatd-1.5.1.orig/debian/po/pt.po
++++ powstatd-1.5.1/debian/po/pt.po
+@@ -0,0 +1,63 @@
++# translation of powstatd debconf to Portuguese
++# Copyright (C) 2007 Américo Monteiro
++# This file is distributed under the same license as the powstatd package.
++#
++# Américo Monteiro <a_monteiro@netcabo.pt>, 2007.
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd_1.5.1-5.1_templates\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2007-07-11 21:55+0100\n"
++"Last-Translator: Américo Monteiro <a_monteiro@netcabo.pt>\n"
++"Language-Team: Portuguese <traduz@debianpt.org>\n"
++"Language: pt\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: KBabel 1.11.4\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr ""
++"Aviso a utilizadores do powstatd com UPS ligada em modo mestre/escravo "
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Esta mensagem é mostrada porque o ficheiro de configuração /etc/powstatd."
++"conf indica que existe uma configuração UPS em mestre/escravo, mas não "
++"existe uma password em /etc/powstatd.conf"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Desde a versão 1.5.1-3, o pacote powstatd usa criptografia  para comunicar "
++"entre unidades mestre e escravo (como era feito anteriormente usando o "
++"pacote powstatd-crypt). É necessário uma password idêntica na configuração "
++"do mestre assim como nos escravos. Exemplo, uma linha como esta:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MinhaPassword"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Consulte powstatd(8) para mais detalhes."
+--- powstatd-1.5.1.orig/debian/po/de.po
++++ powstatd-1.5.1/debian/po/de.po
+@@ -0,0 +1,61 @@
++# Translation of powstatd debconf templates to German
++# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2006.
++# This file is distributed under the same license as the powstatd package.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd 2.1.7\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2006-12-13 18:33+0100\n"
++"Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
++"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
++"Language: de\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Information f�r Benutzer von Master/Slave-UPS"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Diese Mitteilung wird angezeigt, da die Konfigurationsdatei /etc/powstatd."
++"conf andeutet, dass eine Master/Slave-Konfiguration verwendet wird, aber "
++"keine Passwort-Anweisung in /etc/powstatd.conf gefunden werden konnte."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Seit Version 1.5.1-3 verwendet das Powstatd-Paket Kryptographie, um zwischen "
++"Master und Slave-Einheiten zu kommunizieren, wie dies bisher in dem Powstatd-"
++"crypt-Paket der Fall war. Eine identische Passwort-Anweisung wird sowohl in "
++"der Master-Datei wie auch in denen der Slaves ben�tigt, z.B. eine Zeile der "
++"Form"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MeinPasswortHier"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Lesen Sie powstatd(8) f�r weitere Details."
+--- powstatd-1.5.1.orig/debian/po/eu.po
++++ powstatd-1.5.1/debian/po/eu.po
+@@ -0,0 +1,63 @@
++# translation of powstatd-eu.po to Euskara
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++#
++# Piarres Beobide <pi@beobide.net>, 2008.
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd-eu\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2008-10-22 10:49+0200\n"
++"Last-Translator: Piarres Beobide <pi@beobide.net>\n"
++"Language-Team: Euskara <debian-l10n-basque@lists.debian.org>\n"
++"Language: \n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: KBabel 1.11.4\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Powstatd nagusi/morroi UPS erabiltzaileentzat oharra"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Mezu hau /etc/powstatd.conf fitxategiak nagusi/morroia UPS konfigurazioa "
++"erabiltzen duzula baina bertan pasahitz direktibarik ez dagoela zehazten "
++"duelako bistaratzen da"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"1.5.1-3 bertsiotik aurrera powstatd paketeak kriptografia erabiltzen du "
++"unitate nagusi eta morroien arteko komunikazioetarako (lehenago powstats-"
++"crypt paketeak egiten zuen bezalaxe). Pasahitz direktiba berdina egon behar "
++"da nagusiko eta morroietako konfigurazio fitxategietan, adib horrelako lerro "
++"bat:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password NirePasahitzaHemen"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Ikusi powstatd(8) manual orria xehetasunetarako."
+--- powstatd-1.5.1.orig/debian/po/da.po
++++ powstatd-1.5.1/debian/po/da.po
+@@ -0,0 +1,61 @@
++# Danish translation powstatd.
++# Copyright (C) 2010 powstatd & nedenstående oversættere.
++# This file is distributed under the same license as the powstatd package.
++# Joe Hansen <joedalton2@yahoo.dk>, 2010.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2010-10-11 05:26+0100\n"
++"Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
++"Language-Team: Danish <debian-l10n-danish@lists.debian.org> \n"
++"Language: \n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Bemærkning til powstatd's master/slave UPS-brugere"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Denne besked vises fordi konfigurationsfilen /etc/powstatd.conf indikerer, "
++"at en master/slave UPS-konfiguraiton bruges, men et adgangskodedirektiv ikke "
++"er fundet i /etc/powstatd.conf"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Siden version 1.5.1-3, bruger pakken powstatd kryptografi til at kommunikere "
++"mellem master- og slaveenheder (som tidligere blev gjort med brug af pakken "
++"powstatd-crypt). Et identisk adgangskodedirektiv er krævet i masterfilen "
++"samt i alle slaverne, det vil sige en linje som"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password MinAdgangskodeHer"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Se powstatd(8) for detaljer."
+--- powstatd-1.5.1.orig/debian/po/nl.po
++++ powstatd-1.5.1/debian/po/nl.po
+@@ -0,0 +1,62 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE 'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the  package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2007-10-26 19:20+0100\n"
++"Last-Translator: Bart Cornelis <cobaco@skolelinux.no>\n"
++"Language-Team: debian-l10n-dutch <debian-l10n-dutch@lists.debian.org>\n"
++"Language: \n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=utf-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Poedit-Language: Dutch\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Opmerking voor powstatd master/slave UPS-gebruikers"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Dit bericht wordt weergegeven omdat het configuratiebestand /etc/powstatd."
++"conf aangeeft dat er een master/slave-UPS-configuratie gebruikt wordt zonder "
++"dat er een wachtwoordinstelling gevonden is in /etc/powstatd.conf ."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Sinds versie 1.5.1-3 beschermd powstatd de communicatie tussen master- en "
++"slave-apparaten cryptografisch (wat voorheen gedaan werd via het pakket "
++"powstatd-crypt). Een identieke wachtwoord-instelling is nodig in de "
++"configuratie van de master en alle slaves, bv. een regel als:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password DitIsMijnWachtwoord"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Meer informatie vindt u in powstatd(8)."
+--- powstatd-1.5.1.orig/debian/po/cs.po
++++ powstatd-1.5.1/debian/po/cs.po
+@@ -0,0 +1,61 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2006-03-20 15:02+0100\n"
++"Last-Translator: Miroslav Kure <kurem@debian.cz>\n"
++"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
++"Language: cs\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Poznámka pro uživatele powstatd"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Tato poznámka se zobrazila proto, protože to vypadá, že konfigurační soubor /"
++"etc/powstatd.conf používá nastavení UPS v režimu master/slave, ale v tomto "
++"souboru nebyla nalezena direktiva password."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"Balík powstatd používá od verze 1.5.1-3 pro komunikaci mezi nadřízenými a "
++"podřízenými uzly šifrování (stejně, jako dřívější balík powstatd-crypt). Na "
++"nadřízených i podřízených uzlech musí být v konfiguračním souboru zadáno "
++"stejné heslo, např."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password TajneHesloKarkulka"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Podrobnosti naleznete v manuálové stránce powstatd(8)."
+--- powstatd-1.5.1.orig/debian/po/es.po
++++ powstatd-1.5.1/debian/po/es.po
+@@ -0,0 +1,86 @@
++# powstatd po-debconf translation to Spanish
++# Copyright (C) 2010 Software in the Public Interest
++# This file is distributed under the same license as the powstatd package.
++#
++# Changes:
++#   - Initial translation
++#       Omar Campagne <ocampagne@gmail.com>
++#
++#   - Updates
++#       TRANSLATOR
++#
++# Traductores, si no conocen el formato PO, merece la pena leer la
++# documentación de gettext, especialmente las secciones dedicadas a este
++# formato, por ejemplo ejecutando:
++#       info -n '(gettext)PO Files'
++#       info -n '(gettext)Header Entry'
++#
++# Equipo de traducción al español, por favor lean antes de traducir
++# los siguientes documentos:
++#
++#   - El proyecto de traducción de Debian al español
++#     http://www.debian.org/intl/spanish/
++#     especialmente las notas y normas de traducción en
++#     http://www.debian.org/intl/spanish/notas
++#
++#   - La guía de traducción de po's de debconf:
++#     /usr/share/doc/po-debconf/README-trans
++#     o http://www.debian.org/intl/l10n/po-debconf/README-trans
++msgid ""
++msgstr ""
++"Project-Id-Version: powstatd 1.5.1-9\n"
++"Report-Msgid-Bugs-To: psg@debian.org\n"
++"POT-Creation-Date: 2007-01-28 08:26+0100\n"
++"PO-Revision-Date: 2010-10-23 13:00+0200\n"
++"Last-Translator: Omar Campagne <ocampagne@gmail.com>\n"
++"Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
++"Language: \n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "Notice for powstatd master/slave UPS users"
++msgstr "Aviso para usuarios de dispositivos SAI maestro/esclavo"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"This message is displayed because the configuration file /etc/powstatd.conf "
++"indicates that a master/slave UPS configuration is used but a password "
++"directive is not found in /etc/powstatd.conf"
++msgstr ""
++"Este mensaje aparece porque el fichero de configuración «/etc/powstatd.conf» "
++"indica que la configuración maestro/esclavo del dispositivo SAI está en uso, "
++"pero no se ha encontrado ninguna directiva de contraseña en «/etc/powstatd."
++"conf»."
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid ""
++"Since version 1.5.1-3, the powstatd package uses cryptography to communicate "
++"between master and slave units (as was previously done using the powstatd-"
++"crypt package). An identical password directive is needed in the master file "
++"as well as all the slaves, e.g. a line such as"
++msgstr ""
++"A partir de la versión 1.5.1-3, el paquete powstatd establece una "
++"comunicación cifrada entre las unidades maestra y esclava (al igual que se "
++"hacía antes usando el paquete powstatd-crypt). Se requiere una directiva de "
++"contraseña idéntica en el fichero maestro y también en todas las unidades "
++"esclavas. Por ejemplo, con una línea como la siguiente:"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "password MyPasswordHere"
++msgstr "password mi-contraseña"
++
++#. Type: note
++#. Description
++#: ../powstatd.templates:1001
++msgid "See powstatd(8) for details."
++msgstr "Para más detalles consulte powstatd(8)."

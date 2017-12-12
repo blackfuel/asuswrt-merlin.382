@@ -1,0 +1,209 @@
+#!/bin/sh
+#
+# Copyright (C) 1999-2002 Riccardo Facchetti <riccardo@master.oasi.gpa.it>
+#
+#  for apcupsd release 3.14.14 (31 May 2016) - unknown
+#
+# platforms/apccontrol.  Generated from apccontrol.in by configure.
+#
+#  Note, this is a generic file that can be used by most
+#   systems. If a particular system needs to have something
+#   special, start with this file, and put a copy in the
+#   platform subdirectory.
+#
+
+# NOTE: Asuswrt-Merlin users please add the following line to
+# your /jffs/scripts/init-start, to start apcupsd.
+#
+# /usr/local/etc/apcupsd/apccontrol start
+
+#
+# These variables are needed for set up the autoconf other variables.
+#
+prefix=/usr
+exec_prefix=${prefix}
+
+APCPID=/var/run/apcupsd.pid
+APCUPSD="/usr/sbin/apcupsd"
+APCACCESS="/usr/sbin/apcaccess"
+APCUPSD_CONF="/usr/local/etc/apcupsd/apcupsd.conf"
+APCUPSD_NAME="$(basename $APCUPSD)"
+SHUTDOWN=/sbin/halt
+REBOOT=/sbin/reboot
+LOGGER="/usr/bin/logger -t $(/usr/bin/basename $0)"
+POWER_OUTAGE_FLAG=/jffs/apcupsd_power_outage
+SCRIPTSHELL=/bin/sh
+SCRIPTDIR=/usr/local/etc/apcupsd
+WALL=true
+
+#
+# Concatenate all output from this script to the events file
+#  Note, the following kills the script in a power fail situation
+#   where the disks are mounted read-only.
+# exec >>/var/log/apcupsd.events 2>&1
+
+#
+# This piece is to substitute the default behaviour with your own script,
+# perl, or C program.
+# You can customize every single command creating an executable file (may be a
+# script or a compiled program) and calling it the same as the $1 parameter
+# passed by apcupsd to this script.
+#
+# After executing your script, apccontrol continues with the default action.
+# If you do not want apccontrol to continue, exit your script with exit 
+# code 99. E.g. "exit 99".
+#
+# WARNING: the apccontrol file will be overwritten every time you update your
+# apcupsd, doing `make install'. Your own customized scripts will _not_ be
+# overwritten. If you wish to make changes to this file (discouraged), you
+# should change apccontrol.sh.in and then rerun the configure process.
+#
+if [ -f ${SCRIPTDIR}/${1} -a -x ${SCRIPTDIR}/${1} ]
+then
+    ${SCRIPTDIR}/${1} ${2} ${3} ${4}
+    # exit code 99 means he does not want us to do default action
+    if [ $? = 99 ] ; then
+	exit 0
+    fi
+fi
+
+case "$1" in
+    killpower)
+	echo "Apccontrol doing: ${APCUPSD} --killpower on UPS ${2}"
+	sleep 10
+	${APCUPSD} --killpower
+	echo "Apccontrol has done: ${APCUPSD} --killpower on UPS ${2}" | ${WALL}
+    ;;
+    commfailure)
+	echo "Warning communications lost with UPS ${2}" | ${WALL}
+    ;;
+    commok)
+	echo "Communications restored with UPS ${2}" | ${WALL}
+    ;;
+#
+# powerout, onbattery, offbattery, mainsback events occur
+#   in that order.
+#
+    powerout)
+	echo "Warning power loss detected on UPS ${2}" | ${WALL}
+    ;;
+    onbattery)
+	echo "Power failure on UPS ${2}. Running on batteries." | ${WALL}
+	touch "${POWER_OUTAGE_FLAG}"
+    ;;
+    offbattery)
+	echo "Power has returned on UPS ${2}..." | ${WALL}
+	rm -f "${POWER_OUTAGE_FLAG}"
+    ;;
+    mainsback)
+	if [ -f /etc/apcupsd/powerfail ] ; then
+	   printf "Continuing with shutdown."  | ${WALL}
+	fi
+    ;;
+    failing)
+	echo "Battery power exhaused on UPS ${2}. Doing shutdown." | ${WALL}
+    ;;
+    timeout)
+	echo "Battery time limit exceeded on UPS ${2}. Doing shutdown." | ${WALL}
+    ;;
+    loadlimit)
+	echo "Remaining battery charge below limit on UPS ${2}. Doing shutdown." | ${WALL}
+    ;;
+    runlimit)
+	echo "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." | ${WALL}
+    ;;
+    doreboot)
+	echo "UPS ${2} initiating Reboot Sequence" | ${WALL}
+	${LOGGER} "apcupsd UPS ${2} initiated reboot"
+	${REBOOT}
+    ;;
+    doshutdown)
+	echo "UPS ${2} initiated Shutdown Sequence" | ${WALL}
+	${LOGGER} "apcupsd UPS ${2} initiated shutdown"
+	${SHUTDOWN}
+    ;;
+    annoyme)
+	echo "Power problems with UPS ${2}. Please logoff." | ${WALL}
+    ;;
+    emergency)
+	echo "Emergency Shutdown. Possible battery failure on UPS ${2}." | ${WALL}
+    ;;
+    changeme)
+	echo "Emergency! Batteries have failed on UPS ${2}. Change them NOW" | ${WALL}
+    ;;
+    remotedown)
+	echo "Remote Shutdown. Beginning Shutdown Sequence." | ${WALL}
+    ;;
+    restartme)
+	echo -n "Restarting APCUPSD Power Management: "
+	killall -9 $APCUPSD_NAME && sleep 1
+	rm -f ${APCPID}
+	rm -f /etc/apcupsd/powerfail
+	rm -f /etc/apcupsd/nologin
+	rm -f "${POWER_OUTAGE_FLAG}"
+	sleep 5
+	$($APCUPSD -f $APCUPSD_CONF)
+	echo $APCUPSD_NAME
+    ;;
+    startselftest)
+    ;;
+    endselftest)
+    ;;
+    battdetach)
+    ;;
+    battattach)
+    ;;
+    start)
+        ARG1="$1"
+        ARG2="$(grep ^UPSNAME $APCUPSD_CONF | cut -d' ' -f2)"
+        ARG3=""
+        ARG4=""
+        (
+        # load the kernel modules for USB-enabled UPS device
+        sleep 5
+        modprobe usbhid
+        sleep 1
+
+        # start apcupsd, then wait 5 seconds and try again if not yet running
+        loop_wait=0
+        while : ; do
+          if [ $loop_wait -eq 0 ]; then
+            loop_wait=5
+          else
+            $LOGGER "waiting for UPS to become ready [$$]"
+            sleep $loop_wait
+          fi
+
+          if [ -n "$(pidof $APCUPSD_NAME)" ]; then
+            killall -9 $APCUPSD_NAME >/dev/null 2>&1
+            sleep 2
+          fi
+
+          [ -z "$(pidof $APCUPSD_NAME)" ] && $($APCUPSD $APCUPSD_CONF) && sleep 5
+          [ -z "$(pidof $APCUPSD_NAME)" ] && continue
+
+          $LOGGER "started $APCUPSD_NAME [$$]"
+          break
+        done
+
+	# send an e-mail notification when the router has come back online
+        # and the UPS is back on mains power, after a power outage
+	if [ -f "$POWER_OUTAGE_FLAG" ]; then
+            if [ "$(echo $($APCACCESS -p STATUS))" == "ONLINE" ]; then
+                sleep 30
+                rm -f "$POWER_OUTAGE_FLAG"
+                MSG="$($APCUPSD -V) Power has returned on UPS $ARG2..."
+                echo "$(date '+%Y-%m-%d %H:%M:%S %z')  $MSG" >>/var/log/apcupsd.events
+                $LOGGER "$MSG"
+                $SCRIPTDIR/offbattery $ARG2 $ARG3 $ARG4
+            fi
+        fi
+        ) &
+    ;;
+    *)	echo "Usage: ${0##*/} command"
+	echo "	     warning: this script is intended to be launched by"
+	echo "	     apcupsd and should never be launched by users."
+	exit 1
+    ;;
+esac
+

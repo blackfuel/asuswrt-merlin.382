@@ -1,0 +1,59 @@
+--- a/Makefile
++++ b/Makefile
+@@ -45,6 +45,7 @@
+ # delimiters!
+ STATUS  = \"/etc/powerstatus\" 
+ CFGDIR	= /etc
++PFSCR   = /sbin/powerfail
+ DESTDIR	= /sbin
+ MANDIR	= /usr/man/man8
+ 
+@@ -83,16 +84,16 @@
+ #======================================================================
+ # Targets
+ i386: $(SRC) $(INC) $(CRYPT) Makefile
+-	$(CC) $(CFLGS) -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" $(SRC) $(CRYPT) -o $(BIN) $(LIB)
++	$(CC) $(CFLGS) -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" -DPOWERFAIL_CMD="\"$(PFSCR)\"" $(SRC) $(CRYPT) -o $(BIN) $(LIB)
+ 
+ alpha: $(SRC) $(INC) $(ACRYPT) Makefile
+-	$(CC) $(CFLGS) -DALPHA -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" $(SRC) $(ACRYPT) -o $(BIN) $(LIB)
++	$(CC) $(CFLGS) -DALPHA -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" -DPOWERFAIL="\"$(PFSCR)\"" $(SRC) $(ACRYPT) -o $(BIN) $(LIB)
+ 
+ sparc: $(SRC) $(INC) $(ACRYPT) Makefile
+-	$(CC) $(CFLGS) -DSPARC -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" $(SRC) $(ACRYPT) -lxnet -o $(BIN) $(LIB)
++	$(CC) $(CFLGS) -DSPARC -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" -DPOWERFAIL="\"$(PFSCR)\"" $(SRC) $(ACRYPT) -lxnet -o $(BIN) $(LIB)
+ 
+ sgi: $(SRC) $(INC) $(ACRYPT) Makefile
+-	$(CC) $(CFLGS) -DSGI -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" $(SRC) $(ACRYPT) -o $(BIN) $(LIB)
++	$(CC) $(CFLGS) -DSGI -DSTATFILE=$(STATUS) -DCONFIG="\"$(CFGDIR)/$(CFG)\"" -DPOWERFAIL="\"$(PFSCR)\"" $(SRC) $(ACRYPT) -o $(BIN) $(LIB)
+ 
+ install: $(ARCH) $(MAN).$(MSEC) uninstall
+ 	strip $(BIN)
+--- a/powstatd.c
++++ b/powstatd.c
+@@ -168,6 +168,9 @@
+ #endif
+ #endif
+ 
++#define POWERFAIL_ACTION(s) ((s==POK)?"stop":(s==PFAIL)?"start":(s==PLOW)?"now":"error")
++#include <shutils.h>
++
+ /**********************************************************************
+  * UPS monitor.
+  *
+@@ -512,7 +515,14 @@
+ 	      sfp = fopen (sfile, "w");
+ 	      fprintf (sfp, "%s", PSHOW (newStatus));
+ 	      fclose (sfp);
+-	      kill (1, SIGPWR);
++	      // kill (1, SIGPWR);
++
++              // invoke the powerfail script directly
++              eval("/bin/sh", "-c", "if [ -n \"$(pidof powerfail)\" ]; then"
++                                    "  killall powerfail >/dev/null 2>&1 ;"
++                                    "  sleep 2 ;"
++                                    "fi");
++              eval(POWERFAIL_CMD, POWERFAIL_ACTION(newStatus));
+ 	    }
+ 
+ 	  /* Retain new status as current status. */

@@ -1,0 +1,8 @@
+--- a/libdm/libdevmapper.pc.in
++++ b/libdm/libdevmapper.pc.in
+@@ -9,4 +9,4 @@
+ Cflags: -I${includedir} 
+ Libs: -L${libdir} -ldevmapper
+ Requires.private: @SELINUX_PC@ @UDEV_PC@
+-Libs.private: -lm @RT_LIB@
++Libs.private: -lm @RT_LIBS@

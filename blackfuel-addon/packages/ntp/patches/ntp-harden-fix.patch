@@ -1,0 +1,9 @@
+--- a/sntp/harden/linux 2017-03-21 09:04:18.000000000 -0400
++++ b/sntp/harden/linux 2017-03-27 18:56:51.529596541 -0400
+@@ -1,4 +1,4 @@
+ # generic linux hardening flags
+-NTP_HARD_CFLAGS="-pie -fPIE -fPIC -fstack-protector-all -O1"
++NTP_HARD_CFLAGS=""
+ NTP_HARD_CPPFLAGS="-D_FORTIFY_SOURCE=2"
+-NTP_HARD_LDFLAGS="-z relro -z now"
++NTP_HARD_LDFLAGS="-Wl,-z,relro -Wl,-z,now"

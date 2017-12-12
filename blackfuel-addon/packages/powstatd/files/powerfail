@@ -1,0 +1,75 @@
+#! /bin/sh
+#
+# powerfail	This script is run when the UPS tells the system the power has
+#		gone. Tell everybody and start the shutdown based on the
+#		failure type.  This script will also being run when the power
+#		comes up again.
+#
+#
+# Based on genpower's /etc/init.d/powerfail file:
+# 	Version:      v1.2
+# 	Author:       Tom Webster <webster@kaiwan.com>
+# 	Modified-By:  Brian White <bcwhite@pobox.com>
+#
+# This is basically a script that embeds the funtionality of powstatd
+# scripts as modified from genpower by Peter S. Galbraith <psg@debian.org>
+#
+
+failtime=+5	# shutdown delay from initial power failure
+lowtime=now	# shutdown delay from low-battery warning
+
+failmsg="Power failure: system operating on batteries."
+lowmsg="Battery failure -- EMERGENCY SHUTDOWN"
+okaymsg="LINE POWER RESTORED -- RESUMING NORMAL OPERATION"
+
+# Set the path.
+PATH=/sbin:/etc:/bin:/usr/bin
+
+# Set location of file containing PID of running shutdowns
+spidpath="/var/run/shutdown.pid"
+
+# See what happened.
+case "$1" in
+
+    start)
+	# Called with a powerfail event, check to see if a shutdown is running
+	if [ -f $spidpath ]
+	then
+	    # Shutdown is running, kill it to process the new event
+	    shutdown -c >/dev/null 2>&1
+	fi
+	shutdown -h $failtime "$failmsg" &
+	;;
+
+    now)
+	# Battery is low
+	# Check to see if a shutdown is running
+	if [ -f $spidpath ]
+	then
+	    # Shutdown is running, kill it to process the new event
+	    shutdown -c >/dev/null 2>&1
+	fi
+	shutdown -h $lowtime "$lowmsg" &
+	;;
+
+    stop)
+	# Ok, power is good again. Say so on the console.
+	if [ -f $spidpath ]
+	then
+	    # Only cancel if shutdown is running (system boot will call this)
+	    shutdown -c "$okaymsg"
+	fi
+	;;
+
+    *)
+	echo "Usage: /etc/init.d/powerfail {start|now|stop}"
+	echo " start means: shutdown in $failtime minutes due to power failure"
+	echo " now means: shutdown NOW due to eminent UPS battery failure"
+	echo " stop means: cancel shutdown before power is back online."
+	exit 1
+	;;
+
+esac
+
+
+exit 0
