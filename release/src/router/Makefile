@@ -6044,7 +6044,7 @@ liblz4-install:
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.15.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
-			URL="https://download.dnscrypt.org/dnscrypt-proxy/dnscrypt-proxy-1.9.5.tar.bz2"; \
+			URL="http://http.debian.net/debian/pool/main/d/dnscrypt-proxy/dnscrypt-proxy_1.9.5.orig.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "haveged" ]; then \
 			URL="http://www.issihosts.com/haveged/haveged-1.9.1.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "wipe" ]; then \
