@@ -707,14 +707,14 @@ void create_passwd(void)
 	if ((f = fopen("/etc/shadow", "w")) != NULL) {
 		p = crypt(p, salt);
 		fprintf(f,
-				"%s:%s:0:0:99999:7:0:0:\n"
+				"%s:%s::0:99999:7:0::\n"
 #ifdef RTCONFIG_TOR
-				"tor:*:0:0:99999:7:0:0:\n"
+				"tor:*::0:99999:7:0::\n"
 #endif
 #ifdef RTCONFIG_SAMBASRV	//!!TB
-				"%s:*:0:0:99999:7:0:0:\n"
+				"%s:*::0:99999:7:0::\n"
 #endif
-				"nobody:*:0:0:99999:7:0:0:\n"
+				"nobody:*::0:99999:7:0::\n"
 				, http_user, p
 #ifdef RTCONFIG_SAMBASRV	//!!TB
 				, smbd_user
@@ -2937,7 +2937,7 @@ int stop_8021x(void)
 void write_static_leases(FILE *fp)
 {
 	FILE *fp2;
-	char *nv=NULL, *nvp, *b;
+	char *nv, *nvp, *b;
 	char *mac, *ip, *name;
 	char lan_if[IFNAMSIZ];
 	int vars;
@@ -2961,15 +2961,7 @@ void write_static_leases(FILE *fp)
 	if (!fp2)
 		return;
 
-#ifdef HND_ROUTER
-	if (!nvram_is_empty("dhcp_shost")) {
-                nv = nvp = malloc(255 * 10 + 1);
-                if (nv) nvram_split_get("dhcp_shost", nv, 255 * 10 + 1, 9);
-	}
-	if (!nv)
-#endif
 	nv = nvp = strdup(nvram_safe_get("dhcp_staticlist"));
-
 	if (!nv) {
 		fclose(fp2);
 		return;
@@ -3208,6 +3200,7 @@ start_ddns(void)
 		service = "dnsomatic";
 	else if (strcmp(server, "WWW.TUNNELBROKER.NET")==0) {
 		service = "heipv6tb";
+		eval("iptables", "-t", "filter", "-D", "INPUT", "-p", "icmp", "-s", "66.220.2.74", "-j", "ACCEPT");
 		eval("iptables", "-t", "filter", "-I", "INPUT", "1", "-p", "icmp", "-s", "66.220.2.74", "-j", "ACCEPT");
 		nvram_set("ddns_tunbkrnet", "1");
 	}

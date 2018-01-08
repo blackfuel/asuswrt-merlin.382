@@ -2109,7 +2109,8 @@ ifneq ($(RTCONFIG_USB_EXTRAS),y)
 	@rm -rf $(TARGETDIR)/lib/modules/*/kernel/drivers/connector || true
 	@rm -rf $(TARGETDIR)/lib/modules/*/kernel/drivers/block || true
 endif
-	$(if $(RTCONFIG_CIFS),@cp -f,@mv) $(TARGETDIR)/lib/modules/*/kernel/fs/cifs.*o $(PLATFORMDIR)/extras/ || true
+#	$(if $(RTCONFIG_CIFS),@cp -f,@mv) $(TARGETDIR)/lib/modules/*/kernel/fs/cifs.*o $(PLATFORMDIR)/extras/ || true
+	@cp -f $(TARGETDIR)/lib/modules/*/kernel/fs/cifs.*o $(PLATFORMDIR)/extras/ || true
 	$(if $(or $(RTCONFIG_BRCM_NAND_JFFS2),$(RTCONFIG_JFFS2)),$(if $(RTCONFIG_JFFSV1),@mv,@cp -f),@mv) $(TARGETDIR)/lib/modules/*/kernel/fs/jffs2.*o $(PLATFORMDIR)/extras/ || true
 	$(if $(or $(RTCONFIG_BRCM_NAND_JFFS2),$(RTCONFIG_JFFS2)),$(if $(RTCONFIG_JFFSV1),@mv,@cp -f),@mv) $(TARGETDIR)/lib/modules/*/kernel/lib/zlib_*.*o $(PLATFORMDIR)/extras/ || true
 	$(if $(or $(RTCONFIG_BRCM_NAND_JFFS2),$(RTCONFIG_JFFS2)),$(if $(RTCONFIG_JFFSV1),@cp -f,@mv),@mv) $(TARGETDIR)/lib/modules/*/kernel/fs/jffs.*o $(PLATFORMDIR)/extras/ || true
@@ -7257,6 +7258,7 @@ else
 endif
 	@touch $@
 
+<<<<<<< HEAD
 lighttpd-1.4.39: shared nvram$(BCMEX)$(EX7) libpasswd libdisk samba-3.5.8 pcre-8.31 libxml2 sqlite libexif openssl curl $(if $(RTCONFIG_PERMISSION_MANAGEMENT),PMS_DBapis) lighttpd-1.4.39/stamp-h1
 	@mkdir -p lighttpd-1.4.39/src/.libs
 ifeq ($(HND_ROUTER),y)
@@ -7264,6 +7266,9 @@ ifeq ($(HND_ROUTER),y)
 else
 	@cp lighttpd-1.4.39/prebuild/*.so lighttpd-1.4.39/src/.libs/
 endif
+=======
+lighttpd-1.4.39: shared nvram$(BCMEX)$(EX7) libpasswd libdisk samba-3.5.8 pcre-8.31 libxml2 sqlite libexif openssl curl-7.21.7 $(if $(RTCONFIG_PERMISSION_MANAGEMENT),PMS_DBapis) lighttpd-1.4.39/stamp-h1
+>>>>>>> upstream/master
 	$(MAKE) -C lighttpd-1.4.39 $(PARALLEL_BUILD)
 
 lighttpd-1.4.39-install:
@@ -7277,8 +7282,8 @@ lighttpd-1.4.39-install:
 		$(STRIP) -s $(INSTALLDIR)/lighttpd-1.4.39/usr/sbin/lighttpd-arpping ; \
 		install -d $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/ ; \
 		install -D lighttpd-1.4.39/src/.libs/*.so $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/ ; \
-		if [ -d lighttpd-1.4.39/prebuild ] ; then \
-			install -D lighttpd-1.4.39/prebuild/*.so $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/ ; \
+		if [ -d lighttpd-1.4.39/prebuild$(EXHND) ] ; then \
+			install -D lighttpd-1.4.39/prebuild$(EXHND)/*.so $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/ ; \
 		fi ; \
 		install -D samba-3.5.8/source3/bin/libsmbclient.so.0 $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/libsmbclient.so.0 ; \
 		install -D libexif/libexif/.libs/libexif.so.12 $(INSTALLDIR)/lighttpd-1.4.39/usr/lib/libexif.so.12 ; \
@@ -7622,10 +7627,16 @@ curl/Makefile: curl-unpack curl/configure
 
 curl-install:
 	@$(SEP)
+<<<<<<< HEAD
 	install -d $(INSTALLDIR)/curl/usr/lib/
 	cp -df curl/lib/.libs/libcurl.so* $(INSTALLDIR)/curl/usr/lib/
 	chmod u+w $(INSTALLDIR)/curl/usr/lib/*
 	$(STRIP) $(INSTALLDIR)/curl/usr/lib/libcurl.so*
+=======
+	install -D curl-7.21.7/lib/.libs/libcurl.so.4.5.0 $(INSTALLDIR)/curl-7.21.7/usr/lib/libcurl.so.4.5.0
+	$(STRIP) $(INSTALLDIR)/curl-7.21.7/usr/lib/libcurl.so.4.5.0
+	cd $(INSTALLDIR)/curl-7.21.7/usr/lib && ln -sf libcurl.so.4.5.0 libcurl.so && ln -sf libcurl.so.4.5.0 libcurl.so.4
+>>>>>>> upstream/master
 #ifeq ($(RTCONFIG_SPEEDTEST),y)
 	# for speedtest
 	install -D curl/src/.libs/curl $(INSTALLDIR)/curl/usr/sbin/curl

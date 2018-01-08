@@ -2520,6 +2520,9 @@ start_default_filter(int lanunit)
 		":FORWARD DROP [0:0]\n"
 		":OUTPUT ACCEPT [0:0]\n"
 		":ACCESS_RESTRICTION - [0:0]\n"
+#ifdef RTCONFIG_OPENVPN
+		":OVPN - [0:0]\n"
+#endif
 		":logaccept - [0:0]\n"
 		":logdrop - [0:0]\n");
 #ifdef RTCONFIG_PROTECTION_SERVER
@@ -3048,6 +3051,10 @@ filter_setting(char *wan_if, char *wan_ip, char *lan_if, char *lan_ip, char *log
 	    ":FUPNP - [0:0]\n"
 	    ":SECURITY - [0:0]\n"
 	    ":ACCESS_RESTRICTION - [0:0]\n"
+	    ":other2wan - [0:0]\n"
+#ifdef RTCONFIG_OPENVPN
+	    ":OVPN - [0:0]\n"
+#endif
 #ifdef RTCONFIG_PARENTALCTRL
 	    ":PControls - [0:0]\n"
 #endif
@@ -3257,6 +3264,9 @@ TRACE_PT("writing Parental Control\n");
 		fprintf(fp, "-A INPUT -i %s -m state --state NEW -j %s\n", lan_if, "ACCEPT");
 #endif
 		fprintf(fp, "-A INPUT -i %s -m state --state NEW -j %s\n", "lo", "ACCEPT");
+#ifdef RTCONFIG_OPENVPN
+		fprintf(fp, "-A INPUT -m state --state NEW -j OVPN\n");
+#endif
 #ifdef RTCONFIG_IPV6
 		if (ipv6_enabled()) {
 			fprintf(fp_ipv6, "-A INPUT -m state --state RELATED,ESTABLISHED -j %s\n", logaccept);
@@ -3537,9 +3547,9 @@ TRACE_PT("writing Parental Control\n");
 #endif
 
 #ifdef RTCONFIG_WIFI_SON
-	fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, "br+", logdrop);
+	fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, "br+", "other2wan");
 #else
-	fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, lan_if, logdrop);
+	fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, lan_if, "other2wan");
 #endif
 #ifdef RTCONFIG_IPV6
 	if (ipv6_enabled() && *wan6face) {
@@ -3560,10 +3570,13 @@ TRACE_PT("writing Parental Control\n");
 #endif
 			)
 #ifdef RTCONFIG_WIFI_SON
-		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, "br+", logdrop);
+		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, "br+", "other2wan");
 #else
-		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, lan_if, logdrop);
+		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, lan_if, "other2wan");
 #endif
+
+	fprintf(fp, "-A other2wan -i tun+ -j RETURN\n");	// Let OVPN traffic through
+	fprintf(fp, "-A other2wan -j %s\n", logdrop);		// Drop other foreign traffic
 
 // oleg patch ~
 	/* Drop the wrong state, INVALID, packets */
@@ -3932,6 +3945,9 @@ TRACE_PT("write wl filter\n");
 #endif
 	}
 
+#ifdef RTCONFIG_OPENVPN
+	fprintf(fp, "-A FORWARD -m state --state NEW -j OVPN\n");
+#endif
 	/* SECURITY chain */
 	/* Skip DMZ */
 	if ((dstip = nvram_safe_get("dmz_ip")) && *dstip && inet_addr_(dstip))
@@ -4135,6 +4151,10 @@ filter_setting2(char *lan_if, char *lan_ip, char *logaccept, char *logdrop)
 	    ":FUPNP - [0:0]\n"
 	    ":SECURITY - [0:0]\n"
 	    ":ACCESS_RESTRICTION - [0:0]\n"
+#ifdef RTCONFIG_OPENVPN
+	    ":OVPN - [0:0]\n"
+#endif
+	   ":other2wan - [0:0]\n"
 #ifdef RTCONFIG_PARENTALCTRL
 	    ":PControls - [0:0]\n"
 #endif
@@ -4355,6 +4375,9 @@ TRACE_PT("writing Parental Control\n");
 #endif
 		fprintf(fp, "-A INPUT -i %s -m state --state NEW -j %s\n", lan_if, "ACCEPT");
 		fprintf(fp, "-A INPUT -i %s -m state --state NEW -j %s\n", "lo", "ACCEPT");
+#ifdef RTCONFIG_OPENVPN
+		fprintf(fp, "-A INPUT -m state --state NEW -j OVPN\n");
+#endif
 #ifdef RTCONFIG_IPV6
 		if (ipv6_enabled()) {
 			fprintf(fp_ipv6, "-A INPUT -m state --state RELATED,ESTABLISHED -j %s\n", logaccept);
@@ -4602,7 +4625,9 @@ TRACE_PT("writing Parental Control\n");
 #endif
 // ~ oleg patch
 		/* Filter out invalid WAN->WAN connections */
-		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, lan_if, logdrop);
+
+
+		fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wan_if, lan_if, "other2wan");
 #ifdef RTCONFIG_IPV6
 		 if (ipv6_enabled() && *wan6face) {
 			if (nvram_match("ipv6_fw_enable", "1")) {
@@ -4613,8 +4638,11 @@ TRACE_PT("writing Parental Control\n");
 		}
 #endif
 		if (strcmp(wanx_if, wan_if) && inet_addr_(wanx_ip) && dualwan_unit__nonusbif(unit))
-			fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, lan_if, logdrop);
+			fprintf(fp, "-A FORWARD -o %s ! -i %s -j %s\n", wanx_if, lan_if, "other2wan");
 	}
+	fprintf(fp, "-A other2wan -i tun+ -j RETURN\n");	// Let OVPN traffic through
+	fprintf(fp, "-A other2wan -j %s\n", logdrop);		// Drop other foreign traffic
+
 #ifdef RTCONFIG_TAGGED_BASED_VLAN
 	/* Write forward rule for deny lan */
 	vlan_subnet_deny_forward(fp);
@@ -5051,6 +5079,10 @@ TRACE_PT("write wl filter\n");
 			fprintf(fp_ipv6, "-A FORWARD -i %s -o %s -j %s\n", wan6face, lan_if, nvram_match("filter_wl_default_x", "DROP") ? logdrop : logaccept);
 #endif
 	}
+
+#ifdef RTCONFIG_OPENVPN
+	fprintf(fp, "-A FORWARD -m state --state NEW -j OVPN\n");
+#endif
 
 	/* SECURITY chain */
 	/* Skip DMZ */
