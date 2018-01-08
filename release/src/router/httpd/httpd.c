@@ -2326,3 +2326,45 @@ int check_current_ip_is_lan_or_wan()
 	return _check_ip_is_lan_or_wan(target_ip, nvram_safe_get("lan_ipaddr"), nvram_safe_get("lan_netmask"));
 }
 
+// HACK: fix prebuilt web_hook.o
+#if !defined(RTCONFIG_BWDPI)
+int dump_dpi_support(int index)
+{
+	int retval = 0;
+	logmessage("httpd", "dump_dpi_support(%d) called from $(TOP)/httpd/prebuild/web_hook.o, returning %d", index, retval);
+	return retval;
+}
+
+int ej_get_ui_support_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int retval = ej_get_ui_support(eid, wp, argc, argv);
+
+	if (argc == 0)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d) returned %d", eid, wp, argc, retval);
+	else if (argc == 1)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\") returned %d", eid, wp, argc, argv[0], retval);
+	else if (argc == 2)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], retval);
+	else if (argc == 3)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], retval);
+	else if (argc == 4)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], retval);
+	else if (argc == 5)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], retval);
+	else if (argc == 6)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], retval);
+	else if (argc == 7)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], retval);
+	else if (argc == 8)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], retval);
+	else if (argc == 9)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], retval);
+	else if (argc == 10)
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], retval);
+	else
+		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", ...) returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], retval);
+
+	return retval;
+}
+#endif
+

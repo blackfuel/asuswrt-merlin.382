@@ -22294,7 +22294,11 @@ struct ej_handler ej_handlers[] = {
 	{ "get_wifi_probe_status", ej_get_wifi_probe_status},
 	{ "get_encrypt_wifi_result", ej_get_encrypt_wifi_result},
 	{ "get_lan_hwaddr", ej_get_lan_hwaddr},
+#if defined(RTCONFIG_BWDPI)
 	{ "get_ui_support", ej_get_ui_support},
+#else
+	{ "get_ui_support", ej_get_ui_support_hook},
+#endif
 #ifdef RTCONFIG_DBLOG
 	{ "generate_trans_id", ej_generate_trans_id},
 #endif

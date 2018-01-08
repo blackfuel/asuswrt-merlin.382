@@ -378,6 +378,9 @@ extern int gen_guestnetwork_pass(char *key, size_t size);
 extern int alexa_pause_internet(int pause);
 extern int httpd_sw_hw_check(void);
 extern int ej_get_ui_support(int eid, webs_t wp, int argc, char **argv);
+#if !defined(RTCONFIG_BWDPI)
+int ej_get_ui_support_hook(int eid, webs_t wp, int argc, char **argv);
+#endif
 extern void page_default_redirect(int fromapp_flag, char* url);
 #ifdef RTCONFIG_LANTIQ
 extern int wave_app_flag;
