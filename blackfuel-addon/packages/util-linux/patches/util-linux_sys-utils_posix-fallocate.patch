@@ -1,0 +1,58 @@
+--- a/sys-utils/fallocate.c
++++ b/sys-utils/fallocate.c
+@@ -72,6 +72,7 @@
+ #include "closestream.h"
+ #include "xalloc.h"
+ #include "optutils.h"
++#include "posix_fallocate.h"
+ 
+ static int verbose;
+ static char *filename;
+@@ -124,7 +125,7 @@
+ #ifdef HAVE_FALLOCATE
+ 	error = fallocate(fd, mode, offset, length);
+ #else
+-	error = syscall(SYS_fallocate, fd, mode, offset, length);
++	error = syscall(SYS_fallocate, fd, mode, OFF64_HI_LO (offset), OFF64_HI_LO (length));
+ #endif
+ 	/*
+ 	 * EOPNOTSUPP: The FALLOC_FL_KEEP_SIZE is unsupported
+@@ -360,7 +361,7 @@
+ 			posix = 1;
+ 			break;
+ #else
+-			errx(EXIT_FAILURE, _("posix_fallocate support is not compiled"))
++			errx(EXIT_FAILURE, _("posix_fallocate support is not compiled"));
+ #endif
+ 		case 'v':
+ 			verbose++;
+--- a/sys-utils/posix_fallocate.h
++++ b/sys-utils/posix_fallocate.h
+@@ -0,0 +1,27 @@
++#ifndef	_POSIX_FALLOCATE_H
++#define	_POSIX_FALLOCATE_H	1
++
++#include <stdint.h>
++#include <sys/syscall.h>
++
++/********************************************************************************/
++/* stole from uClibc-33a12b5540b8abbc4ee0ecb3a51912b3c7868517: include/endian.h */
++#define OFF_HI(offset) (offset >> 31)
++#define OFF_LO(offset) (offset)
++#define OFF64_HI(offset) (uint32_t)(offset >> 32)
++#define OFF64_LO(offset) (uint32_t)(offset & 0xffffffff)
++#define OFF_HI_LO(offset) __LONG_LONG_PAIR(OFF_HI(offset), OFF_LO(offset))
++#define OFF64_HI_LO(offset) __LONG_LONG_PAIR(OFF64_HI(offset), OFF64_LO(offset))
++/********************************************************************************/
++
++inline int posix_fallocate64(int __fd, __off64_t __offset, __off64_t __len)
++{
++  return syscall(SYS_fallocate, __fd, 0, OFF64_HI_LO (__offset), OFF64_HI_LO (__len));
++}
++
++inline int posix_fallocate(int __fd, __off64_t __offset, __off64_t __len)
++{
++  return syscall(SYS_fallocate, __fd, 0, OFF64_HI_LO (__offset), OFF64_HI_LO (__len));
++}
++
++#endif /* posix_fallocate.h  */
