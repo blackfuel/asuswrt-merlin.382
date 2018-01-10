@@ -6121,7 +6121,7 @@ json-c-install:
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
 			URL="https://github.com/facebook/zstd/archive/v1.3.3.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.1.9.tar.gz"; \
+			URL="https://www.torproject.org/dist/tor-0.3.2.9.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "nettle" ]; then \
 			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ]; then \
