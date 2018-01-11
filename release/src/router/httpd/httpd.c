@@ -2368,3 +2368,26 @@ int ej_get_ui_support_hook(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+// HACK: fix linker error when IFTTT=n, ALEXA=n, NOTIFICATION_CENTER=n
+#if !defined(RTCONFIG_IFTTT)
+int isFileExist(char *file_name)
+{
+	struct stat status;
+
+	if ( stat(file_name, &status) < 0)
+		return 0;
+
+	return 1;
+}
+
+void Debug2File(const char *FilePath, const char * format, ...)
+{
+	return;
+}
+
+void add_ifttt_flag(void)
+{
+	return;
+}
+#endif
+
