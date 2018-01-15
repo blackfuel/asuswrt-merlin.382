@@ -1,13 +1,15 @@
 --- a/libtransmission/file-posix.c
 +++ b/libtransmission/file-posix.c
-@@ -34,6 +34,7 @@
- #include "log.h"
+@@ -34,6 +34,9 @@
  #include "platform.h"
+ #include "tr-assert.h"
  #include "utils.h"
++#ifndef HND_ROUTER
 +#include "posix_fallocate.h"
++#endif
  
  #ifndef O_LARGEFILE
-  #define O_LARGEFILE 0
+ #define O_LARGEFILE 0
 --- a/libtransmission/posix_fallocate.h
 +++ b/libtransmission/posix_fallocate.h
 @@ -0,0 +1,27 @@
