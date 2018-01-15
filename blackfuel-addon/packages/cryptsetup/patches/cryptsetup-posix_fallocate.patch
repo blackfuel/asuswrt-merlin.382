@@ -1,20 +1,24 @@
 --- a/src/cryptsetup.c
 +++ b/src/cryptsetup.c
-@@ -23,6 +23,7 @@
+@@ -23,6 +23,9 @@
  
  #include "cryptsetup.h"
  #include <uuid/uuid.h>
++#ifndef HND_ROUTER
 +#include "posix_fallocate.h"
++#endif
  
  static const char *opt_cipher = NULL;
  static const char *opt_hash = NULL;
 --- a/lib/utils_device.c
 +++ b/lib/utils_device.c
-@@ -39,6 +39,7 @@
+@@ -39,6 +39,9 @@
  #endif
  #include "internal.h"
  #include "utils_device_locking.h"
++#ifndef HND_ROUTER
 +#include "posix_fallocate.h"
++#endif
  
  struct device {
  	char *path;
