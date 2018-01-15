@@ -1,23 +1,28 @@
 --- a/sys-utils/fallocate.c
 +++ b/sys-utils/fallocate.c
-@@ -72,6 +72,7 @@
+@@ -72,6 +72,9 @@
  #include "closestream.h"
  #include "xalloc.h"
  #include "optutils.h"
++#ifndef HND_ROUTER
 +#include "posix_fallocate.h"
++#endif
  
  static int verbose;
  static char *filename;
-@@ -124,7 +125,7 @@
+@@ -124,7 +127,11 @@
  #ifdef HAVE_FALLOCATE
  	error = fallocate(fd, mode, offset, length);
  #else
--	error = syscall(SYS_fallocate, fd, mode, offset, length);
++#ifdef HND_ROUTER
+ 	error = syscall(SYS_fallocate, fd, mode, offset, length);
++#else
 +	error = syscall(SYS_fallocate, fd, mode, OFF64_HI_LO (offset), OFF64_HI_LO (length));
++#endif
  #endif
  	/*
  	 * EOPNOTSUPP: The FALLOC_FL_KEEP_SIZE is unsupported
-@@ -360,7 +361,7 @@
+@@ -360,7 +367,7 @@
  			posix = 1;
  			break;
  #else
