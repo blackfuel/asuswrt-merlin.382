@@ -4365,10 +4365,10 @@ dnscrypt-clean:
 
 dnscrypt-install:
 	install -d $(INSTALLDIR)/dnscrypt/usr/bin/
-	install -d $(INSTALLDIR)/dnscrypt/usr/share/dnscrypt-proxy/
+	install -d $(INSTALLDIR)/dnscrypt/usr/local/dnscrypt-proxy/
 	install -D $(STAGEDIR)/usr/sbin/dnscrypt-proxy $(INSTALLDIR)/dnscrypt/usr/bin/
 	install -D $(STAGEDIR)/usr/bin/hostip $(INSTALLDIR)/dnscrypt/usr/bin/
-	install -D $(STAGEDIR)/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv $(INSTALLDIR)/dnscrypt/usr/share/dnscrypt-proxy/
+	install -D $(STAGEDIR)/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv $(INSTALLDIR)/dnscrypt/usr/local/dnscrypt-proxy/
 	$(STRIP) $(INSTALLDIR)/dnscrypt/usr/bin/dnscrypt-proxy
 	$(STRIP) $(INSTALLDIR)/dnscrypt/usr/bin/hostip
 
@@ -5506,6 +5506,7 @@ transmission-openssl-configure:
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
 		--host=`X=$${CC##*/};echo $${X%-*}` \
 		--prefix=/usr \
+		--datarootdir=/usr/local \
 		--disable-nls \
 		--disable-silent-rules \
 		--enable-daemon \
@@ -5528,14 +5529,14 @@ transmission-openssl-clean:
 
 transmission-openssl-install:
 	install -d $(INSTALLDIR)/transmission-openssl/usr/bin/
-	install -d $(INSTALLDIR)/transmission-openssl/usr/share/
+	install -d $(INSTALLDIR)/transmission-openssl/usr/local/
 	install -D $(STAGEDIR)/usr/bin/transmission-daemon $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-daemon
 	install -D $(STAGEDIR)/usr/bin/transmission-remote $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-remote
 	#install -D $(STAGEDIR)/usr/bin/transmission-cli $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-cli
 	#install -D $(STAGEDIR)/usr/bin/transmission-create $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-create
 	#install -D $(STAGEDIR)/usr/bin/transmission-edit $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-edit
 	#install -D $(STAGEDIR)/usr/bin/transmission-show $(INSTALLDIR)/transmission-openssl/usr/bin/Transmission-show
-	cp -af $(STAGEDIR)/usr/share/transmission $(INSTALLDIR)/transmission-openssl/usr/share/
+	cp -af $(STAGEDIR)/usr/local/transmission $(INSTALLDIR)/transmission-openssl/usr/local/
 	$(STRIP) $(INSTALLDIR)/transmission-openssl/usr/bin/*
 
 ### transmission-mbedtls
@@ -5567,6 +5568,7 @@ transmission-mbedtls-configure:
 		./autogen.sh \
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
 		--prefix=/usr \
+		--datarootdir=/usr/local \
 		--disable-nls \
 		--disable-silent-rules \
 		--enable-daemon \
@@ -5589,14 +5591,14 @@ transmission-mbedtls-clean:
 
 transmission-mbedtls-install:
 	install -d $(INSTALLDIR)/transmission-mbedtls/usr/bin/
-	install -d $(INSTALLDIR)/transmission-mbedtls/usr/share/
+	install -d $(INSTALLDIR)/transmission-mbedtls/usr/local/
 	install -D $(STAGEDIR)/usr/bin/transmission-daemon $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-daemon
 	install -D $(STAGEDIR)/usr/bin/transmission-remote $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-remote
 	#install -D $(STAGEDIR)/usr/bin/transmission-cli $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-cli
 	#install -D $(STAGEDIR)/usr/bin/transmission-create $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-create
 	#install -D $(STAGEDIR)/usr/bin/transmission-edit $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-edit
 	#install -D $(STAGEDIR)/usr/bin/transmission-show $(INSTALLDIR)/transmission-mbedtls/usr/bin/Transmission-show
-	cp -af $(STAGEDIR)/usr/share/transmission $(INSTALLDIR)/transmission-mbedtls/usr/share/
+	cp -af $(STAGEDIR)/usr/local/transmission $(INSTALLDIR)/transmission-mbedtls/usr/local/
 	$(STRIP) $(INSTALLDIR)/transmission-mbedtls/usr/bin/*
 
 ### mbedtls
@@ -5677,7 +5679,7 @@ apcupsd-configure:
 		--sbindir=/usr/sbin \
 		--sysconfdir=/usr/local/etc/apcupsd \
 		--with-cgi-bin=/usr/local/etc/apcupsd \
-		--datarootdir=/usr/share \
+		--datarootdir=/usr/local \
 		--with-distname=unknown \
 		--with-upstype=usb \
 		--with-upscable=usb \
@@ -5718,8 +5720,8 @@ apcupsd-install:
 	install -D $(BLACKFUEL_DIR)/packages/apcupsd/files/onbattery $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/
 	install -D $(BLACKFUEL_DIR)/packages/apcupsd/files/apccontrol $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/
 ifeq ($(RTCONFIG_APCUPSD_CGI),y)
-	install -d $(INSTALLDIR)/apcupsd/www/cgi-bin/apcupsd
-	cp -pf $(STAGEDIR)/usr/local/etc/apcupsd/*.cgi $(INSTALLDIR)/apcupsd/www/cgi-bin/apcupsd/
+	install -d $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/www/cgi-bin
+	cp -pf $(STAGEDIR)/usr/local/etc/apcupsd/*.cgi $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/www/cgi-bin/
 	install -D $(STAGEDIR)/usr/local/etc/apcupsd/apcupsd.css $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/
 	install -D $(STAGEDIR)/usr/local/etc/apcupsd/hosts.conf $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/
 	install -D $(STAGEDIR)/usr/local/etc/apcupsd/multimon.conf $(INSTALLDIR)/apcupsd/usr/local/etc/apcupsd/
