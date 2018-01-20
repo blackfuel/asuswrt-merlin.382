@@ -2331,14 +2331,16 @@ int check_current_ip_is_lan_or_wan()
 int dump_dpi_support(int index)
 {
 	int retval = 0;
+/*
 	logmessage("httpd", "dump_dpi_support(%d) called from $(TOP)/httpd/prebuild/web_hook.o, returning %d", index, retval);
+*/
 	return retval;
 }
 
 int ej_get_ui_support_hook(int eid, webs_t wp, int argc, char **argv)
 {
 	int retval = ej_get_ui_support(eid, wp, argc, argv);
-
+/*
 	if (argc == 0)
 		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d) returned %d", eid, wp, argc, retval);
 	else if (argc == 1)
@@ -2363,7 +2365,7 @@ int ej_get_ui_support_hook(int eid, webs_t wp, int argc, char **argv)
 		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\") returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], retval);
 	else
 		logmessage("httpd", "ej_get_ui_support(%d, 0x%08x, %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", ...) returned %d", eid, wp, argc, argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], retval);
-
+*/
 	return retval;
 }
 #endif
