@@ -1758,6 +1758,7 @@ reinstall:
 	done
 
 	@cd $(TARGETDIR) && $(TOP)/others/rootprep${BCMEX}${EX7}.sh
+	[ ! -d "$(BLACKFUEL_DIR)/staging" ] || cp -afv "$(BLACKFUEL_DIR)/staging/"* "$(TARGETDIR)/"
 	@echo ---
 
 	# extra install in case build-process skip them
@@ -1978,7 +1979,7 @@ ifeq ($(RTCONFIG_LANTIQ),y)
 	@echo ---
 else
 	@cd $(TARGETDIR) && $(TOP)/others/rootprep${BCMEX}.sh
-	[ ! -d $(BLACKFUEL_DIR)/staging ] || cp -afv $(BLACKFUEL_DIR)/staging/* $(TARGETDIR)
+	[ ! -d $(BLACKFUEL_DIR)/staging ] || cp -afv $(BLACKFUEL_DIR)/staging/* $(TARGETDIR)/
 	@echo ---
 endif
 
