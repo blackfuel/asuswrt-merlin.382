@@ -1807,8 +1807,8 @@ endif
 	rm -rf $(INSTALLDIR)/rom/rom/etc
 
 	# strip size for tmp
-	#rm -rf $(INSTALLDIR)/rom/*.ipk
-	#rm -rf $(INSTALLDIR)/rom/*.tgz
+	rm -rf $(INSTALLDIR)/rom/*.ipk
+	rm -rf $(INSTALLDIR)/rom/*.tgz
 	#rm -rf $(INSTALLDIR)/usr/lighttpd/css
 	#rm -rf $(INSTALLDIR)/usr/lighttpd/js
 	#rm -rf $(INSTALLDIR)/www/images/New_ui
