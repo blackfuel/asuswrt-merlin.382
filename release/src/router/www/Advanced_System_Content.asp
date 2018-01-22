@@ -21,6 +21,7 @@
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/httpApi.js"></script>
 <style>
 .cancel{
 	border: 2px solid #898989;
@@ -143,6 +144,8 @@ function initial(){
 	restrict_rulelist_array = JSON.parse(JSON.stringify(orig_restrict_rulelist_array));
 
 	show_menu();
+	//	https://www.asus.com/us/support/FAQ/1034294
+	httpApi.faqURL("faq", "1034294", "https://www.asus.com", "/support/FAQ/");
 	show_http_clientlist();
 	display_spec_IP(document.form.http_client.value);
 
@@ -408,7 +411,8 @@ function applyRule(){
 				document.form.misc_httpport_x.disabled = true;
 		}
 
-		if(document.form.https_lanport.value != '<% nvram_get("https_lanport"); %>' 
+		if(document.form.http_lanport.value != '<% nvram_get("http_lanport"); %>'
+				|| document.form.https_lanport.value != '<% nvram_get("https_lanport"); %>'
 				|| document.form.http_enable.value != '<% nvram_get("http_enable"); %>'
 				|| document.form.misc_httpport_x.value != '<% nvram_get("misc_httpport_x"); %>'
 				|| document.form.misc_httpsport_x.value != '<% nvram_get("misc_httpsport_x"); %>'
@@ -423,6 +427,8 @@ function applyRule(){
 			if(document.form.http_enable.value == "0"){	//HTTP
 				if(isFromWAN)
 					document.form.flag.value = "http://" + location.hostname + ":" + document.form.misc_httpport_x.value;
+				else if (document.form.http_lanport.value)
+					document.form.flag.value = "http://" + location.hostname + ":" + document.form.http_lanport.value;
 				else
 					document.form.flag.value = "http://" + location.hostname;
 			}
@@ -441,6 +447,8 @@ function applyRule(){
 				}else{
 					if(isFromWAN)
 						document.form.flag.value = "http://" + location.hostname + ":" + document.form.misc_httpport_x.value;
+					else if (document.form.http_lanport.value)
+						document.form.flag.value = "http://" + location.hostname + ":" + document.form.http_lanport.value;
 					else
 						document.form.flag.value = "http://" + location.hostname;
 				}
@@ -634,8 +642,8 @@ function validForm(){
 		return false;
 	}
 
-	/*if (!validator.range(document.form.http_lanport, 1, 65535))
-		return false;*/
+	if (!validator.range(document.form.http_lanport, 1, 65535))
+		/*return false;*/ document.form.http_lanport = 80;
 	if (HTTPS_support && !validator.range(document.form.https_lanport, 1, 65535) && !tmo_support)
 		return false;
 
@@ -666,12 +674,14 @@ function validForm(){
 		return false;
 	}
 
-	if(isPortConflict(document.form.misc_httpport_x.value)){
+	if(!document.form.misc_httpport_x.disabled &&
+			isPortConflict(document.form.misc_httpport_x.value)){
 		alert(isPortConflict(document.form.misc_httpport_x.value));
 		document.form.misc_httpport_x.focus();
 		return false;
 	}
-	else if(isPortConflict(document.form.misc_httpsport_x.value) && HTTPS_support){
+	else if(!document.form.misc_httpsport_x.disabled &&
+			isPortConflict(document.form.misc_httpsport_x.value) && HTTPS_support){
 		alert(isPortConflict(document.form.misc_httpsport_x.value));
 		document.form.misc_httpsport_x.focus();
 		return false;
@@ -1233,6 +1243,22 @@ function enable_wan_access(flag){
 			}
 		}
 		else{
+			var effectApps = [];
+			if(app_support) effectApps.push("<#RemoteAccessHint_RouterApp#>");
+			if(alexa_support) effectApps.push("<#RemoteAccessHint_AlexaIFTTT#>");
+
+			var original_misc_http_x = httpApi.nvramGet(["misc_http_x"]).misc_http_x;
+			var RemoteAccessHint = "<#RemoteAccessHint#>".replace("$Apps$", effectApps.join(", "));
+
+			if(original_misc_http_x == '1' && effectApps.length != 0){
+				if(!confirm(RemoteAccessHint)){
+					document.form.misc_http_x[0].checked = true;
+					hideport(1);
+					enable_wan_access(1);			
+					return false;
+				}
+			}
+
 			if(autoChange){
 				document.form.http_enable.selectedIndex = 0;
 				autoChange = false;
@@ -1537,6 +1563,7 @@ function upload_cert_key(){
 <input type="hidden" name="reboot_schedule_enable" value="<% nvram_get("reboot_schedule_enable"); %>">
 <input type="hidden" name="usb_idle_exclude" value="<% nvram_get("usb_idle_exclude"); %>">
 <input type="hidden" name="shell_timeout" value="<% nvram_get("shell_timeout"); %>">
+<input type="hidden" name="http_lanport" value="<% nvram_get("http_lanport"); %>">
 
 <table class="content" align="center" cellpadding="0" cellspacing="0">
   <tr>
@@ -1921,7 +1948,9 @@ function upload_cert_key(){
 					<td>
 						<input type="radio" value="1" name="misc_http_x" class="input" onClick="hideport(1);enable_wan_access(1);" <% nvram_match("misc_http_x", "1", "checked"); %>><#checkbox_Yes#>
 						<input type="radio" value="0" name="misc_http_x" class="input" onClick="hideport(0);enable_wan_access(0);" <% nvram_match("misc_http_x", "0", "checked"); %>><#checkbox_No#><br>
-						<span class="formfontdesc" id="WAN_access_hint" style="color:#FFCC00; display:none;"><#FirewallConfig_x_WanWebEnable_HTTPS_only#> <a href="https://www.asus.com/us/support/FAQ/1034294" target="_blank" style="margin-left: 5px; color:#FFCC00; text-decoration: underline;">FAQ</a></span>
+						<span class="formfontdesc" id="WAN_access_hint" style="color:#FFCC00; display:none;"><#FirewallConfig_x_WanWebEnable_HTTPS_only#> 
+							<a id="faq" href="" target="_blank" style="margin-left: 5px; color:#FFCC00; text-decoration: underline;">FAQ</a>
+						</span>
 						<div class="formfontdesc" id="NSlookup_help_for_WAN_access" style="color:#FFCC00; display:none;"><#NSlookup_help#></div>
 					</td>
 				</tr>
