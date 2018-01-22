@@ -1680,9 +1680,6 @@ config RTCONFIG_ADV_RAST
 	bool "enable advanced roaming assistant"
 	default n
 
-config RTCONFIG_CFGSYNC
-	bool "Sync config"
-
 config RTCONFIG_WLCSCAN_RSSI
 	bool "Sitesurvey for specific SSID rssi"
 	default n
