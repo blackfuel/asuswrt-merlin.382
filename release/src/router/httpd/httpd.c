@@ -217,6 +217,11 @@ struct language_table language_tables[] = {
 
 #endif //TRANSLATE_ON_FLY
 
+// HACK: fix linker error when AMAS=n
+#ifndef RTCONFIG_AMAS
+struct AiMesh_whitelist AiMesh_whitelists[];
+#endif
+
 /* Forwards. */
 static int initialize_listen_socket(usockaddr* usa, const char *ifname);
 int check_noauth_referrer(char* referer, int fromapp_flag);
