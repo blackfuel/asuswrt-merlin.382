@@ -10405,27 +10405,6 @@ int init_main(int argc, char *argv[])
 		case SIGINT:		/* STOP */
 		case SIGQUIT:		/* HALT */
 		case SIGTERM:		/* REBOOT */
-			if (state == SIGTERM || state == SIGQUIT) {
-				if (nvram_get_int("shutdown_started") > 1)
-					break; // multiple shutdown attempts ignored
-				else {
-					// custom script is running
-					nvram_set_int("shutdown_started", 2);
-					nvram_unset("shutdown_canceled");
-					run_custom_script_blocking("shutdown-start", ((state == SIGTERM) ? "reboot" : "halt"));
-					// custom script has finished or it is not present, or JFFS scripts is not enabled
-					nvram_set_int("shutdown_started", 3);
-
-					if (nvram_get_int("shutdown_canceled") == 1) {
-						// custom script canceled the system shutdown
-						nvram_unset("shutdown_started"); // reset the flag
-						break; // shutdown was averted
-					}
-
-					// otherwise, proceed with normal system shutdown
-				} 
-			}
-
 #if defined(RTCONFIG_USB_MODEM) && (defined(RTCONFIG_JFFS2) || defined(RTCONFIG_BRCM_NAND_JFFS2) || defined(RTCONFIG_UBIFS))
 		_dprintf("modem data: save the data during the signal %d.\n", state);
 		eval("/usr/sbin/modem_status.sh", "bytes+");
@@ -10480,7 +10459,6 @@ int init_main(int argc, char *argv[])
 			// SIGHUP (RESTART) falls through
 
 		case SIGUSR2:		/* START */
-			nvram_unset("shutdown_started");
 			start_logger();
 #if defined(RTCONFIG_QCA)
 			logmessage("INIT", "firmware version: %s_%s_%s\n", nvram_safe_get("firmver"), nvram_safe_get("buildno"), nvram_safe_get("extendno"));
@@ -11013,25 +10991,9 @@ int reboothalt_main(int argc, char *argv[])
 {
 	int reboot = (strstr(argv[0], "reboot") != NULL);
 	int def_reset_wait = 20;
-	int shutdown_state = 0;
-
-	if (nvram_get_int("shutdown_started") > 0)
-		return 1; // multiple shutdown attempts ignored
-	else
-		nvram_set_int("shutdown_started", 1); // custom script is starting
 
 	_dprintf(reboot ? "Rebooting..." : "Shutting down...");
 	kill(1, reboot ? SIGTERM : SIGQUIT);
-
-	// block indefinitely until the custom script yields control back to the system
-	shutdown_state = nvram_get_int("shutdown_started");
-	while (shutdown_state == 1 || shutdown_state == 2) {
-		sleep(1);
-		shutdown_state = nvram_get_int("shutdown_started");
-	}
-
-	if (nvram_get_int("shutdown_canceled") == 1)
-		return 2; // custom script canceled the system shutdown
 
 #if defined(RTN14U) || defined(RTN65U) || defined(RTAC52U) || defined(RTAC51U) || defined(RTN11P) || defined(RTN300) || defined(RTN54U) || defined(RTCONFIG_QCA) || defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTAC54U) || defined(RTN56UB2) || defined(RTAC85U) || defined(RTN800HP)
 	def_reset_wait = 50;
