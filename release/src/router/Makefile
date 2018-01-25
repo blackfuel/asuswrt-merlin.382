@@ -6058,11 +6058,11 @@ json-c-install:
 		elif [ "$$PACKAGE_DIR" = "nettle" ]; then \
 			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ]; then \
-			URL="https://github.com/curl/curl/releases/download/curl-7_57_0/curl-7.57.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_58_0/curl-7.58.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
-			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.2.20.tar.xz"; \
+			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.3.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
@@ -6089,7 +6089,7 @@ json-c-install:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.0.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.1.tar.xz"; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
 			URL="https://github.com/redlab-i/pps-tools/archive/v1.0.1.tar.gz"; \
@@ -6122,7 +6122,7 @@ json-c-install:
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
 			URL="https://tls.mbed.org/download/mbedtls-2.6.0-gpl.tgz"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
-			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.2.tar.lz"; \
+			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.lz"; \
 		elif [ "$$PACKAGE_DIR" = "apcupsd" ]; then \
 			URL="https://downloads.sourceforge.net/project/apcupsd/apcupsd - Stable/3.14.14/apcupsd-3.14.14.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgd" ]; then \
