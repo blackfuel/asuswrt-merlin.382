@@ -415,13 +415,13 @@ SEP=echo -e "\033[41;1m   $@   \033[0m"
 #
 # standard packages
 #
-ifeq ($(HND_ROUTER),y)
-export BUSYBOX ?= busybox-1.24.1
-export BUSYBOX_DIR := busybox-1.24.1/busybox-1.24.1
-else
+#ifeq ($(HND_ROUTER),y)
+#export BUSYBOX ?= busybox-1.24.1
+#export BUSYBOX_DIR := busybox-1.24.1/busybox-1.24.1
+#else
 export BUSYBOX ?= busybox
 export BUSYBOX_DIR := $(BUSYBOX)
-endif
+#endif
 obj-y += $(BUSYBOX)
 obj-y += shared
 obj-y += nvram$(BCMEX)$(EX7)
@@ -2474,7 +2474,8 @@ define makeBusybox
 endef
 endif
 
-busybox busybox-1.17.4 busybox-1.24.1: dummy $(if $(RTCONFIG_PROTECTION_SERVER),protect_srv-stage,)
+#busybox busybox-1.17.4 busybox-1.24.1: dummy $(if $(RTCONFIG_PROTECTION_SERVER),protect_srv-stage,)
+busybox: dummy $(if $(RTCONFIG_PROTECTION_SERVER),protect_srv-stage,)
 	$(call makeBusybox)
 
 busybox-install: dummy $(if $(RTCONFIG_PROTECTION_SERVER),protect_srv-stage,)
