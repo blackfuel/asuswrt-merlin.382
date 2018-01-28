@@ -3713,9 +3713,11 @@ void timecheck(void)
 		{
 			if (timecheck_reboot(reboot_schedule))
 			{
+				if (shutdown_start("watchdog", __FUNCTION__, "reboot_schedule") == 0) {
 				_dprintf("reboot plan alert...\n");
 				sleep(1);
 				eval("reboot");
+				}
 			}
 		}
 	}
@@ -4713,6 +4715,7 @@ void swmode_check()
 	else if (flag_sw_mode == 1 && nvram_invmatch("asus_mfg", "1")) {
 		if (sw_mode != pre_sw_mode) {
 			if (++count_stable>4) { // stable for more than 5 second
+				if (shutdown_start("watchdog", __FUNCTION__, "resetdefault") == 0) {
 				dbg("Reboot to switch sw mode ..\n");
 				flag_sw_mode=0;
 				/* sw mode changed: restore defaults */
@@ -4721,6 +4724,7 @@ void swmode_check()
 				nvram_set("restore_defaults", "1");
 				if (notify_rc_after_wait("resetdefault")) {     /* Send resetdefault rc_service failed. */
 					alarmtimer(NORMAL_PERIOD, 0);
+				}
 				}
 			}
 		}
@@ -4748,6 +4752,7 @@ void swmode_check()
 		if (tmp_sw_mode == sw_mode) {
 			if (++count_stable>4) // stable for more than 5 second
 			{
+				if (shutdown_start("watchdog", __FUNCTION__, "reboot") == 0) {
 				dbg("Reboot to switch sw mode ..\n");
 				flag_sw_mode=0;
 				sync();
@@ -4755,6 +4760,7 @@ void swmode_check()
 				nvram_set("nvramver", "0");
 				nvram_commit();
 				reboot(RB_AUTOBOOT);
+				}
 			}
 		}
 		else flag_sw_mode = 0;
@@ -5599,6 +5605,12 @@ static void auto_firmware_check()
 			if (!nvram_get_int("webs_state_flag"))
 			{
 				dbg("no need to upgrade firmware\n");
+				return;
+			}
+
+			if (shutdown_start("watchdog", __FUNCTION__, "auto_upgrade") != 0)
+			{
+				dbg("shutdown-start canceled the auto upgrade because it would reboot\n");
 				return;
 			}
 
