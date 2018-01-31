@@ -193,9 +193,9 @@ int jffs2_fail;
 void
 sanity_logs()
 {
-#if defined(RTAC56U) || defined(RTAC56S)
-	logmessage("ATE", "valid user mode(%d)", !nvram_get_int(ATE_BRCM_FACTORY_MODE_STR()));
-#endif
+//#if defined(RTAC56U) || defined(RTAC56S)
+//	logmessage("ATE", "valid user mode(%d)", !nvram_get_int(ATE_BRCM_FACTORY_MODE_STR()));
+//#endif
 #if defined(RTCONFIG_JFFS2) || defined(RTCONFIG_JFFSV1) || defined(RTCONFIG_BRCM_NAND_JFFS2)
 	logmessage("jffs2", "valid logs(%d)", !jffs2_fail);
 #endif
@@ -1990,6 +1990,8 @@ void stop_ipv6(void)
 {
 	char *lan_ifname = nvram_safe_get("lan_ifname");
 	char *wan_ifname = (char *) get_wan6face();
+	char prefix[sizeof("ffff::/xxx")];
+	int i;
 
 #ifdef RTCONFIG_6RELAYD
 	stop_6relayd();
@@ -1997,9 +1999,13 @@ void stop_ipv6(void)
 	stop_dhcp6c();
 	stop_ipv6_tunnel();
 
+	eval("ip", "-6", "route", "flush", "default");
+	for (i = 1; i < 8; i++) {
+		snprintf(prefix, sizeof(prefix), "%04x::/%d", (0xfe0000 >> i) & 0xffff, i);
+		eval("ip", "-6", "route", "flush", "root", prefix, "table", "main");
+	}
 	eval("ip", "-6", "addr", "flush", "scope", "global", "dev", lan_ifname);
 	eval("ip", "-6", "addr", "flush", "scope", "global", "dev", wan_ifname);
-	eval("ip", "-6", "route", "flush", "scope", "global");
 	eval("ip", "-6", "neigh", "flush", "dev", lan_ifname);
 }
 #endif
