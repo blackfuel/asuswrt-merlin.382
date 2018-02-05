@@ -1744,10 +1744,10 @@ reinstall:
 	install -D $(TOOLCHAIN)/arm-buildroot-linux-gnueabi/sysroot/lib/libpthread.so.0 $(INSTALLDIR)/lib/libpthread.so.0
 	install -D $(TOOLCHAIN)/arm-buildroot-linux-gnueabi/sysroot/lib/libdl.so.2 $(INSTALLDIR)/lib/libdl.so.2
 	install -D $(TOOLCHAIN)/arm-buildroot-linux-gnueabi/sysroot/lib/libgcc_s.so.1 $(INSTALLDIR)/lib/libgcc_s.so.1
-	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/ld-linux-aarch64.so.1 $(INSTALLDIR)/lib/ld-linux-aarch64.so.1
-	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libc.so.6 $(INSTALLDIR)/lib/aarch64/libc.so.6
-	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_dns.so.2 $(INSTALLDIR)/lib/aarch64/libnss_dns.so.2
-	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_files.so.2 $(INSTALLDIR)/lib/aarch64/libnss_files.so.2
+#	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/ld-linux-aarch64.so.1 $(INSTALLDIR)/lib/ld-linux-aarch64.so.1
+#	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libc.so.6 $(INSTALLDIR)/lib/aarch64/libc.so.6
+#	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_dns.so.2 $(INSTALLDIR)/lib/aarch64/libnss_dns.so.2
+#	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_files.so.2 $(INSTALLDIR)/lib/aarch64/libnss_files.so.2
 
 ifeq ($(RTCONFIG_CFEZ),y)
 	install -D $(TOP)/envram_bin/envram$(BCMEX)$(EX7)/envrams $(INSTALLDIR)/usr/sbin/envrams

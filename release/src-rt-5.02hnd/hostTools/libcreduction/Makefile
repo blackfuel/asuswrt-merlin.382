@@ -44,15 +44,15 @@ endif
 
 # Get list of all required 64-bit libraries in final image
 #SHLIBS64 := $(shell find -L $(BIN_INSTALL_DIRS) $(INSTALL_DIR)/lib $(INSTALL_DIR)/usr/lib -type f | file -f - \
-             | grep "ELF 64-bit" )
+#             | grep "ELF 64-bit" )
 
 SHLIBS64 := $(shell find -L $(INSTALL_DIR) -type f | file -f - \
              | grep "ELF 64-bit" )
 
 ifneq ($(SHLIBS64),)
 #SHLIBS64 := $(shell find -L $(BIN_INSTALL_DIRS) $(INSTALL_DIR)/lib $(INSTALL_DIR)/usr/lib -type f | file -f - \
-             | grep "ELF 64-bit" | cut -d':' -f1 | xargs $(READELF) -d | grep NEEDED \
-	     | cut -d'[' -f2 | sed -e 's/]//g' | sort | uniq)
+#             | grep "ELF 64-bit" | cut -d':' -f1 | xargs $(READELF) -d | grep NEEDED \
+#	     | cut -d'[' -f2 | sed -e 's/]//g' | sort | uniq)
 SHLIBS64 := $(shell find -L $(INSTALL_DIR) -type f | file -f - \
              | grep "ELF 64-bit" | cut -d':' -f1 | xargs $(READELF) -d | grep NEEDED \
              | cut -d'[' -f2 | sed -e 's/]//g' | sort | uniq)
@@ -123,7 +123,7 @@ include $(BUILD_DIR)/make.common
 LINKER64 := ld-linux-aarch64.so.1
 
 # Libs which are loaded via dlopen()
-EXTRALIBS64 := libnss_dns.so.2 libnss_files.so.2
+EXTRALIBS64 := libanl.so.1 libatomic.so.1 libBrokenLocale.so.1 libcidn.so.1 libcrypt.so.1 libdl.so.2 libgcc_s.so.1 libm.so.6 libnsl.so.1 libnss_compat.so.2 libnss_db.so.2 libnss_dns.so.2 libnss_files.so.2 libnss_hesiod.so.2 libnss_nisplus.so.2 libnss_nis.so.2 libpthread.so.0 libresolv.so.2 librt.so.1 libthread_db.so.1 libutil.so.1
 
 # Remove dynamic linker from list of libs
 SHLIBS64 := $(filter-out $(LINKER64),$(SHLIBS64))
@@ -133,7 +133,7 @@ SHLIBS64 += $(EXTRALIBS64)
 
 # Remove all shared libs which are already present in INSTALL_DIR/lib
 #EXP_TOOLCHAIN_LIBS64 := $(shell for j in $(SHLIBS64); do if test -n "$$(find -L $(INSTALL_DIR)/lib/aarch64 -name $$j)" \
-                               ; then echo ""; else echo $$j; fi; done;)
+#                               ; then echo ""; else echo $$j; fi; done;)
 EXP_TOOLCHAIN_LIBS64 := $(shell for j in $(SHLIBS64); do if test -n "$$(find -L $(INSTALL_DIR)/usr/lib -name $$j)" \
                                ; then echo ""; else echo $$j; fi; done;)
 
