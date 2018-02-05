@@ -5101,14 +5101,15 @@ pps-tools: pps-tools-unpack
 pps-tools-stage:
 	@echo pps-tools
 	@[ ! -d pps-tools ] || [ -f "$(STAGEDIR)/usr/bin/ppsctl" ] || ( cd pps-tools ; \
-		CC="$(CC)" \
-		CFLAGS="-DN_PPS=18 -ffunction-sections -fdata-sections -O3 -pipe -march=armv7-a -mtune=cortex-a9 -fno-caller-saves -mfloat-abi=soft -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/lib" \
+		CC=$(CC) \
+		CFLAGS="$(CFLAGS) $(if $(RTCONFIG_HND_ROUTER),,-DN_PPS=18) -ffunction-sections -fdata-sections -O3 -pipe -march=armv7-a -mtune=cortex-a9 -fno-caller-saves -mfloat-abi=soft -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="$(LDFLAGS) -ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/lib" \
 		DESTDIR="$(STAGEDIR)" \
-		$(MAKE) install && \
-		[ -f "$(STAGEDIR)/usr/include/timepps.h" ] || \
-		[ ! -f "$(STAGEDIR)/usr/include/sys/timepps.h" ] || \
-		cp -p "$(STAGEDIR)/usr/include/sys/timepps.h" "$(STAGEDIR)/usr/include" )
+		$(MAKE) install \
+		$(if $(RTCONFIG_HND_ROUTER),,&& [ -f "$(STAGEDIR)/usr/include/timepps.h" ] || \
+						[ ! -f "$(STAGEDIR)/usr/include/sys/timepps.h" ] || \
+						cp -p "$(STAGEDIR)/usr/include/sys/timepps.h" "$(STAGEDIR)/usr/include") \
+		)
 
 pps-tools-clean:
 	-@$(MAKE) -C pps-tools clean
@@ -5181,7 +5182,7 @@ ntp/configure:
 
 ntp-configure:
 	@[ ! -d ntp ] || [ -f "$(STAGEDIR)/usr/bin/ntpd" ] || ( cd ntp ; \
-		if [ ! -f "$(STAGEDIR)/usr/include/timepps.h" ]; then \
+		if [ -z "$(RTCONFIG_HND_ROUTER)" ] && [ ! -f "$(STAGEDIR)/usr/include/timepps.h" ]; then \
 			echo "timepps.h is not installed.  Verify that pps-tools was installed properly."; \
 			false; \
 		else \
