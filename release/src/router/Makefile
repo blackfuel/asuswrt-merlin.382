@@ -1749,6 +1749,22 @@ reinstall:
 #	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_dns.so.2 $(INSTALLDIR)/lib/aarch64/libnss_dns.so.2
 #	install -D $(TOOLCHAIN_64)/aarch64-buildroot-linux-gnu/sysroot/lib/libnss_files.so.2 $(INSTALLDIR)/lib/aarch64/libnss_files.so.2
 
+	# support armv7 uClibc programs
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/ld-uClibc.so.0 $(INSTALLDIR)/lib/ld-uClibc.so.0
+	mkdir -p $(INSTALLDIR)/lib/arm-uclibc
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libc.so.0 $(INSTALLDIR)/lib/arm-uclibc/libc.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libm.so.0 $(INSTALLDIR)/lib/arm-uclibc/libm.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libdl.so.0 $(INSTALLDIR)/lib/arm-uclibc/libdl.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libcrypt.so.0 $(INSTALLDIR)/lib/arm-uclibc/libcrypt.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libgcc_s.so.1 $(INSTALLDIR)/lib/arm-uclibc/libgcc_s.so.1
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libnsl.so.0 $(INSTALLDIR)/lib/arm-uclibc/libnsl.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libpthread.so.0 $(INSTALLDIR)/lib/arm-uclibc/libpthread.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/librt.so.0 $(INSTALLDIR)/lib/arm-uclibc/librt.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libutil.so.0 $(INSTALLDIR)/lib/arm-uclibc/libutil.so.0
+	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libresolv.so.0 $(INSTALLDIR)/lib/arm-uclibc/libresolv.so.0
+	chmod u+w $(INSTALLDIR)/lib/arm-uclibc/*
+	$(STRIP) $(INSTALLDIR)/lib/arm-uclibc/*.so*
+
 ifeq ($(RTCONFIG_CFEZ),y)
 	install -D $(TOP)/envram_bin/envram$(BCMEX)$(EX7)/envrams $(INSTALLDIR)/usr/sbin/envrams
 	install -D $(TOP)/envram_bin/envram$(BCMEX)$(EX7)/envram $(INSTALLDIR)/usr/sbin/envram

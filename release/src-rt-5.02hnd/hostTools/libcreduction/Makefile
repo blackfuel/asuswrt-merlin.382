@@ -64,7 +64,7 @@ include $(BUILD_DIR)/make.common
 ifeq ($(LIBC),glibc)
   ifeq ($(strip $(ARCH)),arm)
     # Libs which are loaded via dlopen()
-    EXTRALIBS32 := libnss_dns.so.2 libnss_files.so.2
+    EXTRALIBS32 := libnss_dns.so.2 libnss_files.so.2 ld-uClibc.so.0
     # Dynamic linker
     LINKER32 := ld-linux.so.3
   else
