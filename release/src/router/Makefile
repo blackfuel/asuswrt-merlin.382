@@ -6510,11 +6510,12 @@ endif
 .PHONY: ffmpeg
 
 libogg/stamp-h1:
-	cd libogg && \
+	cd libogg && autoreconf -i -f && \
 	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix=''
 	touch $@
+	touch libogg/aclocal.m4
 
 libogg: libogg/stamp-h1
 	@$(MAKE) -C libogg all
@@ -9114,7 +9115,7 @@ endif
 # Start merlin components
 nano/Makefile:
 	cd nano && \
-	autoreconf -i -f && $(CONFIGURE) --prefix=$(INSTALLDIR)/nano/usr \
+	autoreconf -i -f && $(CONFIGURE) --prefix=$(INSTALLDIR)/nano/usr --sysconfdir=/jffs/configs \
 		CFLAGS="$(EXTRACFLAGS) -Os -I$(TOP)/ncurses-6.0/include -I$(STAGEDIR)/usr/include -ffunction-sections -fdata-sections" \
 		LDFLAGS="$(LDFLAGS) -L$(TOP)/ncurses-6.0/lib -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		PKG_CONFIG_LIBDIR="$(TOP)/ncurses-6.0/misc" PKG_CONFIG_PATH="$(TOP)/ncurses-6.0/misc" \
