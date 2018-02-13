@@ -180,14 +180,15 @@ function initial(){
 	setTimeout("show_warning_message();", 100);
 
 	//set FAQ URL
-	//	https://www.asus.com/support/FAQ/1033576
-	httpApi.faqURL("faq_windows", "1033576", "https://www.asus.com", "/support/FAQ/");
+	//	https://www.asus.com/support/FAQ/1004469
+	httpApi.faqURL("faq_windows", "1004469", "https://www.asus.com", "/support/FAQ/");
+
 	//	https://www.asus.com/support/FAQ/1033575
-	httpApi.faqURL("faq_macOS", "1033575", "https://www.asus.com", "/support/FAQ/");
+	//httpApi.faqURL("faq_macOS", "1033575", "https://www.asus.com", "/support/FAQ/");
 	//	https://www.asus.com/support/FAQ/1033574
-	httpApi.faqURL("faq_iPhone", "1033574", "https://www.asus.com", "/support/FAQ/");
+	//httpApi.faqURL("faq_iPhone", "1033574", "https://www.asus.com", "/support/FAQ/");
 	//	https://www.asus.com/support/FAQ/1033572
-	httpApi.faqURL("faq_android", "1033572", "https://www.asus.com", "/support/FAQ/");	
+	//httpApi.faqURL("faq_android", "1033572", "https://www.asus.com", "/support/FAQ/");	
 
 	var custom2 = document.form.vpn_server_custom2.value;
 	if (isSupport("hnd")) {
@@ -215,18 +216,24 @@ function show_warning_message(){
 			if(validator.isPrivateIP(wanlink_ipaddr())){
 				document.getElementById("privateIP_notes").innerHTML = "<#vpn_privateIP_hint#>";
 				document.getElementById("privateIP_notes").style.display = "";
+				//      http://www.asus.com/support/FAQ/1033906
+				httpApi.faqURL("faq_port_forwarding", "1033906", "https://www.asus.com", "/support/FAQ/");      //this id is include in string : #vpn_privateIP_hint#
 			}
 		}
 		else{
 			if(!external_ip){
 				document.getElementById("privateIP_notes").innerHTML = "<#vpn_privateIP_hint#>";
 				document.getElementById("privateIP_notes").style.display = "";
+				//      http://www.asus.com/support/FAQ/1033906
+				httpApi.faqURL("faq_port_forwarding", "1033906", "https://www.asus.com", "/support/FAQ/");      //this id is include in string : #vpn_privateIP_hint#
 			}
 		}
 	}
 	else if(validator.isPrivateIP(wanlink_ipaddr())){
 		document.getElementById("privateIP_notes").innerHTML = "<#vpn_privateIP_hint#>";
 		document.getElementById("privateIP_notes").style.display = "";
+		//      http://www.asus.com/support/FAQ/1033906
+		httpApi.faqURL("faq_port_forwarding", "1033906", "https://www.asus.com", "/support/FAQ/");      //this id is include in string : #vpn_privateIP_hint#
 	}
 }
 
@@ -1457,9 +1464,9 @@ function updateVpnServerClientAccess() {
 											<br />
 											<ol>
 												<li><a id="faq_windows" href="https://www.asus.com/support/FAQ/1004469/" target="_blank" style="text-decoration:underline;">Windows</a></li>
-												<li><a id="faq_macOS" href="https://www.asus.com/support/FAQ/1004472/" target="_blank" style="text-decoration:underline;">Mac OS</a></li>
-												<li><a id="faq_iPhone" href="https://www.asus.com/support/FAQ/1004471/" target="_blank" style="text-decoration:underline;">iPhone/iPad</a></li>
-												<li><a id="faq_android" href="https://www.asus.com/support/FAQ/1004466/" target="_blank" style="text-decoration:underline;">Android</a></li>
+												<!-- li><a id="faq_macOS" href="https://www.asus.com/support/FAQ/1004472/" target="_blank" style="text-decoration:underline;">Mac OS</a></li -->
+												<!-- li><a id="faq_iPhone" href="https://www.asus.com/support/FAQ/1004471/" target="_blank" style="text-decoration:underline;">iPhone/iPad</a></li -->
+												<!-- li><a id="faq_android" href="https://www.asus.com/support/FAQ/1004466/" target="_blank" style="text-decoration:underline;">Android</a></li -->
 											<ol>
 										</div>
 
