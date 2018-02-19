@@ -3886,7 +3886,128 @@ bbconfig:
 	$(MAKE) -C router bboldconf
 	@echo done
 
+#
+# PackageSetup: unpack a source package, apply patches, after downloading and archiving
+# (TODO: automatically verify the package hash)
+#
+define PackageSetup
+	@( \
+	ASUSWRT_ADDON_DIR="$(strip $(1))"; \
+	TARGET_DIR="$(strip $(2))"; \
+	PACKAGE_DIR="$(strip $(3))"; \
+	if [ ! -d "$$TARGET_DIR/$$PACKAGE_DIR" ]; then \
+		PACKAGE_NAME="$(strip $(8))"; \
+		[ -n "$$PACKAGE_NAME" ] || PACKAGE_NAME="$$PACKAGE_DIR"; \
+		URL="$(strip $(4))"; \
+		SOURCE_VERSION="$(strip $(5))"; \
+		VERSION="$(strip $(6))"; \
+		HASH="$(strip $(7))"; \
+		if [ -z "$$URL" ]; then \
+			URL="/$${PACKAGE_NAME}-MISSING-PACKAGE"; \
+			exit 1; \
+		fi; \
+		DL_DIR="$$ASUSWRT_ADDON_DIR/downloads/$$PACKAGE_NAME"; \
+		PATCH_DIR="$$ASUSWRT_ADDON_DIR/packages/$$PACKAGE_NAME/patches"; \
+		DL_FILE="$${URL##*/}"; \
+		DL_PATH="$$DL_DIR/$$DL_FILE"; \
+		if [ "$${DL_FILE%.git*}" != "$$DL_FILE" ]; then \
+			[ -z "$$VERSION" ] && DL_NAME="$$PACKAGE_NAME" || DL_NAME="$$PACKAGE_NAME-$$VERSION"; \
+			[ -z "$$SOURCE_VERSION" ] && SOURCE_VERSION="master"; \
+			DL_FILE="$${DL_NAME}-$${SOURCE_VERSION}.tar.xz"; \
+			DL_PATH="$$DL_DIR/$$DL_FILE"; \
+			if [ ! -f "$$DL_PATH" ]; then \
+				git clone $$URL $$DL_DIR/temp/$$DL_NAME; \
+				while [ $$? -ne 0 ]; do \
+					sleep 10; git clone $$URL $$DL_DIR/temp/$$DL_NAME; \
+				done; \
+				ORIGDIR="$$PWD"; \
+				cd "$$DL_DIR/temp/$$DL_NAME"; \
+				git checkout $$SOURCE_VERSION; \
+				while [ $$? -ne 0 ]; do \
+					sleep 10; git checkout $$SOURCE_VERSION; \
+				done; \
+				git submodule update --init --recursive; \
+				while [ $$? -ne 0 ]; do \
+					sleep 10; git submodule update --init --recursive; \
+				done; \
+				TAR_TIMESTAMP="`git log -1 --format='@%ct'`"; \
+				rm -rf .git; \
+				cd "$$ORIGDIR"; \
+				chmod -R g-w,o-w "$$DL_DIR/temp/$$DL_NAME"; \
+				tar --numeric-owner --owner=0 --group=0 --sort=name --mtime="$$TAR_TIMESTAMP" -cv -C "$$DL_DIR/temp" "$$DL_NAME" | xz -zc -7e > "$$DL_PATH"; \
+			fi; \
+		elif [ ! -f "$$DL_PATH" ]; then \
+			wget --tries=9 --retry-connrefused --waitretry=5 --directory-prefix="$$DL_DIR" "$$URL"; \
+			while [ $$? -ne 0 ]; do \
+				sleep 10; \
+				[ ! -f "$$DL_PATH" ] || break; \
+				wget --tries=9 --retry-connrefused --waitretry=5 --directory-prefix="$$DL_DIR" "$$URL"; \
+			done; \
+			rm -rf "$$TARGET_DIR/$$PACKAGE_DIR" || true; \
+		fi; \
+		rm -rf "$$DL_DIR/temp"; \
+		mkdir -p "$$DL_DIR/temp"; \
+		if [ "$${DL_FILE%.tar.gz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tgz*}" != "$$DL_FILE" ]; then \
+			tar xzvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
+		elif [ "$${DL_FILE%.tar.bz2*}" != "$$DL_FILE" ]; then \
+			tar xjvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
+		elif [ "$${DL_FILE%.tar.xz*}" != "$$DL_FILE" ]; then \
+			tar xJvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
+		elif [ "$${DL_FILE%.tar.lz*}" != "$$DL_FILE" ]; then \
+			tar xlvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
+		fi; \
+		mv -f "$$DL_DIR/temp/"* "$$TARGET_DIR/$$PACKAGE_DIR"; \
+		rm -rf "$$DL_DIR/temp"; \
+		for PATCH_FILE in $$PATCH_DIR/*.patch; do \
+			if [ -f "$$PATCH_FILE" ]; then \
+				echo "Applying patch: $$PATCH_FILE"; \
+				patch --dry-run --silent -p1 -d "$$TARGET_DIR/$$PACKAGE_DIR/" -i "$$PATCH_FILE" >/dev/null 2>&1 && \
+					patch -p1 -d "$$TARGET_DIR/$$PACKAGE_DIR/" -i "$$PATCH_FILE" || \
+						echo "The patch was not applied."; \
+			else \
+				true; \
+			fi; \
+		done; \
+	else \
+		echo "$$TARGET_DIR/$$PACKAGE_DIR was not unpacked because the directory exists."; \
+		true; \
+	fi; \
+	)
+endef
+
+#
+# CryptodevSetup: this will enable /dev/crypto in Asuswrt firmwares
+#
+define CryptodevSetup
+	$(eval ASUSWRT_DIR="`readlink -f $(SRC_ROOT)`/../..")
+	$(eval ASUSWRT_ADDON_DIR="$(ASUSWRT_DIR)/../asuswrt-merlin-addon")
+	$(eval KERNEL_CRYPTO_DIR=$(LINUXDIR)/crypto)
+	$(eval CRYPTODEV_NAME=cryptodev-linux)
+	$(eval CRYPTODEV_DIR=$(SRCBASE)/router/$(CRYPTODEV_NAME))
+
+	$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(SRCBASE)/router,$(CRYPTODEV_NAME), \
+		https://github.com/cryptodev-linux/cryptodev-linux.git, \
+		87d959d9a279c055b361de8e730fab6a7144edd7,1.9+git, \
+		e14ed020f51fe9355117fa0652be7dbb8b82fb6bf35132d5199f046d75986043)
+
+	# create required version.h in cryptodev-linux
+	[ -f "$(CRYPTODEV_DIR)/version.h" ] || make -C $(CRYPTODEV_DIR) version.h
+
+	# insert cryptodev-linux into the kernel build
+	@if ! grep -qF $(CRYPTODEV_NAME) $(KERNEL_CRYPTO_DIR)/Makefile ; then \
+		echo "" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "#" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "# $(CRYPTODEV_NAME): https://github.com/cryptodev-linux/cryptodev-linux" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "#" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "CONFIG_CRYPTODEV_LINUX:=y" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "obj-\$$(CONFIG_CRYPTODEV_LINUX) += ../../../router/$(CRYPTODEV_NAME)/" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+	fi
+endef
+
 bin:
+ifeq ($(HND_ROUTER),y)
+	$(call CryptodevSetup)
+endif
 ifeq ($(BUILD_NAME),)
 	@echo $@" is not a valid target!"
 	@false
