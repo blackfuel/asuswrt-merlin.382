@@ -715,6 +715,9 @@ BLACKFUEL_CONFIGURE := $(if $(RTCONFIG_HND_ROUTER),$(CONFIGURE_64),$(CONFIGURE))
 BLACKFUEL_TOOLCHAIN := CC="$(BLACKFUEL_CC)" CXX="$(BLACKFUEL_CXX)" CPP="$(BLACKFUEL_CPP)" AR="$(BLACKFUEL_AR)" AS="$(BLACKFUEL_AS)" LD="$(BLACKFUEL_LD)" NM="$(BLACKFUEL_NM)" OBJCOPY="$(BLACKFUEL_OBJCOPY)" OBJDUMP="$(BLACKFUEL_OBJDUMP)" RANLIB="$(BLACKFUEL_RANLIB)" SIZE="$(BLACKFUEL_SIZE)" STRIP="$(BLACKFUEL_STRIP)" $(BLACKFUEL_CURRENT_ARCH)
 BLACKFUEL_EXTRA_CFLAGS := $(if $(RTCONFIG_HND_ROUTER),"","-O3 -pipe -march=armv7-a -mtune=cortex-a9 -fno-caller-saves -mfloat-abi=soft")
 
+ifeq ($(HND_ROUTER),y)
+obj-y += openssl-aarch64
+endif
 obj-y += mbedtls curl
 
 RTCONFIG_APCUPSD := y
@@ -1781,7 +1784,7 @@ ifeq ($(RTCONFIG_HND_ROUTER),y)
 	install -D $(ASUSWRT_DIR)/release/src-rt-6.x.4708/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libresolv.so.0 $(INSTALLDIR)/lib/arm-uclibc/libresolv.so.0
 	chmod u+w $(INSTALLDIR)/lib/arm-uclibc/*
 	$(STRIP) $(INSTALLDIR)/lib/arm-uclibc/*.so*
-#endif
+endif
 
 ifeq ($(RTCONFIG_CFEZ),y)
 	install -D $(TOP)/envram_bin/envram$(BCMEX)$(EX7)/envrams $(INSTALLDIR)/usr/sbin/envrams
@@ -2342,62 +2345,6 @@ else
 	rm -rf $(PLATFORMDIR)/extras
 	rm -rf kernel_header
 endif
-	make clean-blackfuel
-
-clean-blackfuel:
-	@$(SEP)
-	# Blackfuel packages and updates
-	if [ ! -d "$(BLACKFUEL_DIR)" ]; then \
-		ln -sf ../$(BLACKFUEL_ADDON) "$(BLACKFUEL_DIR)"; \
-	fi; \
-	if [ ! -d "$(BLACKFUEL_DIR)/packages" ]; then \
-		echo "The blackfuel packages directory is missing: $(BLACKFUEL_DIR)/packages"; \
-		false; \
-	else \
-		rm -rf "$(TOP)/xzutils"; \
-		rm -rf "$(TOP)/zstd"; \
-		rm -rf "$(TOP)/tor"; \
-		rm -rf "$(TOP)/nettle"; \
-		rm -rf "$(TOP)/curl"; \
-		rm -rf "$(TOP)/findutils"; \
-		rm -rf "$(TOP)/whois"; \
-		rm -rf "$(TOP)/libsodium"; \
-		rm -rf "$(TOP)/dnscrypt"; \
-		rm -rf "$(TOP)/haveged"; \
-		rm -rf "$(TOP)/wipe"; \
-		rm -rf "$(TOP)/gsl"; \
-		rm -rf "$(TOP)/dieharder"; \
-		rm -rf "$(TOP)/popt"; \
-		rm -rf "$(TOP)/libgpg-error"; \
-		rm -rf "$(TOP)/util-linux"; \
-		rm -rf "$(TOP)/lvm2"; \
-		rm -rf "$(TOP)/libgcrypt"; \
-		rm -rf "$(TOP)/cryptsetup-gcrypt" "$(TOP)/cryptsetup-openssl" "$(TOP)/cryptsetup-nettle" "$(TOP)/cryptsetup-kernel"; \
-		rm -rf "$(TOP)/pps-tools"; \
-		rm -rf "$(TOP)/setserial"; \
-		rm -rf "$(TOP)/ntp"; \
-		rm -rf "$(TOP)/argp-standalone"; \
-		rm -rf "$(TOP)/libcap"; \
-		rm -rf "$(TOP)/rtl-sdr"; \
-		rm -rf "$(TOP)/rtl-entropy"; \
-		rm -rf "$(TOP)/ncurses-6.0"; \
-		rm -rf "$(TOP)/transmission-openssl" "$(TOP)/transmission-mbedtls"; \
-		rm -rf "$(TOP)/mbedtls"; \
-		rm -rf "$(TOP)/wget"; \
-		rm -rf "$(TOP)/apcupsd"; \
-		rm -rf "$(TOP)/libgd"; \
-		rm -rf "$(TOP)/jpeg"; \
-		rm -rf "$(TOP)/libpng"; \
-		rm -rf "$(TOP)/libtiff"; \
-		rm -rf "$(TOP)/freetype"; \
-		rm -rf "$(TOP)/bzip2"; \
-		rm -rf "$(TOP)/powstatd"; \
-		rm -rf "$(TOP)/zlib"; \
-		rm -rf "$(TOP)/lzo"; \
-		rm -rf "$(TOP)/liblz4"; \
-		rm -rf "$(TOP)/json-c"; \
-		true; \
-	fi
 
 distclean: clean
 ifneq ($(INSIDE_MAK),1)
@@ -2484,7 +2431,62 @@ config conf: rconf kconf
 menuconfig mconf: rmconf kmconf
 
 oldconfig oldconf: koldconf roldconf bboldconf
+	$(call CleanBlackfuel)
 
+define CleanBlackfuel
+	if [ ! -d "$(BLACKFUEL_DIR)" ]; then \
+		ln -sf ../$(BLACKFUEL_ADDON) "$(BLACKFUEL_DIR)"; \
+	fi; \
+	if [ ! -d "$(BLACKFUEL_DIR)/packages" ]; then \
+		echo "The blackfuel packages directory is missing: $(BLACKFUEL_DIR)/packages"; \
+		false; \
+	else \
+		rm -rf "$(TOP)/xzutils"; \
+		rm -rf "$(TOP)/zstd"; \
+		rm -rf "$(TOP)/tor"; \
+		rm -rf "$(TOP)/nettle"; \
+		rm -rf "$(TOP)/curl"; \
+		rm -rf "$(TOP)/findutils"; \
+		rm -rf "$(TOP)/whois"; \
+		rm -rf "$(TOP)/libsodium"; \
+		rm -rf "$(TOP)/dnscrypt"; \
+		rm -rf "$(TOP)/haveged"; \
+		rm -rf "$(TOP)/wipe"; \
+		rm -rf "$(TOP)/gsl"; \
+		rm -rf "$(TOP)/dieharder"; \
+		rm -rf "$(TOP)/popt"; \
+		rm -rf "$(TOP)/libgpg-error"; \
+		rm -rf "$(TOP)/util-linux"; \
+		rm -rf "$(TOP)/lvm2"; \
+		rm -rf "$(TOP)/libgcrypt"; \
+		rm -rf "$(TOP)/cryptsetup-gcrypt" "$(TOP)/cryptsetup-openssl" "$(TOP)/cryptsetup-nettle" "$(TOP)/cryptsetup-kernel"; \
+		rm -rf "$(TOP)/pps-tools"; \
+		rm -rf "$(TOP)/setserial"; \
+		rm -rf "$(TOP)/ntp"; \
+		rm -rf "$(TOP)/argp-standalone"; \
+		rm -rf "$(TOP)/libcap"; \
+		rm -rf "$(TOP)/rtl-sdr"; \
+		rm -rf "$(TOP)/rtl-entropy"; \
+		rm -rf "$(TOP)/ncurses-6.0"; \
+		rm -rf "$(TOP)/transmission-openssl" "$(TOP)/transmission-mbedtls"; \
+		rm -rf "$(TOP)/mbedtls"; \
+		rm -rf "$(TOP)/wget"; \
+		rm -rf "$(TOP)/apcupsd"; \
+		rm -rf "$(TOP)/libgd"; \
+		rm -rf "$(TOP)/jpeg"; \
+		rm -rf "$(TOP)/libpng"; \
+		rm -rf "$(TOP)/libtiff"; \
+		rm -rf "$(TOP)/freetype"; \
+		rm -rf "$(TOP)/bzip2"; \
+		rm -rf "$(TOP)/powstatd"; \
+		rm -rf "$(TOP)/zlib"; \
+		rm -rf "$(TOP)/lzo"; \
+		rm -rf "$(TOP)/liblz4"; \
+		rm -rf "$(TOP)/json-c"; \
+		rm -rf "$(TOP)/openssl-aarch64" && cp -a "$(TOP)/openssl" "$(TOP)/openssl-aarch64"; \
+		true; \
+	fi
+endef
 
 #
 # overrides and extra dependencies
@@ -2699,10 +2701,21 @@ openssl-1.0.0q-stage:
 	@true
 
 openssl/Makefile:
+ifeq ($(HND_ROUTER),y)
+	cd openssl && \
+	./Configure --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 \
+	linux-armv4 -DOPENSSL_NO_HEARTBEATS -DL_ENDIAN \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections \
+	-march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 \
+	-fomit-frame-pointer -fno-caller-saves
+else
 	cd openssl && \
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
 	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
+endif
+#	-I$(TOP)/cryptodev-linux -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS
 #	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
 #	no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
 #	no-ec no-ecdh no-ecdsa no-err no-hw no-jpake no-threads \
@@ -2776,6 +2789,72 @@ endif
 
 openssl-stage:
 	$(MAKE) -C openssl install_sw INSTALL_PREFIX=$(STAGEDIR)
+
+###############################################################################
+
+openssl-aarch64/Makefile:
+	cd openssl-aarch64 && \
+	$(BLACKFUEL_TOOLCHAIN) \
+	./Configure \
+	linux-aarch64 -DOPENSSL_NO_HEARTBEATS -DL_ENDIAN no-engine -march=armv8-a -fomit-frame-pointer -mabi=lp64 -D__ARM_ARCH_8A__ \
+	--prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections \
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
+#	-I$(TOP)/cryptodev-linux -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS
+#	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
+#	no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
+#	no-ec no-ecdh no-ecdsa no-err no-hw no-jpake no-threads \
+#	no-zlib no-engine no-engines no-sse2 no-perlasm \
+#	no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+
+	-@$(MAKE) -C openssl-aarch64 clean depend
+	@touch $@
+
+fsbuild-aarch64:
+	@echo "deleted fsbuild-aarch64"
+
+ifeq ($(HND_ROUTER),y)
+openssl-aarch64: openssl-aarch64/Makefile fsbuild
+else
+openssl-aarch64: openssl-aarch64/Makefile
+endif
+	$(MAKE) -C openssl-aarch64 && $(MAKE) $@-stage
+
+openssl-aarch64-clean:
+	[ ! -f openssl-aarch64/Makefile ] || $(MAKE) -C openssl-aarch64 clean depend
+	@rm -f openssl-aarch64/Makefile
+
+ifeq ($(HND_ROUTER),y)
+INSTALLSUBDIR=
+else
+INSTALLSUBDIR=/openssl-aarch64
+endif
+
+openssl-aarch64-install:
+	[ ! -f openssl-aarch64/Makefile ] || install -D openssl-aarch64/libcrypto.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib/libcrypto.so.1.0.0
+	[ ! -f openssl-aarch64/Makefile ] || $(STRIP_64) $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib/libcrypto.so.1.0.0
+	[ ! -f openssl-aarch64/Makefile ] || cd $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib && rm -f libcrypto.so && ln -sf libcrypto.so.1.0.0 libcrypto.so
+
+	[ ! -f openssl-aarch64/Makefile ] || install -D openssl-aarch64/apps/openssl $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/sbin/openssl
+	[ ! -f openssl-aarch64/Makefile ] || $(STRIP_64) $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/sbin/openssl
+	[ ! -f openssl-aarch64/Makefile ] || chmod 0500 $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/sbin/openssl
+	[ ! -f openssl-aarch64/Makefile ] || patchelf --set-rpath /aarch64/usr/lib $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/sbin/openssl
+
+ifeq ($(or $(RTCONFIG_WEBDAV),$(RTCONFIG_FTP_SSL),$(RTCONFIG_OPENVPN),$(RTCONFIG_HTTPS)),y)
+	[ ! -f openssl-aarch64/Makefile ] || install -D openssl-aarch64/libssl.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib/libssl.so.1.0.0
+	[ ! -f openssl-aarch64/Makefile ] || $(STRIP_64) $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib/libssl.so.1.0.0
+	[ ! -f openssl-aarch64/Makefile ] || cd $(INSTALLDIR)$(INSTALLSUBDIR)/aarch64/usr/lib && rm -f libssl.so && ln -sf libssl.so.1.0.0 libssl.so
+endif
+#ifeq ($(HND_ROUTER),y)
+#	[ ! -f openssl-aarch64/Makefile ] || mkdir -p $(BCM_FSBUILD_DIR)/public/include/openssl
+#	[ ! -f openssl-aarch64/Makefile ] || cp -u openssl/include/openssl/* $(BCM_FSBUILD_DIR)/public/include/openssl
+#endif
+#	[ ! -f openssl-aarch64/Makefile ] || install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/gencert.sh
+
+openssl-aarch64-stage:
+	$(MAKE) -C openssl-aarch64 install_sw INSTALL_PREFIX=$(STAGEDIR)/aarch64
+
+###############################################################################
 
 mssl: openssl
 
@@ -6044,9 +6123,8 @@ liblz4-install:
 
 json-c: json-c/stamp-h1
 	@[ ! -f json-c/stamp-h1 ] || ( $(SEP); \
-		[ -f "$(STAGEDIR)/usr/lib/libjson-c.so" ] || ( \
-			$(MAKE) -C json-c $(PARALLEL_BUILD) && $(MAKE) -C json-c install \
-			) \
+		[ -f "$(STAGEDIR)/usr/lib/libjson-c.so" ] || \
+			( $(MAKE) -C json-c $(PARALLEL_BUILD) && $(MAKE) -C json-c install ) \
 		)
 
 json-c/stamp-h1: json-c-unpack
@@ -6183,7 +6261,8 @@ json-c-install:
 		elif [ "$$PACKAGE_DIR" = "json-c" ]; then \
 			URL="http://http.debian.net/debian/pool/main/j/json-c/json-c_0.12.1.orig.tar.gz"; \
 		else \
-			URL="/$$PACKAGE_DIR-MISSING-URL"; \
+			URL="/$${PACKAGE_DIR}-MISSING-PACKAGE"; \
+			exit 1; \
 		fi; \
 		DL_DIR="$(BLACKFUEL_DIR)/downloads/$$PACKAGE_NAME"; \
 		PATCH_DIR="$(BLACKFUEL_DIR)/packages/$$PACKAGE_NAME/patches"; \
