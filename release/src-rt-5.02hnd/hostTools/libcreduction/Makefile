@@ -212,14 +212,14 @@ all install: print_libs
 	fi
 	@echo "###################################################"
 	@echo ""
-	@if [ -n "$(TOOLCHAIN_LIBS32)" ]; then install $(TOOLCHAIN_LIBS32) $(INSTALL_DIR)/lib; fi
+	@if [ -n "$(TOOLCHAIN_LIBS32)" ]; then cp -fv $(TOOLCHAIN_LIBS32) $(INSTALL_DIR)/lib; fi
 	@if [ -n "$(TOOLCHAIN_LIBS64)" ]; then \
 	    if [ ! -d "$(INSTALL_DIR)/lib/$(BCM_INSTALL_SUFFIX)" ]; then \
 	        mkdir $(INSTALL_DIR)/lib/$(BCM_INSTALL_SUFFIX); \
 	    fi ;\
-	    install $(TOOLCHAIN_LIBS64) $(INSTALL_DIR)/lib/$(BCM_INSTALL_SUFFIX); \
+	    cp -fv $(TOOLCHAIN_LIBS64) $(INSTALL_DIR)/lib/$(BCM_INSTALL_SUFFIX); \
 	fi
-	@if [ -n "$(TOOLCHAIN_LINKER)" ]; then install $(TOOLCHAIN_LINKER) $(INSTALL_DIR)/lib; fi
+	@if [ -n "$(TOOLCHAIN_LINKER)" ]; then cp -fv $(TOOLCHAIN_LINKER) $(INSTALL_DIR)/lib; fi
 ifneq ($(strip $(BRCM_IKOS)),)
         # Delete libraries not needed by the ikos Linux image. 
 	rm -rfv $(INSTALL_DIR)/lib/private $(INSTALL_DIR)/lib/libdl.so.0 $(INSTALL_DIR)/lib/libutil.so.0
