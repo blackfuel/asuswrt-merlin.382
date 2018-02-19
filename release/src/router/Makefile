@@ -9152,7 +9152,7 @@ libical-2.0.0-install:
 		ln -sf libicalvcal.so.2.0.0 libicalvcal.so.2.0 &&\
 		ln -sf libicalvcal.so.2.0.0 libicalvcal.so.2
 
-ncurses-6.0/Makefile:
+ncurses-6.0/Makefile: ncurses-6.0-unpack
 	cd ncurses-6.0 && \
 	PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
 	CFLAGS="$(CFLAGS) $(EXTRACFLAGS) -Os -I$(STAGEDIR)/usr/include" \
