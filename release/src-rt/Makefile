@@ -3979,9 +3979,9 @@ define CryptodevSetup
 	$(eval ASUSWRT_ADDON_DIR="$(ASUSWRT_DIR)/../asuswrt-merlin-addon")
 	$(eval KERNEL_CRYPTO_DIR=$(LINUXDIR)/crypto)
 	$(eval CRYPTODEV_NAME=cryptodev-linux)
-	$(eval CRYPTODEV_DIR=$(SRCBASE)/router/$(CRYPTODEV_NAME))
+	$(eval CRYPTODEV_DIR=$(KERNEL_CRYPTO_DIR)/$(CRYPTODEV_NAME))
 
-	$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(SRCBASE)/router,$(CRYPTODEV_NAME), \
+	$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(KERNEL_CRYPTO_DIR),$(CRYPTODEV_NAME), \
 		https://github.com/cryptodev-linux/cryptodev-linux.git, \
 		87d959d9a279c055b361de8e730fab6a7144edd7,1.9+git, \
 		e14ed020f51fe9355117fa0652be7dbb8b82fb6bf35132d5199f046d75986043)
@@ -3996,7 +3996,7 @@ define CryptodevSetup
 		echo "# $(CRYPTODEV_NAME): https://github.com/cryptodev-linux/cryptodev-linux" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
 		echo "#" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
 		echo "CONFIG_CRYPTODEV_LINUX:=y" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
-		echo "obj-\$$(CONFIG_CRYPTODEV_LINUX) += ../../../router/$(CRYPTODEV_NAME)/" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
+		echo "obj-\$$(CONFIG_CRYPTODEV_LINUX) += $(CRYPTODEV_NAME)/" >>$(KERNEL_CRYPTO_DIR)/Makefile; \
 	fi
 endef
 
