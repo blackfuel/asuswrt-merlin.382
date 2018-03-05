@@ -176,7 +176,7 @@ ifneq ($(CONSUMER_BUILD),)
 $(warning Consumer Release Build Detected, ignoring missing 64-bit libs: $(MISSING_LIBS64))
 else
 $(warning All Required 64-bit libraries: $(SHLIBS64))
-$(error Missing 64-bit libraries: $(MISSING_LIBS64))
+$(warning Missing 64-bit libraries: $(MISSING_LIBS64))
 endif
 endif
 
