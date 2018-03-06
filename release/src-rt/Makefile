@@ -3895,8 +3895,8 @@ define PackageSetup
 		PACKAGE_NAME="$(strip $(8))"; \
 		[ -n "$$PACKAGE_NAME" ] || PACKAGE_NAME="$$PACKAGE_DIR"; \
 		URL="$(strip $(4))"; \
-		SOURCE_VERSION="$(strip $(5))"; \
-		VERSION="$(strip $(6))"; \
+		VERSION="$(strip $(5))"; \
+		SOURCE_VERSION="$(strip $(6))"; \
 		HASH="$(strip $(7))"; \
 		if [ -z "$$URL" ]; then \
 			URL="/$${PACKAGE_NAME}-MISSING-PACKAGE"; \
@@ -3908,7 +3908,12 @@ define PackageSetup
 		DL_PATH="$$DL_DIR/$$DL_FILE"; \
 		if [ "$${DL_FILE%.git*}" != "$$DL_FILE" ]; then \
 			[ -z "$$VERSION" ] && DL_NAME="$$PACKAGE_NAME" || DL_NAME="$$PACKAGE_NAME-$$VERSION"; \
-			[ -z "$$SOURCE_VERSION" ] && SOURCE_VERSION="master"; \
+			if [ -z "$$SOURCE_VERSION" ]; then \
+				SOURCE_VERSION=`git ls-remote $${URL} | grep HEAD | cut -f1`; \
+				while [ -z "$$SOURCE_VERSION" ]; do \
+					sleep 10; SOURCE_VERSION=`git ls-remote $${URL} | grep HEAD | cut -f1`; \
+				done; \
+			fi; \
 			DL_FILE="$${DL_NAME}-$${SOURCE_VERSION}.tar.xz"; \
 			DL_PATH="$$DL_DIR/$$DL_FILE"; \
 			if [ ! -f "$$DL_PATH" ]; then \
@@ -3982,9 +3987,7 @@ define CryptodevSetup
 	$(eval CRYPTODEV_DIR=$(KERNEL_CRYPTO_DIR)/$(CRYPTODEV_NAME))
 
 	$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(KERNEL_CRYPTO_DIR),$(CRYPTODEV_NAME), \
-		https://github.com/cryptodev-linux/cryptodev-linux.git, \
-		87d959d9a279c055b361de8e730fab6a7144edd7,1.9+git, \
-		e14ed020f51fe9355117fa0652be7dbb8b82fb6bf35132d5199f046d75986043)
+		https://github.com/cryptodev-linux/cryptodev-linux.git, 1.9+git)
 
 	# create required version.h in cryptodev-linux
 	[ -f "$(CRYPTODEV_DIR)/version.h" ] || make -C $(CRYPTODEV_DIR) version.h
@@ -4000,13 +4003,80 @@ define CryptodevSetup
 	fi
 endef
 
+#
+# XtablesAddonsSetup: include the official xtables-addons kernel modules in Asuswrt firmwares
+#
+define IncludeXtablesKernelModule
+	$(eval KERNEL_MODULE_NAME=$(1))
+	$(eval KERNEL_MODULE_BUILTIN=$(2))
+	@if [ -f "$(XTABLES_EXTENSIONS_DIR)/$(KERNEL_MODULE_NAME).c" ]; then \
+		echo "obj-$(KERNEL_MODULE_BUILTIN) += xtables-addons/extensions/$(KERNEL_MODULE_NAME).o" >>$(KERNEL_NETFILTER_DIR)/Makefile; \
+		EXTSUBDIR="`dirname $(KERNEL_MODULE_NAME)`"; \
+		if [ "$$EXTSUBDIR" != "." ]; then \
+			for PATH_COMPAT_H in $(XTABLES_EXTENSIONS_DIR)/compat_*.h ; do \
+				COMPAT_H=`basename $$PATH_COMPAT_H`; \
+				ln -sf ../$$COMPAT_H $(XTABLES_EXTENSIONS_DIR)/$$EXTSUBDIR/$$COMPAT_H ; \
+			done; \
+		fi; \
+	else \
+		echo "MISSING SOURCE FILE: $(XTABLES_EXTENSIONS_DIR)/$(KERNEL_MODULE_NAME).c"; \
+		false; \
+	fi
+endef
+
+define XtablesAddonsSetup
+	$(eval XTABLES_ADDONS_VERSION=$(1))
+	$(eval ASUSWRT_DIR="`readlink -f $(SRC_ROOT)`/../..")
+	$(eval ASUSWRT_ADDON_DIR="$(ASUSWRT_DIR)/../asuswrt-merlin-addon")
+	$(eval KERNEL_NETFILTER_DIR=$(LINUXDIR)/net/netfilter)
+	$(eval XTABLES_ADDONS_NAME=xtables-addons)
+	$(eval XTABLES_ADDONS_DIR=$(KERNEL_NETFILTER_DIR)/$(XTABLES_ADDONS_NAME))
+	$(eval XTABLES_EXTENSIONS_DIR=$(XTABLES_ADDONS_DIR)/extensions)
+	$(eval XTABLES_EXISTS=$(shell grep -qF $(XTABLES_ADDONS_NAME) $(KERNEL_NETFILTER_DIR)/Makefile && echo 1 || echo 0))
+
+	# insert xtables-addons into the kernel build
+	$(if ifeq ($(XTABLES_EXISTS), 0),
+		$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(KERNEL_NETFILTER_DIR),$(XTABLES_ADDONS_NAME), \
+			https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-$(XTABLES_ADDONS_VERSION).tar.xz)
+		@echo "" >>$(KERNEL_NETFILTER_DIR)/Makefile
+		@echo "#" >>$(KERNEL_NETFILTER_DIR)/Makefile
+		@echo "# $(XTABLES_ADDONS_NAME): https://xtables-addons.sourceforge.net" >>$(KERNEL_NETFILTER_DIR)/Makefile
+		@echo "#" >>$(KERNEL_NETFILTER_DIR)/Makefile
+		$(call IncludeXtablesKernelModule,compat_xtables,m)
+		$(call IncludeXtablesKernelModule,ACCOUNT/xt_ACCOUNT,m)
+		$(call IncludeXtablesKernelModule,xt_CHAOS,m)
+		$(call IncludeXtablesKernelModule,xt_DELUDE,m)
+		$(call IncludeXtablesKernelModule,xt_DHCPMAC,m)
+		$(call IncludeXtablesKernelModule,xt_DNETMAP,m)
+		$(call IncludeXtablesKernelModule,xt_ECHO,n)
+		$(call IncludeXtablesKernelModule,xt_IPMARK,m)
+		$(call IncludeXtablesKernelModule,xt_LOGMARK,m)
+		$(call IncludeXtablesKernelModule,xt_SYSRQ,m)
+		$(call IncludeXtablesKernelModule,xt_TARPIT,m)
+		$(call IncludeXtablesKernelModule,xt_condition,m)
+		$(call IncludeXtablesKernelModule,xt_fuzzy,m)
+		$(call IncludeXtablesKernelModule,xt_geoip,m)
+		$(call IncludeXtablesKernelModule,xt_iface,m)
+		$(call IncludeXtablesKernelModule,xt_ipp2p,m)
+		$(call IncludeXtablesKernelModule,xt_ipv4options,m)
+		$(call IncludeXtablesKernelModule,xt_length2,m)
+		$(call IncludeXtablesKernelModule,xt_lscan,m)
+		$(call IncludeXtablesKernelModule,pknock/xt_pknock,m)
+		$(call IncludeXtablesKernelModule,xt_psd,m)
+		$(call IncludeXtablesKernelModule,xt_quota2,m)
+	)
+endef
+
 bin:
-ifeq ($(HND_ROUTER),y)
-	$(call CryptodevSetup)
-endif
 ifeq ($(BUILD_NAME),)
 	@echo $@" is not a valid target!"
 	@false
+endif
+ifeq ($(HND_ROUTER),y)
+	$(call CryptodevSetup)
+	$(call XtablesAddonsSetup,2.14)
+else
+	$(call XtablesAddonsSetup,1.47.1)
 endif
 ifeq ($(HND_ROUTER),y)
 	@echo BRCM_BOARD_ID=$(BRCM_BOARD_ID)
