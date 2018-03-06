@@ -4057,6 +4057,8 @@ set_hostname(void)
 int
 _start_telnetd(int force)
 {
+	return 1;
+#if 0	// Disable it
 	char *telnetd_argv[] = { "telnetd",
 		NULL, NULL,	/* -b address */
 #if defined(HND_ROUTER) && defined(RTCONFIG_HNDMFG)
@@ -4092,6 +4094,7 @@ _start_telnetd(int force)
 #endif
 
 	return _eval(telnetd_argv, NULL, 0, NULL);
+#endif	// Disable it
 }
 
 int
@@ -7541,7 +7544,6 @@ start_services(void)
 	start_amas_wlcconnect();
 	start_amas_bhctrl();	
 	start_amas_lanctrl();
-	start_amas_lldpd();
 #endif
 #if defined(RTCONFIG_BCMWL6) && defined(RTCONFIG_PROXYSTA)	
 	start_psta_monitor();
@@ -7706,6 +7708,9 @@ start_services(void)
 
 #ifdef RTCONFIG_ADTBW
 	start_adtbw();
+#endif
+#ifdef RTCONFIG_AMAS
+	start_amas_lldpd();
 #endif
 
 #ifdef RTCONFIG_PUSH_EMAIL
@@ -8723,10 +8728,6 @@ static void QOS_CONTROL()
 #if defined(RTCONFIG_BWDPI)
 	start_dpi_engine_service();
 #endif
-	// force to rebuild firewall to avoid some loopback issue
-	if (nvram_match("fw_nat_loopback", "2"))
-		start_firewall(wan_primary_ifunit(), 0);
-
 	start_iQos();
 
 #ifdef RTCONFIG_LANTIQ
@@ -11529,23 +11530,12 @@ check_ddr_done:
 			QOS_CONTROL();
 		}
 		nvram_set("restart_qo", "0");
-
-#if defined(RTCONFIG_BWDPI)
-		// force to rebuild firewall to avoid some loopback issue
-		if (nvram_match("fw_nat_loopback", "2"))
-			start_firewall(wan_primary_ifunit(), 0);
-#endif
 	}
 #if defined(RTCONFIG_BWDPI)
 	else if (strcmp(script, "wrs") == 0)
 	{
 		if(action & RC_SERVICE_STOP) stop_dpi_engine_service(0);
-		if(action & RC_SERVICE_START) {
-			start_dpi_engine_service();
-			// force to rebuild firewall to avoid some loopback issue
-			if (nvram_match("fw_nat_loopback", "2"))
-				start_firewall(wan_primary_ifunit(), 0);
-		}
+		if(action & RC_SERVICE_START) start_dpi_engine_service();
 	}
 	else if (strcmp(script, "wrs_force") == 0)
 	{
@@ -12294,10 +12284,10 @@ _dprintf("test 2. turn off the USB power during %d seconds.\n", reset_seconds[re
 	}
 #endif
 #ifdef RTCONFIG_CLOUDCHECK
-        else if(!strcmp(script, "cloudcheck")){
-                if(action & RC_SERVICE_STOP) stop_cloudcheck();
-                if(action & RC_SERVICE_START) start_cloudcheck();
-        }
+	else if(!strcmp(script, "cloudcheck")){
+		if(action & RC_SERVICE_STOP) stop_cloudcheck();
+		if(action & RC_SERVICE_START) start_cloudcheck();
+	}
 #endif
 #ifdef RTCONFIG_GETREALIP
 	else if(!strcmp(script, "getrealip")){
@@ -12819,6 +12809,9 @@ void gen_lldpd_if(char *bind_ifnames)
 {
 	char word[64], *next;
 	int i = 0;
+#ifdef HND_ROUTER
+	char *lacp_ifs = nvram_get_int("lacp_enabled")?nvram_safe_get("lacp_ifnames"):NULL;
+#endif
 
 	/* prepare binding interface list */
 #if defined(RTCONFIG_BCMARM) && defined(RTCONFIG_PROXYSTA)
@@ -12830,6 +12823,11 @@ void gen_lldpd_if(char *bind_ifnames)
 	{		
 		/* for lan_ifnames */
 		foreach (word, nvram_safe_get("lan_ifnames"), next) {
+
+#ifdef HND_ROUTER
+			if(lacp_ifs && strstr(lacp_ifs, word))
+				continue;
+#endif
 
 			if (i == 0)
 				i = 1;
@@ -12854,11 +12852,15 @@ void gen_lldpd_if(char *bind_ifnames)
 	{
 		/* for lan_ifnames */
 		foreach (word, nvram_safe_get("lan_ifnames"), next) {
-		if (i == 0)
-		i = 1;
-		else
-		bind_ifnames += sprintf(bind_ifnames, ",");
-		bind_ifnames += sprintf(bind_ifnames, "%s", word);
+#ifdef HND_ROUTER
+			if(lacp_ifs && strstr(lacp_ifs, word))
+				continue;
+#endif
+			if (i == 0)
+				i = 1;
+			else
+				bind_ifnames += sprintf(bind_ifnames, ",");
+			bind_ifnames += sprintf(bind_ifnames, "%s", word);
 		}
 	}
 
@@ -13374,6 +13376,10 @@ firmware_check_main(int argc, char *argv[])
 	isTcFwExist = separate_tc_fw_from_trx(argv[1]);
 #endif
 #endif
+
+//#ifdef CONFIG_BCMWL5
+//	fw_check_pre();
+//#endif
 
 	if(!check_imagefile(argv[1])) {
 		_dprintf("FW OK\n");
@@ -15378,11 +15384,6 @@ int start_cfgsync(void)
 	char *cfg_client_argv[] = {"cfg_client", NULL};
 	pid_t pid;
 	int ret = 0;
-
-	if (!f_exists("/etc/cfg_pub.pem"))
-	{
-		eval("/usr/sbin/gencfgcert.sh");
-	}
 
 #ifdef RTCONFIG_MASTER_DET
 	if (nvram_match("cfg_master", "1") && (!repeater_mode() && !mediabridge_mode()))
