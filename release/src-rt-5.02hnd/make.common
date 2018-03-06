@@ -474,7 +474,11 @@ export BRCM_APP_CFLAGS :=  $(BRCM_COMMON_CFLAGS) -mno-shared
 endif
 
 ifeq ($(ARCH),arm)
-BRCM_COMMON_CFLAGS := -Os -march=armv7-a -fomit-frame-pointer -mno-thumb-interwork -mabi=aapcs-linux -marm -fno-common -ffixed-r8 -msoft-float -D__ARM_ARCH_7A__ $(BRCM_WERROR_CFLAGS)
+ ifneq ($(strip $(BUILD_BRCM_HNDROUTER)),)
+BRCM_COMMON_CFLAGS := -O3 -march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fomit-frame-pointer -fno-caller-saves -mno-thumb-interwork -mabi=aapcs-linux -fno-common $(BRCM_WERROR_CFLAGS)
+ else
+BRCM_COMMON_CFLAGS := -O3 -march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer -fno-caller-saves -mfloat-abi=soft -mno-thumb-interwork -mabi=aapcs-linux -marm -fno-common $(BRCM_WERROR_CFLAGS)
+ endif
 #for mips' -mno-shared (do not generate posistion independent code), arm is -mno-apcs-reentrant which is the default
 ifeq ($(CMS_MEM_LEAK_TRACING),y)
 # These extra flags are needed by ARM stack backtrace function
