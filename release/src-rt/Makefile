@@ -3980,13 +3980,12 @@ endef
 # CryptodevSetup: this will enable /dev/crypto in Asuswrt firmwares
 #
 define CryptodevSetup
-	$(eval ASUSWRT_DIR="`readlink -f $(SRC_ROOT)`/../..")
-	$(eval ASUSWRT_ADDON_DIR="$(ASUSWRT_DIR)/../asuswrt-merlin-addon")
+	# CryptodevSetup
 	$(eval KERNEL_CRYPTO_DIR=$(LINUXDIR)/crypto)
 	$(eval CRYPTODEV_NAME=cryptodev-linux)
 	$(eval CRYPTODEV_DIR=$(KERNEL_CRYPTO_DIR)/$(CRYPTODEV_NAME))
 
-	$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(KERNEL_CRYPTO_DIR),$(CRYPTODEV_NAME), \
+	$(call PackageSetup,$(BLACKFUEL_DIR),$(KERNEL_CRYPTO_DIR),$(CRYPTODEV_NAME), \
 		https://github.com/cryptodev-linux/cryptodev-linux.git, 1.9+git)
 
 	# create required version.h in cryptodev-linux
@@ -4006,7 +4005,7 @@ endef
 #
 # XtablesAddonsSetup: include the official xtables-addons kernel modules in Asuswrt firmwares
 #
-define IncludeXtablesKernelModule
+define InsertXtablesKernelModule
 	$(eval KERNEL_MODULE_NAME=$(1))
 	$(eval KERNEL_MODULE_BUILTIN=$(2))
 	@if [ -f "$(XTABLES_EXTENSIONS_DIR)/$(KERNEL_MODULE_NAME).c" ]; then \
@@ -4025,9 +4024,8 @@ define IncludeXtablesKernelModule
 endef
 
 define XtablesAddonsSetup
+	# XtablesAddonsSetup
 	$(eval XTABLES_ADDONS_VERSION=$(1))
-	$(eval ASUSWRT_DIR="`readlink -f $(SRC_ROOT)`/../..")
-	$(eval ASUSWRT_ADDON_DIR="$(ASUSWRT_DIR)/../asuswrt-merlin-addon")
 	$(eval KERNEL_NETFILTER_DIR=$(LINUXDIR)/net/netfilter)
 	$(eval XTABLES_ADDONS_NAME=xtables-addons)
 	$(eval XTABLES_ADDONS_DIR=$(KERNEL_NETFILTER_DIR)/$(XTABLES_ADDONS_NAME))
@@ -4036,35 +4034,49 @@ define XtablesAddonsSetup
 
 	# insert xtables-addons into the kernel build
 	$(if ifeq ($(XTABLES_EXISTS), 0),
-		$(call PackageSetup,$(ASUSWRT_ADDON_DIR),$(KERNEL_NETFILTER_DIR),$(XTABLES_ADDONS_NAME), \
+		$(call PackageSetup,$(BLACKFUEL_DIR),$(KERNEL_NETFILTER_DIR),$(XTABLES_ADDONS_NAME), \
 			https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-$(XTABLES_ADDONS_VERSION).tar.xz)
 		@echo "" >>$(KERNEL_NETFILTER_DIR)/Makefile
 		@echo "#" >>$(KERNEL_NETFILTER_DIR)/Makefile
 		@echo "# $(XTABLES_ADDONS_NAME): https://xtables-addons.sourceforge.net" >>$(KERNEL_NETFILTER_DIR)/Makefile
 		@echo "#" >>$(KERNEL_NETFILTER_DIR)/Makefile
-		$(call IncludeXtablesKernelModule,compat_xtables,m)
-		$(call IncludeXtablesKernelModule,ACCOUNT/xt_ACCOUNT,m)
-		$(call IncludeXtablesKernelModule,xt_CHAOS,m)
-		$(call IncludeXtablesKernelModule,xt_DELUDE,m)
-		$(call IncludeXtablesKernelModule,xt_DHCPMAC,m)
-		$(call IncludeXtablesKernelModule,xt_DNETMAP,m)
-		$(call IncludeXtablesKernelModule,xt_ECHO,n)
-		$(call IncludeXtablesKernelModule,xt_IPMARK,m)
-		$(call IncludeXtablesKernelModule,xt_LOGMARK,m)
-		$(call IncludeXtablesKernelModule,xt_SYSRQ,m)
-		$(call IncludeXtablesKernelModule,xt_TARPIT,m)
-		$(call IncludeXtablesKernelModule,xt_condition,m)
-		$(call IncludeXtablesKernelModule,xt_fuzzy,m)
-		$(call IncludeXtablesKernelModule,xt_geoip,m)
-		$(call IncludeXtablesKernelModule,xt_iface,m)
-		$(call IncludeXtablesKernelModule,xt_ipp2p,m)
-		$(call IncludeXtablesKernelModule,xt_ipv4options,m)
-		$(call IncludeXtablesKernelModule,xt_length2,m)
-		$(call IncludeXtablesKernelModule,xt_lscan,m)
-		$(call IncludeXtablesKernelModule,pknock/xt_pknock,m)
-		$(call IncludeXtablesKernelModule,xt_psd,m)
-		$(call IncludeXtablesKernelModule,xt_quota2,m)
+		$(call InsertXtablesKernelModule,compat_xtables,m)
+		$(call InsertXtablesKernelModule,ACCOUNT/xt_ACCOUNT,m)
+		$(call InsertXtablesKernelModule,xt_CHAOS,m)
+		$(call InsertXtablesKernelModule,xt_DELUDE,m)
+		$(call InsertXtablesKernelModule,xt_DHCPMAC,m)
+		$(call InsertXtablesKernelModule,xt_DNETMAP,m)
+		$(call InsertXtablesKernelModule,xt_ECHO,n)
+		$(call InsertXtablesKernelModule,xt_IPMARK,m)
+		$(call InsertXtablesKernelModule,xt_LOGMARK,m)
+		$(call InsertXtablesKernelModule,xt_SYSRQ,m)
+		$(call InsertXtablesKernelModule,xt_TARPIT,m)
+		$(call InsertXtablesKernelModule,xt_condition,m)
+		$(call InsertXtablesKernelModule,xt_fuzzy,m)
+		$(call InsertXtablesKernelModule,xt_geoip,m)
+		$(call InsertXtablesKernelModule,xt_iface,m)
+		$(call InsertXtablesKernelModule,xt_ipp2p,m)
+		$(call InsertXtablesKernelModule,xt_ipv4options,m)
+		$(call InsertXtablesKernelModule,xt_length2,m)
+		$(call InsertXtablesKernelModule,xt_lscan,m)
+		$(call InsertXtablesKernelModule,pknock/xt_pknock,m)
+		$(call InsertXtablesKernelModule,xt_psd,m)
+		$(call InsertXtablesKernelModule,xt_quota2,m)
 	)
+endef
+
+define CreateBlackfuelDirectory
+	# CreateBlackfuelDirectory
+	@echo "PWD=$${PWD}"
+	$(eval ASUSWRT_DIR=$(shell echo "$${PWD%/release\/src*}";))
+	$(eval ASUSWRT_ADDON=../asuswrt-merlin-addon)
+	$(eval ASUSWRT_ADDON_DIR=$(ASUSWRT_DIR)/$(ASUSWRT_ADDON))
+	$(eval BLACKFUEL_DIR=$(ASUSWRT_DIR)/blackfuel-addon)
+	@echo "ASUSWRT_DIR=$(ASUSWRT_DIR)"
+	@echo "ASUSWRT_ADDON=$(ASUSWRT_ADDON)"
+	@echo "ASUSWRT_ADDON_DIR=$(ASUSWRT_ADDON_DIR)"
+	@echo "BLACKFUEL_DIR=$(BLACKFUEL_DIR)"
+	$(shell [ -d "$(BLACKFUEL_DIR)" ] || (mkdir -p $(ASUSWRT_ADDON_DIR) && rm -f "$(BLACKFUEL_DIR)" && ln -s $(ASUSWRT_ADDON) "$(BLACKFUEL_DIR)") )
 endef
 
 bin:
@@ -4072,12 +4084,16 @@ ifeq ($(BUILD_NAME),)
 	@echo $@" is not a valid target!"
 	@false
 endif
+### blackfuel
 ifeq ($(HND_ROUTER),y)
+	$(call CreateBlackfuelDirectory)
 	$(call CryptodevSetup)
 	$(call XtablesAddonsSetup,2.14)
 else
+	$(call CreateBlackfuelDirectory)
 	$(call XtablesAddonsSetup,1.47.1)
 endif
+### END blackfuel
 ifeq ($(HND_ROUTER),y)
 	@echo BRCM_BOARD_ID=$(BRCM_BOARD_ID)
 	@rm -f bcmdrivers/broadcom/net/wl/bcm9$(BCM_CHIP) && ln -sf impl51 bcmdrivers/broadcom/net/wl/bcm9$(BCM_CHIP)

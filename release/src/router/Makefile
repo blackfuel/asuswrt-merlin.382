@@ -695,9 +695,10 @@ endif
 #
 # Blackfuel addons
 #
-ASUSWRT_DIR:=`readlink -f $(TOP)`/../../..
-BLACKFUEL_ADDON:=blackfuel-addon
-BLACKFUEL_DIR:=$(ASUSWRT_DIR)/$(BLACKFUEL_ADDON)
+ASUSWRT_DIR:=`echo $${PWD%/release\/src*}`
+ASUSWRT_ADDON:=../asuswrt-merlin-addon
+ASUSWRT_ADDON_DIR:=$(ASUSWRT_DIR)/$(ASUSWRT_ADDON)
+BLACKFUEL_DIR:=$(ASUSWRT_DIR)/blackfuel-addon
 BLACKFUEL_OPTIMIZED_ARMV7:=-march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer -fno-caller-saves -mfloat-abi=soft
 BLACKFUEL_OPTIMIZED_ARMV8_32:=-march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
 BLACKFUEL_OPTIMIZED_ARMV8_64:=-march=armv8-a+crypto -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
@@ -2462,9 +2463,7 @@ oldconfig oldconf: koldconf roldconf bboldconf
 	$(call CleanBlackfuel)
 
 define CleanBlackfuel
-	if [ ! -d "$(BLACKFUEL_DIR)" ]; then \
-		ln -sf ../$(BLACKFUEL_ADDON) "$(BLACKFUEL_DIR)"; \
-	fi; \
+	[ -d "$(BLACKFUEL_DIR)" ] || (mkdir -p $(ASUSWRT_ADDON_DIR) && rm -f "$(BLACKFUEL_DIR)" && ln -s $(ASUSWRT_ADDON) "$(BLACKFUEL_DIR)"); \
 	if [ ! -d "$(BLACKFUEL_DIR)/packages" ]; then \
 		echo "The blackfuel packages directory is missing: $(BLACKFUEL_DIR)/packages"; \
 		false; \
@@ -6604,8 +6603,8 @@ strongswan-5.2.1/stamp-h1:
 	autoreconf -i -f && \
 	$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 	PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
-	CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
-	CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
+	CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -fPIC -I$(STAGEDIR)/usr/include" \
+	CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -fPIC -I$(STAGEDIR)/usr/include" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 	LIBS="-lssl -lcrypto -lpthread -ldl -lm" \
 	$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
@@ -6641,22 +6640,12 @@ strongswan-5.2.1-install: strongswan-5.2.1
 	@rm -rf $(INSTALLDIR)/strongswan-5.2.1/usr/etc
 	@rm -f $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/*.la
 	@rm -f $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/plugins/*.la
-ifeq ($(HND_ROUTER),y)
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/*.so
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/starter
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/stroke
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/scepclient
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/charon
-	$(STRIP_64) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/plugins/*.so
-else
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/*.so
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/starter
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/stroke
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/scepclient
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/charon
-	$(STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/lib/ipsec/plugins/*.so
-endif
-
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/*.so
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/starter
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/stroke
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/scepclient
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/charon
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/plugins/*.so
 	mv $(INSTALLDIR)/strongswan-5.2.1/etc $(INSTALLDIR)/strongswan-5.2.1/usr/
 
 strongswan-5.2.1-clean:
@@ -6761,7 +6750,29 @@ xtables-addons-clean:
 
 xtables-addons-install:
 	install -d $(INSTALLDIR)/xtables-addons/usr/lib/xtables
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_ACCOUNT.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_CHAOS.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_DELUDE.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_DHCPMAC.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_DNETMAP.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_ECHO.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_IPMARK.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_LOGMARK.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_SYSRQ.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
 	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_TARPIT.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_condition.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_dhcpmac.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_fuzzy.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_geoip.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_gradm.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_iface.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_ipp2p.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_ipv4options.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_length2.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_lscan.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_pknock.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_psd.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
+	cp -df $(STAGEDIR)/usr/lib/xtables/libxt_quota2.so $(INSTALLDIR)/xtables-addons/usr/lib/xtables/
 	chmod u+w $(INSTALLDIR)/xtables-addons/usr/lib/xtables/*
 	$(STRIP) $(INSTALLDIR)/xtables-addons/usr/lib/xtables/*.so*
 
