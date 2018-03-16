@@ -1,0 +1,28 @@
+--- a/libtransmission/file-posix.c
++++ b/libtransmission/file-posix.c
+@@ -71,6 +71,12 @@
+ #endif
+ #endif
+ 
++#include <stdint.h>
++#include <sys/syscall.h>
++#define OFF64_HI(offset) (uint32_t)(offset >> 32)
++#define OFF64_LO(offset) (uint32_t)(offset & 0xffffffff)
++#define OFF64_HI_LO(offset) __LONG_LONG_PAIR(OFF64_HI(offset), OFF64_LO(offset))
++
+ static void set_system_error(tr_error** error, int code)
+ {
+     if (error == NULL)
+@@ -926,6 +932,12 @@
+         code = posix_fallocate(handle, 0, size);
+         ret = code == 0;
+ 
++#elif defined SYS_fallocate
++#pragma message("SYS_fallocate detected. Using it.")
++        code = syscall(SYS_fallocate, handle, 0, OFF64_HI_LO (0), OFF64_HI_LO (size));
++        ret = code == 0;
++#else
++#pragma message("SYS_fallocate not detected.")
+ #endif
+ 
+ #if defined(HAVE_XFS_XFS_H) || defined(__APPLE__)

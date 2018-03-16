@@ -3950,11 +3950,11 @@ define PackageSetup
 		mkdir -p "$$DL_DIR/temp"; \
 		if [ "$${DL_FILE%.tar.gz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tgz*}" != "$$DL_FILE" ]; then \
 			tar xzvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.bz2*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.bz2*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tbz*}" != "$$DL_FILE" ]; then \
 			tar xjvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.xz*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.xz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.txz*}" != "$$DL_FILE" ]; then \
 			tar xJvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.lz*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.lz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tlz*}" != "$$DL_FILE" ]; then \
 			tar xlvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
 		fi; \
 		mv -f "$$DL_DIR/temp/"* "$$TARGET_DIR/$$PACKAGE_DIR"; \

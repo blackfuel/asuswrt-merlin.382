@@ -721,6 +721,7 @@ BLACKFUEL_OPTIMIZED_CONFIGURE:=$(if $(RTCONFIG_HND_ROUTER),./configure LD=/opt/t
 BLACKFUEL_OPTIMIZED_TOOLCHAIN:=CC="$(BLACKFUEL_OPTIMIZED_CC)" CXX="$(BLACKFUEL_OPTIMIZED_CXX)" CPP="$(BLACKFUEL_OPTIMIZED_CPP)" AR="$(BLACKFUEL_OPTIMIZED_AR)" AS="$(BLACKFUEL_OPTIMIZED_AS)" LD="$(BLACKFUEL_OPTIMIZED_LD)" NM="$(BLACKFUEL_OPTIMIZED_NM)" OBJCOPY="$(BLACKFUEL_OPTIMIZED_OBJCOPY)" OBJDUMP="$(BLACKFUEL_OPTIMIZED_OBJDUMP)" RANLIB="$(BLACKFUEL_OPTIMIZED_RANLIB)" SIZE="$(BLACKFUEL_OPTIMIZED_SIZE)" STRIP="$(BLACKFUEL_OPTIMIZED_STRIP)" $(BLACKFUEL_CURRENT_ARCH)
 BLACKFUEL_OPTIMIZED_LIB:=$(if $(RTCONFIG_HND_ROUTER),lib64,lib)
 BLACKFUEL_OPTIMIZED_SYSROOT:=$(if $(RTCONFIG_HND_ROUTER),/opt/toolchains/crosstools-aarch64-gcc-5.3-linux-4.1-glibc-2.22-binutils-2.25/usr/aarch64-buildroot-linux-gnu/sysroot,$(TOOLS)/bin/arm-brcm-linux-uclibcgnueabi/sysroot)
+BLACKFUEL_OPTIMIZED_HOST:=$(if $(RTCONFIG_HND_ROUTER),aarch64-buildroot-linux-gnu,arm-brcm-linux-uclibcgnueabi)
 
 obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += curl$(if $(RTCONFIG_HND_ROUTER),-aarch64,-7.21.7)
@@ -5690,8 +5691,7 @@ transmission-openssl-configure:
 		ZLIB_LIBS="-L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) -lz" \
 		./autogen.sh \
 		LD=$(BLACKFUEL_OPTIMIZED_LD) \
-		--host=aarch64-buildroot-linux-gnu \
-		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
+		--host=$(BLACKFUEL_OPTIMIZED_HOST) \
 		--prefix=/usr \
 		--libdir=/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
 		--datarootdir=/usr/local \
@@ -7180,10 +7180,10 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.1.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.2.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.0.1+git"; \
-			SOURCE_VERSION="cd65f6a84de1ca02c0827ecf5aa559bcec9fa1b3"; \
+			VERSION="2.0.2+git"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
 			URL="https://github.com/redlab-i/pps-tools/archive/v1.0.1.tar.gz"; \
@@ -7210,8 +7210,8 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "transmission-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "transmission-mbedtls" ]; then \
 			URL="git://github.com/transmission/transmission.git"; \
-			VERSION="2.92+git"; \
-			SOURCE_VERSION="5b29fe15561d40c40cbee635446df6b33e18d2c2"; \
+			VERSION="2.93+git"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
 			URL="https://tls.mbed.org/download/mbedtls-2.7.0-gpl.tgz"; \
@@ -7316,11 +7316,11 @@ strace-clean:
 		mkdir -p "$$DL_DIR/temp"; \
 		if [ "$${DL_FILE%.tar.gz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tgz*}" != "$$DL_FILE" ]; then \
 			tar xzvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.bz2*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.bz2*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tbz*}" != "$$DL_FILE" ]; then \
 			tar xjvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.xz*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.xz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.txz*}" != "$$DL_FILE" ]; then \
 			tar xJvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
-		elif [ "$${DL_FILE%.tar.lz*}" != "$$DL_FILE" ]; then \
+		elif [ "$${DL_FILE%.tar.lz*}" != "$$DL_FILE" ] || [ "$${DL_FILE%.tlz*}" != "$$DL_FILE" ]; then \
 			tar xlvf "$$DL_PATH" -C "$$DL_DIR/temp"; \
 		fi; \
 		mv -f "$$DL_DIR/temp/"* "$$PACKAGE_DIR"; \
