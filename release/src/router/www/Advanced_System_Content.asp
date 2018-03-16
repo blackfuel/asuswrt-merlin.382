@@ -880,29 +880,34 @@ var dstoff_end_m,dstoff_end_w,dstoff_end_d,dstoff_end_h;
 function parse_dstoffset(){     //Mm.w.d/h,Mm.w.d/h
 	if(dstoffset){
 		var dstoffset_startend = dstoffset.split(",");
-    			
-    		if(dstoffset_startend[0] != "" && dstoffset_startend[0] != undefined){		
-			var dstoffset_start = trim(dstoffset_startend[0]);		
+
+		if(dstoffset_startend[0] != "" && dstoffset_startend[0] != undefined){
+			var dstoffset_start = trim(dstoffset_startend[0]);
 			var dstoff_start = dstoffset_start.split(".");
 			dstoff_start_m = dstoff_start[0]!=""?dstoff_start[0]:"M3";
-			dstoff_start_w = validator.isNumber(dstoff_start[1], this)?dstoff_start[1]:"2";
-			dstoff_start_d = validator.isNumber(dstoff_start[2], this)?dstoff_start[2].split("/")[0]:"0";
-			dstoff_start_h = validator.isNumber(dstoff_start[2], this)?dstoff_start[2].split("/")[1]:"2";
+			dstoff_start_w = parseInt(dstoff_start[1]);
+			if (dstoff_start_w == "NaN") dstoff_start_w = "2";
+			dstoff_start_d = parseInt(dstoff_start[2].split("/")[0]);
+			if (dstoff_start_d == "NaN") dstoff_start_d = "0";
+			dstoff_start_h = parseInt(dstoff_start[2].split("/")[1]);
+			if (dstoff_start_h == "NaN") dstoff_start_h = "2";
 		}
-		
+
 		if(dstoffset_startend[1] != "" && dstoffset_startend[1] != undefined){
 			var dstoffset_end = trim(dstoffset_startend[1]);
 			var dstoff_end = dstoffset_end.split(".");
 			dstoff_end_m = dstoff_end[0]!=""?dstoff_end[0]:"M10";
-			dstoff_end_w = validator.isNumber(dstoff_end[1], this)?dstoff_end[1]:"2";
-			dstoff_end_d = validator.isNumber(dstoff_end[2], this)?dstoff_end[2].split("/")[0]:"0";
-			dstoff_end_h = validator.isNumber(dstoff_end[2], this)?dstoff_end[2].split("/")[1]:"2";
-		}	
-    			
+			dstoff_end_w = parseInt(dstoff_end[1]);
+			if (dstoff_end_w == "NaN") dstoff_end_w = "2";
+			dstoff_end_d = parseInt(dstoff_end[2].split("/")[0]);
+			if (dstoff_end_d == "NaN") dstoff_end_d = "0";
+			dstoff_end_h = parseInt(dstoff_end[2].split("/")[1]);
+			if (dstoff_end_h == "NaN") dstoff_end_h = "2";
+		}
 		//console.log(dstoff_start_m+"."+dstoff_start_w+"."+dstoff_start_d+"/"+dstoff_start_h);
 		//console.log(dstoff_end_m+"."+dstoff_end_w+"."+dstoff_end_d+"/"+dstoff_end_h);
 	}
-	
+
 	load_dst_m_Options();
 	load_dst_w_Options();
 	load_dst_d_Options();
@@ -1048,6 +1053,7 @@ function hide_https_crt(){
 		showhide("https_crt_san", (protos != "0" ? 1 : 0));
 		showhide("https_crt_gen", (protos != "0" ? 1 : 0));
 		showhide("https_cert", (protos != "0" ? 1 : 0));
+		showhide("cert_manage_link", 0);
 	}
 }
 
@@ -1939,6 +1945,7 @@ function upload_cert_key(){
 							<div style="display:table-cell;white-space: nowrap">Expires on :</div>
 							<div id="expireOn" style="display:table-cell; padding-left:10px;"></div>
 						</div>
+						<div id="cert_manage_link" style="padding-top:10px;"><span>Click <a style="color:#FC0;text-decoration: underline;" href="Advanced_ASUSDDNS_Content.asp">here</a> to manage.</span></div>
 					</td>
 				</tr>
 
