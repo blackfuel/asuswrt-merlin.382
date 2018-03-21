@@ -7099,10 +7099,10 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_58_0/curl-7.58.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.58.0+git"; \
-			SOURCE_VERSION="d6c21c8eec597a925d2b647cff3d58ac69de01a0"; \
+			VERSION="7.59.0+git"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
 			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.lz"; \
