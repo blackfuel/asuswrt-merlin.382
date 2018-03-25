@@ -7161,13 +7161,13 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
 			URL="http://rpm5.org/files/popt/popt-1.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgpg-error" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.28.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
-			VERSION="1.27+git"; \
+			VERSION="1.28+git"; \
 			SOURCE_VERSION="70058cd9f944d620764e57c838209afae8a58c78"; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.31/util-linux-2.31.1.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
 			URL="https://mirrors.kernel.org/sourceware/lvm2/LVM2.2.02.177.tgz"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
@@ -7214,9 +7214,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
-			URL="https://tls.mbed.org/download/mbedtls-2.7.0-gpl.tgz"; \
+			URL="https://tls.mbed.org/download/start/mbedtls-2.8.0-gpl.tgz"; \
 			URL2="https://github.com/ARMmbed/mbedtls.git"; \
-			VERSION="2.7.0+git"; \
+			VERSION="2.8.0+git"; \
 			SOURCE_VERSION="32605dc83042d737e715a685e53176388d73540e"; \
 			PACKAGE_NAME="mbedtls"; \
 		elif [ "$$PACKAGE_DIR" = "apcupsd" ]; then \
@@ -7262,7 +7262,11 @@ strace-clean:
 			SOURCE_VERSION="5806b687b142dad80c01ac17996241ba326623dc"; \
 			PACKAGE_NAME="nss"; \
 		elif [ "$$PACKAGE_DIR" = "xtables-addons" ]; then \
-			URL="https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-2.14.tar.xz"; \
+			if [ -n "$(RTCONFIG_HND_ROUTER)" ]; then \
+				URL="https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-2.14.tar.xz"; \
+			else \
+				URL="https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-1.47.1.tar.xz"; \
+			fi; \
 			PACKAGE_NAME="xtables-addons"; \
 		else \
 			URL="/$${PACKAGE_DIR}-MISSING-PACKAGE"; \
