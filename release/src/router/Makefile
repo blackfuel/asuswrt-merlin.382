@@ -7213,7 +7213,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
-			URL="https://tls.mbed.org/download/start/mbedtls-2.8.0-gpl.tgz"; \
+			URL="https://tls.mbed.org/download/mbedtls-2.8.0-gpl.tgz"; \
 			URL2="https://github.com/ARMmbed/mbedtls.git"; \
 			VERSION="2.8.0+git"; \
 			SOURCE_VERSION="32605dc83042d737e715a685e53176388d73540e"; \
