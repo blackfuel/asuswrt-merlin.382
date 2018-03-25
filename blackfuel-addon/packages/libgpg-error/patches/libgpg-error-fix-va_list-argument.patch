@@ -1,0 +1,11 @@
+--- a/src/logging.c
++++ b/src/logging.c
+@@ -1150,7 +1150,7 @@
+       va_end (arg_ptr);
+     }
+   else
+-    _gpgrt_logv_printhex (buffer, length, NULL, NULL);
++    _gpgrt_logv_printhex (buffer, length, NULL, arg_ptr);
+ }
+ 
+ 
