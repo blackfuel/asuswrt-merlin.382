@@ -2427,6 +2427,7 @@ void btn_check(void)
 				if (++btn_count > RESET_WAIT_COUNT)
 				{
 					dbg("You can release RESET button now!\n");
+					if (btn_pressed == 1 && shutdown_start("watchdog", __FUNCTION__, "reset_button_pressed") == 0) {
 #ifdef BLUECAVE
 					if(btn_pressed == 1) {
 						nvram_set("bc_ledbh", "reset");
@@ -2446,6 +2447,7 @@ void btn_check(void)
 						set_led(LED_BLINK_SLOW, LED_BLINK_SLOW);
 #endif
 					btn_pressed = 2;
+					} else if (btn_pressed == 1) btn_count = 0;
 				}
 				if (btn_pressed == 2)
 				{
