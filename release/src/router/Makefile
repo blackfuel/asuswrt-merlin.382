@@ -7091,7 +7091,7 @@ strace-clean:
 			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.tar.gz"; \
 			URL2="https://git.lysator.liu.se/nettle/nettle.git"; \
 			VERSION="3.4+git"; \
-			SOURCE_VERSION="0d9930963b4891c7823ec1382fd576821388f7d2"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="nettle"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ] || [ "$$PACKAGE_DIR" = "curl-7.21.7" ] || \
 			[ "$$PACKAGE_DIR" = "curl-aarch64" ]; then \
@@ -7107,7 +7107,7 @@ strace-clean:
 			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.lz"; \
 			URL2="https://gitlab.com/gnuwget/wget.git"; \
 			VERSION="1.19.4+git"; \
-			SOURCE_VERSION="ab8a3c80dfc981194ca2ea42d9f709ac198b222c"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="wget"; \
 		elif [ "$$PACKAGE_DIR" = "jpeg" ] || [ "$$PACKAGE_DIR" = "jpeg-aarch64" ]; then \
 			URL="http://www.ijg.org/files/jpegsrc.v9a.tar.gz"; \
@@ -7116,7 +7116,7 @@ strace-clean:
 			URL="https://zlib.net/zlib-1.2.11.tar.xz"; \
 			URL2="https://github.com/madler/zlib.git"; \
 			VERSION="1.2.11+git"; \
-			SOURCE_VERSION="cacf7f1d4e3d44d871b605da3b647f07d718623f"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zlib"; \
 		elif [ "$$PACKAGE_DIR" = "lzo" ] || [ "$$PACKAGE_DIR" = "lzo-aarch64" ]; then \
 			URL="http://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"; \
@@ -7131,13 +7131,13 @@ strace-clean:
 			URL="https://tukaani.org/xz/xz-5.2.3.tar.gz"; \
 			URL2="https://git.tukaani.org/xz.git"; \
 			VERSION="5.2.3+git"; \
-			SOURCE_VERSION="3d566cd519017eee1a400e7961ff14058dfaf33c"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/archive/v1.3.3.tar.gz"; \
+			URL="https://github.com/facebook/zstd/archive/v1.3.4.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.3.3+git"; \
-			SOURCE_VERSION="f3a8bd553a865c59f1bd6e1f68bf182cf75a8f00"; \
+			VERSION="1.3.4+git"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
 			URL="https://www.torproject.org/dist/tor-0.3.2.10.tar.gz"; \
@@ -7163,7 +7163,7 @@ strace-clean:
 			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.28.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
 			VERSION="1.28+git"; \
-			SOURCE_VERSION="70058cd9f944d620764e57c838209afae8a58c78"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ]; then \
 			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.tar.xz"; \
@@ -7216,7 +7216,7 @@ strace-clean:
 			URL="https://tls.mbed.org/download/mbedtls-2.8.0-gpl.tgz"; \
 			URL2="https://github.com/ARMmbed/mbedtls.git"; \
 			VERSION="2.8.0+git"; \
-			SOURCE_VERSION="32605dc83042d737e715a685e53176388d73540e"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="mbedtls"; \
 		elif [ "$$PACKAGE_DIR" = "apcupsd" ]; then \
 			URL="https://downloads.sourceforge.net/project/apcupsd/apcupsd - Stable/3.14.14/apcupsd-3.14.14.tar.gz"; \
@@ -7224,7 +7224,7 @@ strace-clean:
 			URL="https://github.com/libgd/libgd/releases/download/gd-2.2.5/libgd-2.2.5.tar.xz"; \
 			URL2="https://github.com/libgd/libgd.git"; \
 			VERSION="2.2.5+git"; \
-			SOURCE_VERSION="8255231b68889597d04d451a72438ab92a405aba"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgd"; \
 		elif [ "$$PACKAGE_DIR" = "libpng" ]; then \
 			URL="https://sourceforge.net/projects/libpng/files/libpng16/1.6.34/libpng-1.6.34.tar.xz"; \
@@ -7240,13 +7240,13 @@ strace-clean:
 			URL="https://github.com/lz4/lz4/archive/v1.8.1.2.tar.gz"; \
 			URL2="https://github.com/lz4/lz4.git"; \
 			VERSION="1.8.1.2+git"; \
-			SOURCE_VERSION="dfed9fa1d77f0434306d377c4da1f7191d3ba08a"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lz4"; \
 		elif [ "$$PACKAGE_DIR" = "strace" ] || [ "$$PACKAGE_DIR" = "strace-aarch64" ]; then \
 			URL="https://strace.io/files/4.21/strace-4.21.tar.xz"; \
 			URL2="https://github.com/strace/strace.git"; \
 			VERSION="4.21+git"; \
-			SOURCE_VERSION="003c02745f4a07d51cce133a090a1e4cc1a1edce"; \
+			SOURCE_VERSION=""; \
 			PACKAGE_NAME="strace"; \
 		elif [ "$$PACKAGE_DIR" = "libargon2" ]; then \
 			URL2="https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz"; \
