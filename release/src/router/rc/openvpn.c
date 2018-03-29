@@ -1339,6 +1339,7 @@ void start_ovpn_server(int serverNum)
 	fclose(fp);
 	vpnlog(VPN_LOG_EXTRA,"Done creating firewall rules");
 
+/*
 	// Run the firewall rules
 	vpnlog(VPN_LOG_EXTRA,"Running firewall rules");
 	sprintf(buffer, "/etc/openvpn/fw/server%d-fw.sh", serverNum);
@@ -1346,6 +1347,7 @@ void start_ovpn_server(int serverNum)
 	argv[1] = NULL;
 	_eval(argv, NULL, 0, NULL);
 	vpnlog(VPN_LOG_EXTRA,"Done running firewall rules");
+*/
 
 	// Start the VPN server
 	sprintf(buffer, "/etc/openvpn/vpnserver%d", serverNum);
