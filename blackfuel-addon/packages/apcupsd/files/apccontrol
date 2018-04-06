@@ -161,10 +161,12 @@ case "$1" in
         (
         # load the kernel modules for USB-enabled UPS device
         sleep 5
+        $LOGGER "load kernel modules [$$]"
         modprobe usbhid
         sleep 1
 
         # start apcupsd, then wait 5 seconds and try again if not yet running
+        $LOGGER "starting apcupsd [$$]"
         loop_wait=0
         while : ; do
           if [ $loop_wait -eq 0 ]; then
@@ -183,14 +185,21 @@ case "$1" in
           [ -z "$(pidof $APCUPSD_NAME)" ] && continue
 
           $LOGGER "started $APCUPSD_NAME [$$]"
+          sleep 30
           break
         done
 
-	# send an e-mail notification when the router has come back online
+        # send an e-mail notification when the router has come back online
         # and the UPS is back on mains power, after a power outage
-	if [ -f "$POWER_OUTAGE_FLAG" ]; then
-            if [ "$(echo $($APCACCESS -p STATUS))" == "ONLINE" ]; then
-                sleep 30
+        $LOGGER "check for power outage flag [$$]"
+        if [ -f "$POWER_OUTAGE_FLAG" ]; then
+            $LOGGER "check for ups online [$$]"
+            apcaccess_status="$(echo $($APCACCESS -p STATUS))"
+            $LOGGER "apcaccess status is $apcaccess_status [$$]"
+            if [ "$apcaccess_status" == "ONLINE" ]; then
+                $LOGGER "waiting to clear power outage flag [$$]"
+                sleep 5
+                $LOGGER "clear power outage flag [$$]"
                 rm -f "$POWER_OUTAGE_FLAG"
                 MSG="$($APCUPSD -V) Power has returned on UPS $ARG2..."
                 echo "$(date '+%Y-%m-%d %H:%M:%S %z')  $MSG" >>/var/log/apcupsd.events
@@ -200,10 +209,10 @@ case "$1" in
         fi
         ) &
     ;;
-    *)	echo "Usage: ${0##*/} command"
-	echo "	     warning: this script is intended to be launched by"
-	echo "	     apcupsd and should never be launched by users."
-	exit 1
+    *)  echo "Usage: ${0##*/} command"
+        echo "       warning: this script is intended to be launched by"
+        echo "       apcupsd and should never be launched by users."
+        exit 1
     ;;
 esac
 
