@@ -621,10 +621,10 @@ OBJS += amas_wlcconnect.o
 OBJS += amas_bhctrl.o
 endif
 OBJS += amas_lanctrl.o
+endif
 ifeq ($(RTCONFIG_LIBASUSLOG),y)
 LDFLAGS += -L$(TOP)/libasuslog -lasuslog
 CFLAGS += -I$(TOP)/libasuslog
-endif
 endif
 
 all: rc init.prep
@@ -984,10 +984,10 @@ ifeq ($(RTCONFIG_ADTBW),y)
 	@cd $(INSTALLDIR)/sbin && ln -sf rc adtbw
 endif
 
-#ifeq ($(RTAC68U),y)
-#	@cd $(INSTALLDIR)/sbin && ln -sf rc firmware_enc_crc
-#	@cd $(INSTALLDIR)/sbin && ln -sf rc fw_check
-#endif
+ifeq ($(RTAC68U),y)
+	@cd $(INSTALLDIR)/sbin && ln -sf rc firmware_enc_crc
+	@cd $(INSTALLDIR)/sbin && ln -sf rc fw_check
+endif
 
 clean:
 	rm -f rc *.o .*.depend *.prep

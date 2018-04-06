@@ -494,6 +494,40 @@ void start_ovpn_client(int clientNum)
 		return;
 	}
 	vpnlog(VPN_LOG_EXTRA,"Done starting openvpn");
+
+	// watchdog
+	sprintf(buffer, "/etc/openvpn/client%d/vpnc-watchdog%d.sh", clientNum, clientNum);
+	if (fp = fopen(buffer, "w")) {
+		chmod(buffer, S_IRUSR|S_IWUSR|S_IXUSR);
+		fprintf(fp, "#!/bin/sh\n"
+			    "while :\n"
+			    "do\n"
+			    "if [ -z $(pidof vpnclient%d) ]\n"
+			    "then\n"
+			    "service restart_vpnclient%d\n"
+			    "exit\n"
+			    "fi\n"
+			    "sleep 60\n"
+			    "done\n",
+			    clientNum, clientNum);
+		fclose(fp);
+		argv[0] = buffer;
+		argv[1] = NULL;
+		_eval(argv, NULL, 0, &pid);
+
+	        sprintf(buffer, "/var/run/vpnc-watchdog%d.pid", clientNum);
+
+	        if (fp = fopen(buffer, "w")) {
+		        fprintf(fp, "%d", pid);
+		        fclose(fp);
+
+			vpnlog(VPN_LOG_EXTRA,"VPN watchdog started.");
+		} else {
+			kill(pid, SIGTERM);
+		}
+
+	}
+
 	vpnlog(VPN_LOG_INFO,"VPN GUI client backend complete.");
 }
 
@@ -510,6 +544,11 @@ void stop_ovpn_client(int clientNum)
 	}
 
 	vpnlog(VPN_LOG_INFO,"Stopping VPN GUI client backend.");
+
+	// Stop watchdog
+	vpnlog(VPN_LOG_EXTRA, "Stopping OpenVPN watchdog.");
+	sprintf(buffer, "/var/run/vpnc-watchdog%d.pid", clientNum);
+	kill_pidfile_s_rm(buffer, SIGTERM);
 
 	// Stop the VPN client
 	vpnlog(VPN_LOG_EXTRA,"Stopping OpenVPN client.");
@@ -580,7 +619,6 @@ void start_ovpn_server(int serverNum)
 	enum { TAP, TUN } ifType = TUN;
 	enum { TLS, SECRET } cryptMode = TLS;
 	int nvi, ip[4], nm[4];
-	long int nvl;
 	int pid;
 	int taskset_ret;
 	char fpath[128];
@@ -1360,9 +1398,41 @@ void start_ovpn_server(int serverNum)
 	{
 		vpnlog(VPN_LOG_ERROR,"Starting VPN instance failed...");
 		stop_ovpn_server(serverNum);
+		nvram_pf_set(prefix, "state", "-1");
 		return;
 	}
 	vpnlog(VPN_LOG_EXTRA,"Done starting openvpn");
+
+	// watchdog
+	sprintf(buffer, "/etc/openvpn/server%d/vpns-watchdog%d.sh", serverNum, serverNum);
+	if (fp = fopen(buffer, "w")) {
+		chmod(buffer, S_IRUSR|S_IWUSR|S_IXUSR);
+		fprintf(fp, "#!/bin/sh\n"
+			    "while :\n"
+			    "do\n"
+			    "if [ -z $(pidof vpnserver%d) ]\n"
+			    "then\n"
+			    "service restart_vpnserver%d\n"
+			    "exit\n"
+			    "fi\n"
+			    "sleep 60\n"
+			    "done\n",
+			    serverNum, serverNum);
+		fclose(fp);
+
+		argv[0] = buffer;
+		argv[1] = NULL;
+		_eval(argv, NULL, 0, &pid);
+                sprintf(buffer, "/var/run/vpns-watchdog%d.pid", serverNum);
+
+                if (fp = fopen(buffer, "w")) {
+                        fprintf(fp, "%d", pid);
+                        fclose(fp);
+			vpnlog(VPN_LOG_EXTRA,"VPN watchdog started.");
+                } else {
+			kill(pid, SIGTERM);
+                }
+	}
 
 	if ( cryptMode == SECRET )
 	{
@@ -1386,6 +1456,11 @@ void stop_ovpn_server(int serverNum)
 	}
 
 	vpnlog(VPN_LOG_INFO,"Stopping VPN GUI server backend.");
+
+        // Stop watchdog
+        vpnlog(VPN_LOG_EXTRA, "Stopping OpenVPN watchdog.");
+        sprintf(buffer, "/var/run/vpns-watchdog%d.pid", serverNum);
+        kill_pidfile_s_rm(buffer, SIGTERM);
 
 	// Stop the VPN server
 	vpnlog(VPN_LOG_EXTRA,"Stopping OpenVPN server.");
@@ -1602,7 +1677,7 @@ void write_ovpn_dnsmasq_config(FILE* f)
 {
 	char nv[16];
 	char buf[24];
-	char *pos, ch;
+	char ch;
 	int unit, ch2;	DIR *dir;
 	struct dirent *file;
 	FILE *dnsf;

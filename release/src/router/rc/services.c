@@ -1754,17 +1754,6 @@ void stop_dnsmasq(void)
 
 void reload_dnsmasq(void)
 {
-
-#ifdef RTCONFIG_DNSSEC
-	if ((nvram_get_int("dnssec_enable") == 1) && (nvram_get_int("ntp_ready") == 1)) {
-		/* Don't reload, as it would prematurely enable timestamp validation */
-		stop_dnsmasq();
-		sleep(1);
-		start_dnsmasq();
-	}
-	else
-#endif
-
 	/* notify dnsmasq */
 	kill_pidfile_s("/var/run/dnsmasq.pid", SIGHUP);
 }
@@ -3946,6 +3935,7 @@ stop_misc(void)
 	if (pids("ntpclient"))
 		killall_tk("ntpclient");
 
+	stop_hotplug2();
 #ifdef RTCONFIG_BCMWL6
 #ifdef BCM_ASPMD
 	stop_aspmd();
@@ -3995,9 +3985,49 @@ stop_misc(void)
 	stop_lltdc();
 #endif
 	stop_networkmap();
-
 #ifdef RTCONFIG_NEW_USER_LOW_RSSI
 	stop_roamast();
+#endif
+#ifdef RTCONFIG_MDNS
+	stop_mdns();
+#endif
+#if !(defined(RTCONFIG_QCA) || defined(RTCONFIG_RALINK) || defined(RTCONFIG_REALTEK))
+	stop_erp_monitor();
+#endif
+#ifdef RTCONFIG_CROND
+	stop_cron();
+#endif
+#ifdef RTCONFIG_NOTIFICATION_CENTER
+	stop_notification_center();
+#endif
+#ifdef RTCONFIG_PROTECTION_SERVER
+	stop_ptcsrv();
+#endif
+#ifdef RTCONFIG_SYSSTATE
+	stop_sysstate();
+#endif
+	stop_logger();
+	stop_ots();
+#ifdef RTCONFIG_DISK_MONITOR
+        stop_diskmon();
+#endif
+#ifdef RTCONFIG_TUNNEL
+	stop_mastiff();
+#endif
+#ifdef RTCONFIG_BWDPI
+	stop_bwdpi_check();
+#endif
+#ifdef RTCONFIG_CFGSYNC
+	stop_cfgsync();
+#endif
+#ifdef RTCONFIG_AMAS
+	stop_amas_bhctrl();
+	stop_amas_lanctrl();
+	stop_amas_wlcconnect();
+	stop_amas_lldpd();
+#ifdef RTCONFIG_BCMWL6
+	stop_obd();
+#endif
 #endif
 }
 
@@ -4466,7 +4496,7 @@ void start_upnp(void)
 				}
 #endif
 #ifdef RTCONFIG_TUNNEL
-				if(nvram_get_int("aae_enable")) {
+				if((nvram_get_int("aae_enable") & 1) == 1) {
 					fprintf(f, "deny 61689 0.0.0.0/0 0-65535\n");	// MASTIFF_DEF_PORT
 				}
 #endif
@@ -4891,6 +4921,11 @@ int start_mdns(void)
 	char adisk_service_config[80];
 	char itune_service_config[80];
 
+#ifdef RTAC68U
+	if (!hw_usb_cap())
+		return 0;
+#endif
+
 	sprintf(afpd_service_config, "%s/%s", AVAHI_SERVICES_PATH, AVAHI_AFPD_SERVICE_FN);
 	sprintf(adisk_service_config, "%s/%s", AVAHI_SERVICES_PATH, AVAHI_ADISK_SERVICE_FN);
 	sprintf(itune_service_config, "%s/%s", AVAHI_SERVICES_PATH, AVAHI_ITUNE_SERVICE_FN);
@@ -4945,6 +4980,9 @@ void restart_mdns(void)
 	char itune_service_config[80];
 	sprintf(afpd_service_config, "%s/%s", AVAHI_SERVICES_PATH, AVAHI_AFPD_SERVICE_FN);
 	sprintf(itune_service_config, "%s/%s", AVAHI_SERVICES_PATH, AVAHI_ITUNE_SERVICE_FN);
+
+	if (g_reboot || g_upgrade)
+		return;
 
 	if (nvram_match("timemachine_enable", "1") == f_exists(afpd_service_config)){
 		if(nvram_match("daapd_enable", "1") == f_exists(itune_service_config)){
@@ -7919,9 +7957,6 @@ stop_services(void)
 #ifdef RTCONFIG_CLOUDCHECK
 	stop_cloudcheck();
 #endif
-#ifdef RTCONFIG_TUNNEL
-	stop_mastiff();
-#endif
 #ifdef RTCONFIG_KEY_GUARD
 	stop_keyguard();
 #endif
@@ -7943,6 +7978,9 @@ stop_services(void)
 #endif
 #ifdef RTCONFIG_CFGSYNC
 	stop_cfgsync();
+#endif
+#ifdef RTCONFIG_NEW_USER_LOW_RSSI
+	stop_roamast();
 #endif
 }
 
@@ -8124,6 +8162,12 @@ stop_services_mfg(void)
 #endif
 #ifdef RTCONFIG_NOTIFICATION_CENTER
 	stop_notification_center();
+#endif
+#ifdef RTCONFIG_TUNNEL
+	stop_mastiff();
+#endif
+#ifdef RTCONFIG_NEW_USER_LOW_RSSI
+	stop_roamast();
 #endif
 }
 
@@ -8485,6 +8529,9 @@ static int no_need_obd(void)
 	if (g_reboot || g_upgrade)
 		return -1;
 
+//	if (ATE_BRCM_FACTORY_MODE())
+//		return -1;
+
 	if (!is_router_mode() || (nvram_get_int("obd_Setting") == 1) || (nvram_get_int("x_Setting") == 1))
 		return -1;
 
@@ -8545,6 +8592,11 @@ start_usbled(void)
 
 #if defined(HND_ROUTER) && defined(RTCONFIG_HNDMFG)
 	return 0;
+#endif
+
+#ifdef RTAC68U
+	if (!hw_usb_cap())
+		return 0;
 #endif
 
 	stop_usbled();
@@ -9314,11 +9366,6 @@ again:
 			stop_dpi_engine_service(1);
 #endif
 			stop_misc();
-			stop_logger();
-			stop_upnp();
-#if defined(RTCONFIG_MDNS)
-			stop_mdns();
-#endif
 			stop_all_webdav();
 #ifdef RTCONFIG_CAPTIVE_PORTAL
 			stop_uam_srv();
@@ -9347,7 +9394,6 @@ again:
 			remove_storage_main(1);
 			remove_usb_module();
 #endif
-
 #endif
 			remove_conntrack();
 			stop_udhcpc(-1);
@@ -9357,27 +9403,12 @@ again:
 #endif
 			stop_dhcp6c();
 #endif
-
 #ifdef RTCONFIG_TR069
 			stop_tr();
 #endif
 			stop_jffs2(1);
-#ifdef RTCONFIG_JFFS2USERICON
-			stop_lltdc();
-#endif
-			stop_networkmap();
-
 #ifdef RTCONFIG_QCA_PLC_UTILS
 			reset_plc();
-#endif
-#ifdef RTCONFIG_CFGSYNC
-			stop_cfgsync();
-#endif
-#ifdef RTCONFIG_AMAS
-			stop_amas_lldpd();
-#if defined(RTCONFIG_BCMWL6)		
-			stop_obd();			
-#endif
 #endif
 			// TODO free necessary memory here
 			// Free kernel page cache
@@ -12206,6 +12237,11 @@ _dprintf("test 2. turn off the USB power during %d seconds.\n", reset_seconds[re
 		int ohcienable = nvram_get_int("usb_ohci");
 		int i;
 
+#ifdef RTAC68U
+		if (!hw_usb_cap())
+			return;
+#endif
+
 		_dprintf("xhcimode: stop_usb_program...\n");
 		stop_usb_program(1);
 
@@ -13384,9 +13420,11 @@ firmware_check_main(int argc, char *argv[])
 #endif
 #endif
 
-//#ifdef CONFIG_BCMWL5
-//	fw_check_pre();
-//#endif
+#ifdef CONFIG_BCMWL5
+#if defined(RTAC68U) || defined(RTAC88U) || defined(RTAC3100) || defined(RTAC5300) || defined(RTAC86U) // kludge
+	fw_check_pre();
+#endif
+#endif
 
 	if(!check_imagefile(argv[1])) {
 		_dprintf("FW OK\n");
@@ -15393,7 +15431,7 @@ int start_cfgsync(void)
 	int ret = 0;
 
 #ifdef RTCONFIG_MASTER_DET
-	if (nvram_match("cfg_master", "1") && (!repeater_mode() && !mediabridge_mode()))
+	if (nvram_match("cfg_master", "1") && (is_router_mode() || access_point_mode()))
 #else
 	if (is_router_mode())
 #endif	/* RTCONFIG_MASTER_DET */
@@ -15413,15 +15451,15 @@ int start_cfgsync(void)
 	}
 #endif
 	else if (
-#ifdef RTCONFIG_MASTER_DET
-		is_router_mode() ||
+#ifdef RTCONFIG_AMAS
+		(nvram_get_int("re_mode") == 1) &&
 #endif
-		((dpsr_mode()
+		(((dpsr_mode()
 #ifdef RTCONFIG_DPSTA
 		|| dpsta_mode()
 #endif
 		) && nvram_get_int("lan_state_t") == LAN_STATE_CONNECTED) ||
-		((repeater_mode() || mediabridge_mode()) && nvram_get_int("wlc_state") == WLC_STATE_CONNECTED))
+		((repeater_mode() || mediabridge_mode()) && nvram_get_int("wlc_state") == WLC_STATE_CONNECTED)))
 	{
 		stop_cfgsync();
 		ret = _eval(cfg_client_argv, NULL, 0, &pid);

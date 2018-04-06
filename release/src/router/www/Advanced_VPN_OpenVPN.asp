@@ -1171,7 +1171,7 @@ function update_digest() {
 		<input type="hidden" name="action_mode" value="apply">
 		<input type="hidden" name="action_script" value="saveNvram">
 		<input type="hidden" name="action_wait" value="1">
-		<input type="hidden" name="preferred_lang" id="preferred_lang" value="<% nvram_get("preferred_lang"); %>">
+		<input type="hidden" name="preferred_lang" value="<% nvram_get("preferred_lang"); %>">
 		<input type="hidden" name="firmver" value="<% nvram_get("firmver"); %>">
 		<input type="hidden" name="vpn_crt_server1_ca" value="" disabled>
 		<input type="hidden" name="vpn_crt_server1_crt" value="" disabled>
@@ -1271,7 +1271,7 @@ function update_digest() {
 <input type="hidden" name="action_mode" value="apply">
 <input type="hidden" name="action_wait" value="15">
 <input type="hidden" name="action_script" value="">
-<input type="hidden" name="preferred_lang" id="preferred_lang" value="<% nvram_get("preferred_lang"); %>">
+<input type="hidden" name="preferred_lang" value="<% nvram_get("preferred_lang"); %>">
 <input type="hidden" name="firmver" value="<% nvram_get("firmver"); %>">
 <input type="hidden" name="VPNServer_enable" value="<% nvram_get("VPNServer_enable"); %>">
 <input type="hidden" name="VPNServer_mode" value="<% nvram_get("VPNServer_mode"); %>">
@@ -1360,11 +1360,11 @@ function update_digest() {
 										<tr id="trClientWillUseVPNToAccess">
 											<th><#vpn_access#></th>
 											<td>
-												<input type="radio" name="vpn_server_client_access" id="vpn_server_client_access" class="input" value="0" <% nvram_match_x("", "vpn_server_client_access", "0", "checked"); %>>
+												<input type="radio" name="vpn_server_client_access" class="input" value="0" <% nvram_match_x("", "vpn_server_client_access", "0", "checked"); %>>
 												<label for="vpn_server_client_access_local">LAN only</label>
-												<input type="radio" name="vpn_server_client_access" id="vpn_server_client_access" class="input" value="1" <% nvram_match_x("", "vpn_server_client_access", "1", "checked"); %>>
+												<input type="radio" name="vpn_server_client_access" class="input" value="1" <% nvram_match_x("", "vpn_server_client_access", "1", "checked"); %>>
 												<label for="vpn_server_client_access_local">Internet only</label>
-												<input type="radio" name="vpn_server_client_access" id="vpn_server_client_access" class="input" value="2" <% nvram_match_x("", "vpn_server_client_access", "2", "checked"); %>>
+												<input type="radio" name="vpn_server_client_access" class="input" value="2" <% nvram_match_x("", "vpn_server_client_access", "2", "checked"); %>>
 												<label for="vpn_server_client_access_both">Both</label>
 											</td>
 										</tr>
