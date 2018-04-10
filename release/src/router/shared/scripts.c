@@ -179,7 +179,7 @@ int _shutdown_start(const char *cmd, ...)
 	if (shutdown_started == 0) {
 		nvram_set_int("shutdown_started", 1); // custom script is running
 		nvram_unset("shutdown_cancel");
-		run_custom_script_blocking("shutdown-start", args);
+		run_custom_script_blocking("shutdown-start", args, NULL);
 
 		if (nvram_get_int("shutdown_cancel") == 1) {
 			// custom script has canceled the system shutdown
