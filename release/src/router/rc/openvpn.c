@@ -1407,29 +1407,21 @@ void start_ovpn_server(int serverNum)
 	}
 
 	// watchdog
-	sprintf(buffer, "/etc/openvpn/server%d/vpns-watchdog%d.sh", serverNum, serverNum);
-	if (fp = fopen(buffer, "w")) {
-		char taskname[20];
-
-		chmod(buffer, S_IRUSR|S_IWUSR|S_IXUSR);
-		fprintf(fp, "#!/bin/sh\n"
-		            "if [ -z $(pidof vpnserver%d) ]\n"
-		            "then\n"
-		            "   service restart_vpnserver%d\n"
-		            "fi\n",
-		            serverNum, serverNum);
-		fclose(fp);
-
-		argv[0] = "cru";
-		argv[1] = "a";
-		sprintf(taskname, "CheckVPNServer%d", serverNum);
-		argv[2] = taskname;
-		sprintf(buffer2, "*/2 * * * * %s", buffer);
-		argv[3] = buffer2;
-		argv[4] = NULL;
-		_eval(argv, NULL, 0, NULL);
-		vpnlog(VPN_LOG_EXTRA,"Done adding cron job");
-	}
+	#define vpns_watchdog_script \
+          "if [ -z $(pidof vpnserver%d) ]; then " \
+            "service restart_vpnserver%d; " \
+          "fi"
+	sprintf(buffer, vpns_watchdog_script, serverNum, serverNum);
+	char taskname[20];
+	argv[0] = "cru";
+	argv[1] = "a";
+	sprintf(taskname, "CheckVPNServer%d", serverNum);
+	argv[2] = taskname;
+	sprintf(buffer2, "*/2 * * * * %s", buffer);
+	argv[3] = buffer2;
+	argv[4] = NULL;
+	_eval(argv, NULL, 0, NULL);
+	vpnlog(VPN_LOG_EXTRA,"Done adding cron job");
 
 	vpnlog(VPN_LOG_INFO,"VPN GUI server backend complete.");
 }
