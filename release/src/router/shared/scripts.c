@@ -29,6 +29,23 @@ int _xstart(const char *cmd, ...)
         return _eval(argv, NULL, 0, &pid);
 }
 
+int _xstart_pid(int *ppid, const char *cmd, ...)
+{
+        va_list ap;
+        char *argv[16];
+        int argc;
+
+        argv[0] = (char *)cmd;
+        argc = 1;
+        va_start(ap, cmd);
+        while ((argv[argc++] = va_arg(ap, char *)) != NULL) {
+                //
+        }
+        va_end(ap);
+
+        return _eval(argv, NULL, 0, ppid);
+}
+
 long fappend(FILE *out, const char *fname)
 {
 	FILE *in;

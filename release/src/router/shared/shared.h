@@ -1770,6 +1770,8 @@ extern int get_bonding_status();
 /* scripts.c */
 #define xstart(args...) _xstart(args, NULL)
 extern int _xstart(const char *cmd, ...);
+#define xstart_pid(ppid, args...) _xstart_pid(ppid, args, NULL)
+extern int _xstart_pid(int *ppid, const char *cmd, ...);
 extern void run_custom_script(char *name, char *args);
 extern void run_custom_script_blocking(char *name, char *arg1, char*arg2);
 extern void run_postconf(char *name, char *config);
