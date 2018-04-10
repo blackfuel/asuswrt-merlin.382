@@ -1407,11 +1407,7 @@ void start_ovpn_server(int serverNum)
 	}
 
 	// watchdog
-	#define vpns_watchdog_script \
-          "if [ -z $(pidof vpnserver%d) ]; then " \
-            "service restart_vpnserver%d; " \
-          "fi"
-	sprintf(buffer, vpns_watchdog_script, serverNum, serverNum);
+	sprintf(buffer, "[ -z $(pidof vpnserver%d) ] && service restart_vpnserver%d", serverNum, serverNum);
 	char taskname[20];
 	argv[0] = "cru";
 	argv[1] = "a";
