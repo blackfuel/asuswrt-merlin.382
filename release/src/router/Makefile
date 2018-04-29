@@ -7157,7 +7157,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
 			URL="http://rpm5.org/files/popt/popt-1.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgpg-error" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.28.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.29.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
 			VERSION="1.28+git"; \
 			SOURCE_VERSION=""; \
