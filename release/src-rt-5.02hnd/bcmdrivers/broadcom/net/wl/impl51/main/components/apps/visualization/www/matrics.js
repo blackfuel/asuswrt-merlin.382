@@ -49,11 +49,11 @@ timerdata[0] = Number(timerdata[0]);
 function initPage()
 {
 	if (isHTTPDWebserver == 1) {
-		urlremotesettings = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlapstainfo = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlglitchcounter  = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlpacketqueuestats = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlampdu = window.location.protocol+'//'+ window.location.host +'/json.cgi';
+		urlremotesettings = '/json.cgi';
+		urlapstainfo = '/json.cgi';
+		urlglitchcounter  = '/json.cgi';
+		urlpacketqueuestats = '/json.cgi';
+		urlampdu = '/json.cgi';
 	} else {
 		urlremotesettings = 'http://localhost/remotesettings.php';
 		urlapstainfo = 'http://localhost/stationdetails.php';

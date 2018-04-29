@@ -46,10 +46,10 @@ var g_selectedstamac = "";
 function initPage()
 {
 	if (isHTTPDWebserver == 1) {
-		urlremotesettings = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlchcapacity = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlapstainfo = window.location.protocol+'//'+ window.location.host +'/json.cgi';
-		urlselectedstainfodtls = window.location.protocol+'//'+ window.location.host +'/json.cgi';
+		urlremotesettings = '/json.cgi';
+		urlchcapacity = '/json.cgi';
+		urlapstainfo = '/json.cgi';
+		urlselectedstainfodtls = '/json.cgi';
 	} else {
 		urlremotesettings = 'http://localhost/remotesettings.php';
 		urlchcapacity = 'http://localhost/channelcapacity.php';

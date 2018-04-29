@@ -2732,7 +2732,7 @@ openssl-1.0.0q-stage:
 
 openssl/Makefile:
 	cd openssl && \
-	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
+	./Configure $(HOSTCONFIG) -DOPENSSL_NO_BUF_FREELISTS --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
 	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
 #	-I$(TOP)/cryptodev-linux -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS
