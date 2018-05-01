@@ -23,6 +23,26 @@
 prefix=/usr
 exec_prefix=${prefix}
 
+wall_write() {
+  logger -t $(basename $0) "$1"
+  for tty in /dev/pts/*; do
+    if [ -c $tty ]; then
+      echo "$1" >$tty
+    fi
+  done
+}
+
+wall() {
+  if [ -n "$1" ]; then
+    wall_write "$1"
+  else
+    local textline=""
+    while read -r textline; do
+      wall_write "$textline"
+    done
+  fi
+}
+
 APCPID=/var/run/apcupsd.pid
 APCUPSD="/usr/sbin/apcupsd"
 APCACCESS="/usr/sbin/apcaccess"
@@ -34,7 +54,8 @@ LOGGER="/usr/bin/logger -t $(/usr/bin/basename $0)"
 POWER_OUTAGE_FLAG=/jffs/apcupsd_power_outage
 SCRIPTSHELL=/bin/sh
 SCRIPTDIR=/usr/local/etc/apcupsd
-WALL=true
+#WALL=true
+WALL=wall
 
 #
 # Concatenate all output from this script to the events file
