@@ -17,8 +17,8 @@
 +	struct json_object	*jobj;
  };
  
- /*
-@@ -135,8 +135,8 @@
+ struct luks2_keyslot_params {
+@@ -154,8 +154,8 @@
  		      struct luks2_hdr *hdr,
  		      const char *backup_file);
  
@@ -27,5 +27,5 @@
 +uint64_t LUKS2_hdr_and_areas_size(struct json_object *jobj);
 +uint64_t LUKS2_keyslots_size(struct json_object *jobj);
  
- /*
-  * Generic LUKS2 keyslot
+ int LUKS2_keyslot_cipher_incompatible(struct crypt_device *cd);
+ 

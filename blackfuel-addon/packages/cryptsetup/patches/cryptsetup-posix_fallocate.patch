@@ -10,6 +10,18 @@
  
  static const char *opt_cipher = NULL;
  static const char *opt_hash = NULL;
+--- a/src/cryptsetup_reencrypt.c
++++ b/src/cryptsetup_reencrypt.c
+@@ -24,6 +24,9 @@
+ #include <linux/fs.h>
+ #include <arpa/inet.h>
+ #include <uuid/uuid.h>
++#ifndef HND_ROUTER
++#include "posix_fallocate.h"
++#endif
+ 
+ #define PACKAGE_REENC "crypt_reencrypt"
+ 
 --- a/lib/utils_device.c
 +++ b/lib/utils_device.c
 @@ -39,6 +39,9 @@
@@ -22,6 +34,18 @@
  
  struct device {
  	char *path;
+--- a/lib/luks2/luks2_luks1_convert.c
++++ b/lib/luks2/luks2_luks1_convert.c
+@@ -23,6 +23,9 @@
+ #include "luks2_internal.h"
+ #include "../luks1/luks.h"
+ #include "../luks1/af.h"
++#ifndef HND_ROUTER
++#include "../posix_fallocate.h"
++#endif
+ 
+ static int json_luks1_keyslot(const struct luks_phdr *hdr_v1, int keyslot, struct json_object **keyslot_object)
+ {
 --- a/lib/posix_fallocate.h
 +++ b/lib/posix_fallocate.h
 @@ -0,0 +1,27 @@
