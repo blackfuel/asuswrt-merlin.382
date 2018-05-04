@@ -7206,7 +7206,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "transmission-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "transmission-mbedtls" ]; then \
 			URL="git://github.com/transmission/transmission.git"; \
-			VERSION="2.93+git"; \
+			VERSION="2.94+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
