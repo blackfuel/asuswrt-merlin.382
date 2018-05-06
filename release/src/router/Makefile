@@ -7105,9 +7105,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
-			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.lz"; \
+			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.5.tar.lz"; \
 			URL2="https://gitlab.com/gnuwget/wget.git"; \
-			VERSION="1.19.4+git"; \
+			VERSION="1.19.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="wget"; \
 		elif [ "$$PACKAGE_DIR" = "jpeg" ] || [ "$$PACKAGE_DIR" = "jpeg-aarch64" ]; then \
