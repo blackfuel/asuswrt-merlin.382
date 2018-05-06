@@ -1335,7 +1335,22 @@ CONFIG_USB_NET_QMI_WWAN=m
 #
 # Input device support
 #
-# CONFIG_INPUT is not set
+CONFIG_INPUT=m
+
+#
+# HID support
+CONFIG_HID=m
+# CONFIG_HID_BATTERY_STRENGTH is not set
+# CONFIG_HIDRAW is not set
+# CONFIG_UHID is not set
+CONFIG_HID_GENERIC=m
+
+#
+# USB HID support
+#
+CONFIG_USB_HID=m
+# CONFIG_HID_PID is not set
+# CONFIG_USB_HIDDEV is not set
 
 #
 # Hardware I/O ports
@@ -1714,15 +1729,6 @@ CONFIG_BCMA_POSSIBLE=y
 # CONFIG_SOUND is not set
 
 #
-# HID support
-#
-CONFIG_HID=m
-# CONFIG_HID_BATTERY_STRENGTH is not set
-CONFIG_HIDRAW=y
-# CONFIG_UHID is not set
-CONFIG_HID_GENERIC=m
-
-#
 # Special HID drivers
 #
 # CONFIG_HID_A4TECH is not set
@@ -1785,13 +1791,6 @@ CONFIG_HID_GENERIC=m
 # CONFIG_HID_ZEROPLUS is not set
 # CONFIG_HID_ZYDACRON is not set
 # CONFIG_HID_SENSOR_HUB is not set
-
-#
-# USB HID support
-#
-CONFIG_USB_HID=m
-# CONFIG_HID_PID is not set
-CONFIG_USB_HIDDEV=y
 
 #
 # USB HID Boot Protocol drivers
