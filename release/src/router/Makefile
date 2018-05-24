@@ -7145,7 +7145,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
-			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.3.0.tar.xz"; \
+			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.3.1.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
