@@ -771,6 +771,7 @@ obj-y += cryptsetup-gcrypt
 obj-y += libargon2
 obj-y += libgcrypt
 obj-y += libgpg-error
+obj-y += libaio
 obj-y += lvm2
 obj-y += util-linux
 obj-y += popt
@@ -780,6 +781,7 @@ ifeq ($(RTCONFIG_CRYPTSETUP),openssl)
 obj-y += cryptsetup-openssl
 obj-y += libargon2
 obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
+obj-y += libaio
 obj-y += lvm2
 obj-y += util-linux
 obj-y += popt
@@ -789,6 +791,7 @@ ifeq ($(RTCONFIG_CRYPTSETUP),nettle)
 obj-y += cryptsetup-nettle
 obj-y += libargon2
 obj-y += nettle$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
+obj-y += libaio
 obj-y += lvm2
 obj-y += util-linux
 obj-y += popt
@@ -797,6 +800,7 @@ else
 ifeq ($(RTCONFIG_CRYPTSETUP),kernel)
 obj-y += cryptsetup-kernel
 obj-y += libargon2
+obj-y += libaio
 obj-y += lvm2
 obj-y += util-linux
 obj-y += popt
@@ -4893,9 +4897,32 @@ util-linux-install:
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/losetup
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/hwclock
 
+### libaio
+
+libaio: libaio-unpack
+	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
+
+libaio-stage:
+	@echo libaio
+	@[ ! -d libaio ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libaio.so" ] || ( cd libaio ; \
+		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
+		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		$(MAKE) install prefix=$(STAGEDIR)/usr includedir=$(STAGEDIR)/usr/include libdir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
+		)
+
+libaio-clean:
+	-@$(MAKE) -C libaio clean
+
+libaio-install:
+	install -d $(INSTALLDIR)/libaio/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libaio.so* $(INSTALLDIR)/libaio/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	chmod u+w $(INSTALLDIR)/libaio/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
+
 ### lvm2
 
-lvm2: lvm2/Makefile
+lvm2: libaio lvm2/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 lvm2/Makefile: lvm2-unpack lvm2/configure
@@ -7168,6 +7195,12 @@ strace-clean:
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ]; then \
 			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.tar.xz"; \
+		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
+			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
+			URL2="https://pagure.io/libaio.git"; \
+			VERSION="0.3.111+git"; \
+			SOURCE_VERSION=""; \
+			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
 			URL="https://mirrors.kernel.org/sourceware/lvm2/LVM2.2.02.178.tgz"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
