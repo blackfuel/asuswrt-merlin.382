@@ -7109,7 +7109,8 @@ wdp:
 	cfgsync_check();
 #endif
 #ifdef RTCONFIG_TUNNEL
-	mastiff_check();
+	if(!nvram_get_int("aae_disable_force"))
+		mastiff_check();
 #endif
 }
 
