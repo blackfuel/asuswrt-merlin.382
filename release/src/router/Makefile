@@ -2501,6 +2501,7 @@ define CleanBlackfuel
 		rm -rf "$(TOP)/popt"; \
 		rm -rf "$(TOP)/libgpg-error"; \
 		rm -rf "$(TOP)/util-linux"; \
+		rm -rf "$(TOP)/libaio"; \
 		rm -rf "$(TOP)/lvm2"; \
 		rm -rf "$(TOP)/libgcrypt"; \
 		rm -rf "$(TOP)/cryptsetup-gcrypt" "$(TOP)/cryptsetup-openssl" "$(TOP)/cryptsetup-nettle" "$(TOP)/cryptsetup-kernel"; \
