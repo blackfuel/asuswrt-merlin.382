@@ -7141,7 +7141,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.3.6.tar.gz"; \
+			URL="https://www.torproject.org/dist/tor-0.3.3.7.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
@@ -7169,11 +7169,11 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "util-linux" ]; then \
 			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
-			URL="https://mirrors.kernel.org/sourceware/lvm2/LVM2.2.02.177.tgz"; \
+			URL="https://mirrors.kernel.org/sourceware/lvm2/LVM2.2.02.178.tgz"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.2.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.3.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgcrypt.git"; \
-			VERSION="1.8.2+git"; \
+			VERSION="1.8.3+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgcrypt"; \
 		elif [ "$$PACKAGE_DIR" = "cryptsetup-gcrypt" ] || \
