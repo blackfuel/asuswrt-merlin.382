@@ -7204,6 +7204,10 @@ strace-clean:
 			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
 			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.178.tgz"; \
+			URL2="git://sourceware.org/git/lvm2.git"; \
+			VERSION="2.02.178+git"; \
+			SOURCE_VERSION=""; \
+			PACKAGE_NAME="LVM2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
 			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.3.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgcrypt.git"; \
