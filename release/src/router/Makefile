@@ -7184,7 +7184,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "wipe" ]; then \
 			URL="https://downloads.sourceforge.net/project/wipe/wipe/2.3.1/wipe-2.3.1.tar.bz2"; \
 		elif [ "$$PACKAGE_DIR" = "gsl" ]; then \
-			URL="https://ftpmirror.gnu.org/gsl/gsl-2.4.tar.gz"; \
+			URL="https://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.5.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dieharder" ]; then \
 			URL="http://www.phy.duke.edu/~rgb/General/dieharder/dieharder-3.31.1.tgz"; \
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
