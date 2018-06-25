@@ -1172,7 +1172,7 @@ int write_3g_conf(FILE *fp, int dno, int aut, const unsigned int vid, const unsi
 			fprintf(fp, "DefaultVendor=0x%04x\n",	0x12d1);
 			fprintf(fp, "DefaultProduct=0x%04x\n",	0x1446);
 			fprintf(fp, "TargetVendor=0x%04x\n",	0x12d1);
-			fprintf(fp, "TargetProduct= \"1001,1406,140b,140c,1412,141b,14ac\"\n");
+			fprintf(fp, "TargetProductList=\"%s\"\n",	"1001,1406,140b,140c,1412,141b,14ac");
 			fprintf(fp, "CheckSuccess=%d\n",	20);
 			fprintf(fp, "MessageContent=%s\n",	"55534243123456780000000000000011062000000100000000000000000000");
 			break;
@@ -4913,13 +4913,10 @@ int asus_usb_interface(const char *device_name, const char *action)
 		snprintf(buf, sizeof(buf), "%x %x", vid, pid);
 		f_write_string("/sys/bus/usb-serial/drivers/option1/new_id", buf, 0, 0);
 #else
-		//sleep(2);
-		//snprintf(modem_cmd, sizeof(modem_cmd), "vendor=0x%04x", vid);
-		//snprintf(buf, sizeof(buf), "product=0x%04x", pid);
-		//eval("insmod", "option", modem_cmd, buf);
 		usb_dbg("(%s): Runing option with (0x%04x/0x%04x)...\n", device_name, vid, pid);
-		snprintf(modem_cmd, sizeof(modem_cmd), "vendor=0x%04x product=0x%04x", vid, pid);
-		modprobe("option", modem_cmd);
+		snprintf(modem_cmd, sizeof(modem_cmd), "vendor=0x%04x", vid);
+		snprintf(buf, sizeof(buf), "product=0x%04x", pid);
+		modprobe("option", modem_cmd, buf);
 #endif
 		sleep(1);
 	}
