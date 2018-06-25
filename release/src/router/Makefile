@@ -7208,7 +7208,7 @@ strace-clean:
 			URL2="git://sourceware.org/git/lvm2.git"; \
 			VERSION="2.02.178+git"; \
 			SOURCE_VERSION=""; \
-			PACKAGE_NAME="LVM2"; \
+			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
 			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.3.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgcrypt.git"; \
