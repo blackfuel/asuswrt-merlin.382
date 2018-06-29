@@ -7164,9 +7164,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/archive/v1.3.4.tar.gz"; \
+			URL="https://github.com/facebook/zstd/archive/v1.3.5.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.3.4+git"; \
+			VERSION="1.3.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
