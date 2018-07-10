@@ -7170,7 +7170,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.3.7.tar.gz"; \
+			URL="https://www.torproject.org/dist/tor-0.3.3.8.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
