@@ -5,7 +5,7 @@
 # loses contact with the UPS (i.e. the serial connection is not responding).
 # We send an email message to root to notify him.
 #
-. /usr/local/etc/apcupsd/apcupsd_mail.conf
+source /usr/local/etc/apcupsd/apcupsd_mail.conf
 
 MSG="$HOSTNAME Communications with UPS $1 lost"
 #
@@ -17,5 +17,5 @@ MSG="$HOSTNAME Communications with UPS $1 lost"
    echo "$MSG"
    echo " "
    /usr/sbin/apcaccess status
-) | $MAILPROG -t -S $MAILHOST -f $(echo $FROM | sed -r 's/.*<(.*)>.*/\1/')
+) | apcupsd_mail_command
 exit 0

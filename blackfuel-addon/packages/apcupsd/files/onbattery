@@ -5,7 +5,7 @@
 # goes on batteries.
 # We send an email message to root to notify him.
 #
-. /usr/local/etc/apcupsd/apcupsd_mail.conf
+source /usr/local/etc/apcupsd/apcupsd_mail.conf
 
 MSG="$HOSTNAME UPS $1 Power Failure !!!"
 #
@@ -17,5 +17,5 @@ MSG="$HOSTNAME UPS $1 Power Failure !!!"
    echo "$MSG"
    echo " "
    /usr/sbin/apcaccess status
-) | $MAILPROG -t -S $MAILHOST -f $(echo $FROM | sed -r 's/.*<(.*)>.*/\1/')
+) | apcupsd_mail_command
 exit 0

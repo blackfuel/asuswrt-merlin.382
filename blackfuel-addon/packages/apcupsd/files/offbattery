@@ -5,7 +5,7 @@
 # UPS goes back on to the mains after a power failure.
 # We send an email message to root to notify him.
 #
-. /usr/local/etc/apcupsd/apcupsd_mail.conf
+source /usr/local/etc/apcupsd/apcupsd_mail.conf
 
 MSG="$HOSTNAME UPS $1 Power has returned"
 #
@@ -17,5 +17,5 @@ MSG="$HOSTNAME UPS $1 Power has returned"
    echo "$MSG"
    echo " "
    /usr/sbin/apcaccess status
-) | $MAILPROG -t -S $MAILHOST -f $(echo $FROM | sed -r 's/.*<(.*)>.*/\1/')
+) | apcupsd_mail_command
 exit 0
