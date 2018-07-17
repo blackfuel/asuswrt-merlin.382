@@ -7128,9 +7128,9 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_60_0/curl-7.60.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_61_0/curl-7.61.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.60.0+git"; \
+			VERSION="7.61.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
