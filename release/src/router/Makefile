@@ -4850,6 +4850,7 @@ util-linux-configure:
 		--enable-shared \
 		--enable-static \
 		$(if $(RTCONFIG_HND_ROUTER),,--disable-tls) \
+		$(if $(RTCONFIG_HND_ROUTER),,--disable-chcpu) \
 		--disable-rpath \
 		--disable-silent-rules \
 		--disable-bash-completion \
