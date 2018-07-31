@@ -7180,6 +7180,10 @@ strace-clean:
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
 			URL="http://http.debian.net/debian/pool/main/d/dnscrypt-proxy/dnscrypt-proxy_1.9.5.orig.tar.gz"; \
+			URL2="https://github.com/dyne/dnscrypt-proxy"; \
+			VERSION="1.9.5+git"; \
+			SOURCE_VERSION="3762f45e2f0d0781fbe3c73413b048dd9890cfd6"; \
+			PACKAGE_NAME="dnscrypt"; \
 		elif [ "$$PACKAGE_DIR" = "haveged" ]; then \
 			URL="http://www.issihosts.com/haveged/haveged-1.9.1.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "wipe" ]; then \
