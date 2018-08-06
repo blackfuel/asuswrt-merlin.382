@@ -7230,9 +7230,9 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.3.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.4.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.0.3+git"; \
+			VERSION="2.0.4+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
