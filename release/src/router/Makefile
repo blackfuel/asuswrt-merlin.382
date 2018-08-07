@@ -7255,7 +7255,7 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "transmission-mbedtls" ]; then \
 			URL="git://github.com/transmission/transmission.git"; \
 			VERSION="2.94+git"; \
-			SOURCE_VERSION=""; \
+			SOURCE_VERSION="c11f2870fd18ff781ca06ce84b6d43541f3293dd"; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
 			URL="https://tls.mbed.org/download/mbedtls-2.11.0-gpl.tgz"; \
