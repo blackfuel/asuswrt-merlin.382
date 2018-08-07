@@ -3550,20 +3550,22 @@ odhcp6c-clean:
 6relayd-clean:
 	-@$(MAKE) -C 6relayd clean
 
-e2fsprogs: e2fsprogs/Makefile
-	$(MAKE) -C e2fsprogs $(PARALLEL_BUILD) && $(MAKE) $@-stage
+e2fsprogs: util-linux e2fsprogs/Makefile
+	$(MAKE) -C e2fsprogs $(PARALLEL_BUILD)
 
 e2fsprogs/Makefile:
 	$(MAKE) e2fsprogs-configure
 
 e2fsprogs-configure: e2fsprogs/Makefile.in
 	cd e2fsprogs && \
-	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
-	LDFLAGS="-Wl,--gc-sections $(EXTRALDFLAGS)" \
+	PKG_CONFIG_PATH="$(STAGEDIR)/usr/lib/pkgconfig" \
+	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) -I$(STAGEDIR)/usr/include" \
+	LDFLAGS="-Wl,--gc-sections $(EXTRALDFLAGS) -L$(STAGEDIR)/usr/lib" \
+	LIBS="-luuid -L$(STAGEDIR)/usr/lib" \
 	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --enable-elf-shlibs \
-		--disable-rpath --disable-nls --disable-tls \
+		--disable-rpath --disable-nls $(if $(RTCONFIG_HND_ROUTER),,--disable-tls) \
 		--disable-jbd-debug --disable-blkid-debug --disable-testio-debug \
-		--enable-libuuid --enable-libblkid \
+		--disable-libuuid --disable-libblkid \
 		--disable-backtrace --disable-debugfs \
 		--disable-imager --disable-resizer --disable-defrag \
 		--disable-e2initrd-helper --disable-uuidd \
@@ -3571,21 +3573,13 @@ e2fsprogs-configure: e2fsprogs/Makefile.in
 		ac_cv_lib_dl_dlopen=no \
 		ac_cv_have_decl_fgets_unlocked=yes
 
-e2fsprogs-stage:
-	$(MAKE) -C e2fsprogs/lib/uuid DESTDIR=$(STAGEDIR) LDCONFIG=true install
-
 e2fsprogs-install:
 # libs
-	install -D e2fsprogs/lib/libuuid.so.1.2 $(INSTALLDIR)/e2fsprogs/usr/lib/libuuid.so.1.2
-	cd $(INSTALLDIR)/e2fsprogs/usr/lib && \
-		ln -sf libuuid.so.1.2 libuuid.so.1 && ln -sf libuuid.so.1.2 libuuid.so
 ifneq (,$(filter y,$(RTCONFIG_E2FSPROGS) $(RTCONFIG_EXT4FS)))
-	install -D e2fsprogs/lib/libblkid.so.1.0 $(INSTALLDIR)/e2fsprogs/usr/lib/libblkid.so.1.0
 	install -D e2fsprogs/lib/libcom_err.so.2.1 $(INSTALLDIR)/e2fsprogs/usr/lib/libcom_err.so.2.1
 	install -D e2fsprogs/lib/libe2p.so.2.3 $(INSTALLDIR)/e2fsprogs/usr/lib/libe2p.so.2.3
 	install -D e2fsprogs/lib/libext2fs.so.2.4 $(INSTALLDIR)/e2fsprogs/usr/lib/libext2fs.so.2.4
 	cd $(INSTALLDIR)/e2fsprogs/usr/lib && \
-		ln -sf libblkid.so.1.0 libblkid.so.1 && ln -sf libblkid.so.1.0 libblkid.so && \
 		ln -sf libcom_err.so.2.1 libcom_err.so.2 && ln -sf libcom_err.so.2.1 libcom_err.so && \
 		ln -sf libe2p.so.2.3 libe2p.so.2 && ln -sf libe2p.so.2.3 libe2p.so && \
 		ln -sf libext2fs.so.2.4 libext2fs.so.2 && ln -sf libext2fs.so.2.4 libext2fs.so
