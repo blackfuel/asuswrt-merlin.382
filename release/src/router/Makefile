@@ -703,7 +703,6 @@ BLACKFUEL_OPTIMIZED_ARMV7:=-march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer 
 BLACKFUEL_OPTIMIZED_ARMV8_32:=-march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
 BLACKFUEL_OPTIMIZED_ARMV8_64:=-march=armv8-a+crypto -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
 BLACKFUEL_OPTIMIZED_COPTS:=$(if $(RTCONFIG_HND_ROUTER),$(BLACKFUEL_OPTIMIZED_ARMV8_64),$(BLACKFUEL_OPTIMIZED_ARMV7))
-BLACKFUEL_COMPATIBILE_COPTS:=$(if $(RTCONFIG_HND_ROUTER),$(BLACKFUEL_OPTIMIZED_ARMV8_32),$(BLACKFUEL_OPTIMIZED_ARMV7))
 BLACKFUEL_CURRENT_ARCH:=$(if $(RTCONFIG_HND_ROUTER),CURRENT_ARCH="aarch64",)
 BLACKFUEL_OPTIMIZED_CC:=$(if $(RTCONFIG_HND_ROUTER),$(CROSS_COMPILE_64)gcc,$(TOOLS)/bin/$(CC))
 BLACKFUEL_OPTIMIZED_CXX:=$(if $(RTCONFIG_HND_ROUTER),$(CROSS_COMPILE_64)g++,$(TOOLS)/bin/$(CXX))
@@ -722,6 +721,12 @@ BLACKFUEL_OPTIMIZED_TOOLCHAIN:=CC="$(BLACKFUEL_OPTIMIZED_CC)" CXX="$(BLACKFUEL_O
 BLACKFUEL_OPTIMIZED_LIB:=$(if $(RTCONFIG_HND_ROUTER),lib64,lib)
 BLACKFUEL_OPTIMIZED_SYSROOT:=$(if $(RTCONFIG_HND_ROUTER),/opt/toolchains/crosstools-aarch64-gcc-5.3-linux-4.1-glibc-2.22-binutils-2.25/usr/aarch64-buildroot-linux-gnu/sysroot,$(TOOLS)/bin/arm-brcm-linux-uclibcgnueabi/sysroot)
 BLACKFUEL_OPTIMIZED_HOST:=$(if $(RTCONFIG_HND_ROUTER),aarch64-buildroot-linux-gnu,arm-brcm-linux-uclibcgnueabi)
+
+BLACKFUEL_COMPATIBILE_COPTS:=$(if $(RTCONFIG_HND_ROUTER),$(BLACKFUEL_OPTIMIZED_ARMV8_32),$(BLACKFUEL_OPTIMIZED_ARMV7))
+BLACKFUEL_COMPATIBILE_TOOLCHAIN=CC="$(CC)" CXX="$(CXX)" CPP="$(CPP)" AR="$(AR)" AS="$(AS)" LD="$(LD)" NM="$(NM)" OBJCOPY="$(OBJCOPY)" OBJDUMP="$(OBJDUMP)" RANLIB="$(RANLIB)" SIZE="$(SIZE)" STRIP="$(STRIP)" $(BLACKFUEL_CURRENT_ARCH)
+BLACKFUEL_COMPATIBILE_CONFIGURE=$(CONFIGURE)
+BLACKFUEL_COMPATIBILE_LIB=lib
+BLACKFUEL_COMPATIBILE_STRIP=$(STRIP)
 
 obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += curl$(if $(RTCONFIG_HND_ROUTER),-aarch64,-7.21.7)
@@ -773,7 +778,7 @@ obj-y += libgcrypt
 obj-y += libgpg-error
 obj-y += libaio
 obj-y += lvm2
-obj-y += util-linux
+obj-y += util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += popt
 obj-y += json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 else
@@ -783,7 +788,7 @@ obj-y += libargon2
 obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += libaio
 obj-y += lvm2
-obj-y += util-linux
+obj-y += util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += popt
 obj-y += json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 else
@@ -793,7 +798,7 @@ obj-y += libargon2
 obj-y += nettle$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += libaio
 obj-y += lvm2
-obj-y += util-linux
+obj-y += util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += popt
 obj-y += json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 else
@@ -802,7 +807,7 @@ obj-y += cryptsetup-kernel
 obj-y += libargon2
 obj-y += libaio
 obj-y += lvm2
-obj-y += util-linux
+obj-y += util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += popt
 obj-y += json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 endif
@@ -826,7 +831,7 @@ ifeq ($(RTCONFIG_NTP),y)
 obj-y += ntp
 obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += libcap
-obj-y += util-linux
+obj-y += util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += pps-tools
 obj-y += setserial
 endif
@@ -2501,7 +2506,7 @@ define CleanBlackfuel
 		rm -rf "$(TOP)/dieharder"; \
 		rm -rf "$(TOP)/popt"; \
 		rm -rf "$(TOP)/libgpg-error"; \
-		rm -rf "$(TOP)/util-linux"; \
+		rm -rf "$(TOP)/util-linux" "$(TOP)/util-linux-aarch64"; \
 		rm -rf "$(TOP)/libaio"; \
 		rm -rf "$(TOP)/lvm2"; \
 		rm -rf "$(TOP)/libgcrypt"; \
@@ -4826,7 +4831,7 @@ popt-install:
 
 ### util-linux
 
-util-linux: ncurses$(if $(RTCONFIG_HND_ROUTER),-aarch64,-6.0) libgcrypt util-linux/Makefile
+util-linux: ncurses-6.0 libgcrypt util-linux/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 util-linux/Makefile: util-linux-unpack util-linux/configure
@@ -4836,17 +4841,17 @@ util-linux/configure:
 	@[ -f $@ ] || ( cd util-linux ; ./autogen.sh )
 
 util-linux-configure:
-	@[ ! -d util-linux ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so" ] || ( \
+	@[ ! -d util-linux ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libuuid.so" ] || ( \
 		cd util-linux ; \
-		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
-		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
-		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
-		LIBS="-lm $(if $(RTCONFIG_BCMARM),-lncursesw,-lncurses) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
-		$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
+		$(BLACKFUEL_COMPATIBILE_TOOLCHAIN) \
+		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/pkgconfig" \
+		CFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
+		CPPFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
+		LIBS="-lm $(if $(RTCONFIG_BCMARM),-lncursesw,-lncurses) -L$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
+		$(BLACKFUEL_COMPATIBILE_CONFIGURE) \
 		--prefix="$(STAGEDIR)/usr" \
-		--libdir="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		--libdir="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
 		--enable-shared \
 		--enable-static \
 		$(if $(RTCONFIG_HND_ROUTER),,--disable-tls) \
@@ -4872,16 +4877,17 @@ util-linux-clean:
 	@rm -f util-linux/Makefile
 
 util-linux-install:
-	install -d $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	install -d $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
 	install -d $(INSTALLDIR)/util-linux/usr/bin/
-	# /usr/$(BLACKFUEL_OPTIMIZED_LIB)
-	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
-	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libblkid.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
-	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libsmartcols.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
-	chmod u+w $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so*
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libblkid.so*
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libsmartcols.so*
+	# /usr/$(BLACKFUEL_COMPATIBILE_LIB)
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libuuid.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libblkid.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libsmartcols.so* $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
+	chmod u+w $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/*
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libuuid.so*
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libblkid.so*
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libsmartcols.so*
+ifneq ($(HND_ROUTER),y)
 	# /usr/bin
 	install -D $(STAGEDIR)/usr/bin/fallocate $(INSTALLDIR)/util-linux/usr/bin/
 	install -D $(STAGEDIR)/usr/bin/hexdump $(INSTALLDIR)/util-linux/usr/bin/
@@ -4891,14 +4897,15 @@ util-linux-install:
 	install -D $(STAGEDIR)/usr/sbin/ldattach $(INSTALLDIR)/util-linux/usr/bin/
 	install -D $(STAGEDIR)/usr/sbin/losetup $(INSTALLDIR)/util-linux/usr/bin/
 	install -D $(STAGEDIR)/usr/sbin/hwclock $(INSTALLDIR)/util-linux/usr/bin/
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/fallocate
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/hexdump
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/cal
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/whereis
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/rename
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/ldattach
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/losetup
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux/usr/bin/hwclock
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/fallocate
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/hexdump
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/cal
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/whereis
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/rename
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/ldattach
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/losetup
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/util-linux/usr/bin/hwclock
+endif
 
 ### libaio
 
@@ -5006,7 +5013,7 @@ lvm2-install:
 
 ### cryptsetup-gcrypt
 
-cryptsetup-gcrypt: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux lvm2 libgpg-error libgcrypt cryptsetup-gcrypt/Makefile
+cryptsetup-gcrypt: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,) lvm2 libgpg-error libgcrypt cryptsetup-gcrypt/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 cryptsetup-gcrypt/Makefile: cryptsetup-gcrypt-unpack cryptsetup-gcrypt/configure
@@ -5070,7 +5077,7 @@ cryptsetup-gcrypt-install:
 
 ### cryptsetup-openssl
 
-cryptsetup-openssl: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux lvm2 openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) cryptsetup-openssl/Makefile
+cryptsetup-openssl: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,) lvm2 openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) cryptsetup-openssl/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 cryptsetup-openssl/Makefile: cryptsetup-openssl-unpack cryptsetup-openssl/configure
@@ -5133,7 +5140,7 @@ cryptsetup-openssl-install:
 
 ### cryptsetup-nettle
 
-cryptsetup-nettle: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux lvm2 nettle$(if $(RTCONFIG_HND_ROUTER),-aarch64,) cryptsetup-nettle/Makefile
+cryptsetup-nettle: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,) lvm2 nettle$(if $(RTCONFIG_HND_ROUTER),-aarch64,) cryptsetup-nettle/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 cryptsetup-nettle/Makefile: cryptsetup-nettle-unpack cryptsetup-nettle/configure
@@ -5196,7 +5203,7 @@ cryptsetup-nettle-install:
 
 ### cryptsetup-kernel
 
-cryptsetup-kernel: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux lvm2 cryptsetup-kernel/Makefile
+cryptsetup-kernel: libargon2 json-c$(if $(RTCONFIG_HND_ROUTER),-aarch64,) popt util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,) lvm2 cryptsetup-kernel/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 cryptsetup-kernel/Makefile: cryptsetup-kernel-unpack cryptsetup-kernel/configure
@@ -5335,7 +5342,7 @@ setserial-install:
 
 ### ntp
 
-ntp: pps-tools setserial util-linux openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) libcap ntp/Makefile
+ntp: pps-tools setserial util-linux$(if $(RTCONFIG_HND_ROUTER),-aarch64,) openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) libcap ntp/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 ntp/Makefile: ntp-unpack ntp/configure
@@ -5449,6 +5456,84 @@ libcap-install:
 	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libcap.so* $(INSTALLDIR)/libcap/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
 	chmod u+w $(INSTALLDIR)/libcap/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/libcap/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libcap.so*
+
+### util-linux-aarch64
+
+ifeq ($(HND_ROUTER),y)
+util-linux-aarch64: ncurses-aarch64 libgcrypt util-linux-aarch64/Makefile
+	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
+
+util-linux-aarch64/Makefile: util-linux-aarch64-unpack util-linux-aarch64/configure
+	@[ -f $@ ] || $(MAKE) util-linux-aarch64-configure
+
+util-linux-aarch64/configure:
+	@[ -f $@ ] || ( cd util-linux-aarch64 ; ./autogen.sh )
+
+util-linux-aarch64-configure:
+	@[ ! -d util-linux-aarch64 ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so" ] || ( \
+		cd util-linux-aarch64 ; \
+		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
+		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
+		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		LIBS="-lm $(if $(RTCONFIG_BCMARM),-lncursesw,-lncurses) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
+		--prefix="$(STAGEDIR)/usr" \
+		--libdir="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		--enable-shared \
+		--enable-static \
+		$(if $(RTCONFIG_HND_ROUTER),,--disable-tls) \
+		$(if $(RTCONFIG_HND_ROUTER),,--disable-chcpu) \
+		--disable-rpath \
+		--disable-silent-rules \
+		--disable-bash-completion \
+		--disable-makeinstall-chown \
+		--disable-makeinstall-setuid \
+		--disable-agetty \
+		$(if $(RTCONFIG_BCMARM),--with-ncursesw --without-ncurses,--with-ncurses --without-ncursesw) \
+		--enable-libuuid \
+		--enable-libblkid )
+
+util-linux-aarch64-stage:
+	@echo util-linux-aarch64
+	@[ ! -d util-linux-aarch64 ] || ( \
+		$(MAKE) -C util-linux-aarch64 $(PARALLEL_BUILD) && \
+		$(MAKE) -C util-linux-aarch64 install )
+
+util-linux-aarch64-clean:
+	[ ! -f util-linux-aarch64/Makefile ] || $(MAKE) -C util-linux-aarch64 clean
+	@rm -f util-linux-aarch64/Makefile
+
+util-linux-aarch64-install:
+	install -d $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	install -d $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	# /usr/$(BLACKFUEL_OPTIMIZED_LIB)
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so* $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libblkid.so* $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libsmartcols.so* $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	chmod u+w $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libuuid.so*
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libblkid.so*
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libsmartcols.so*
+	# /usr/bin
+	install -D $(STAGEDIR)/usr/bin/fallocate $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/bin/hexdump $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/bin/cal $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/bin/whereis $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/bin/rename $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/sbin/ldattach $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/sbin/losetup $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	install -D $(STAGEDIR)/usr/sbin/hwclock $(INSTALLDIR)/util-linux-aarch64/usr/bin/
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/fallocate
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/hexdump
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/cal
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/whereis
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/rename
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/ldattach
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/losetup
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/util-linux-aarch64/usr/bin/hwclock
+endif
 
 ### libusb10-aarch64
 
@@ -6759,8 +6844,8 @@ xtables-addons-configure:
 	@[ ! -d xtables-addons ] || [ -f "$(STAGEDIR)/usr/lib/xtables/libxt_TARPIT.so" ] || ( cd xtables-addons ; \
 		$(call Install_Pkgconfig,$(TOP)/iptables-1.4.x/iptables/xtables.pc); \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/lib/pkgconfig" \
-		CFLAGS="$(BLACKFUEL_COMPATIBLE_COPTS) -ffunction-sections -fdata-sections -Os -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/iptables-1.4.x/include -I$(STAGEDIR)/usr/include" \
-		CPPFLAGS="$(BLACKFUEL_COMPATIBLE_COPTS) -ffunction-sections -fdata-sections -Os -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/iptables-1.4.x/include -I$(STAGEDIR)/usr/include" \
+		CFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -Os -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/iptables-1.4.x/include -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -Os -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/iptables-1.4.x/include -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/iptables-1.4.x/libxtables/.libs -L$(STAGEDIR)/usr/lib" \
 		$(CONFIGURE) \
 		--prefix="$(STAGEDIR)/usr" \
@@ -6820,7 +6905,7 @@ powstatd-stage:
 		MANDIR="$(STAGEDIR)/usr/share/man/man8" \
 		CFGDIR="/usr/local/etc" \
 		CC="$(CC)" \
-		CFLGS="$(BLACKFUEL_COMPATIBLE_COPTS) -Os -Wall -pipe -fPIC -std=gnu99 -D_GNU_SOURCE -I$(TOP)/shared -ffunction-sections -fdata-sections" \
+		CFLGS="$(BLACKFUEL_COMPATIBILE_COPTS) -Os -Wall -pipe -fPIC -std=gnu99 -D_GNU_SOURCE -I$(TOP)/shared -ffunction-sections -fdata-sections" \
 		LIB="-lgcc_s -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram $(shell if [[ "$(HND_ROUTER)" = "y" ]] ; then echo "-L$(TOP)/wlcsm -lwlcsm"; else echo ""; fi) -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -ffunction-sections -fdata-sections -Wl,--gc-sections" )
 
 powstatd-clean:
@@ -7200,8 +7285,9 @@ strace-clean:
 			VERSION="1.32+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
-		elif [ "$$PACKAGE_DIR" = "util-linux" ]; then \
+		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
 			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.1.tar.xz"; \
+			PACKAGE_NAME="util-linux"; \
 		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
 			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
 			URL2="https://pagure.io/libaio.git"; \
