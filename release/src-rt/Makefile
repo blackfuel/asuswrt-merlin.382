@@ -81,7 +81,6 @@ include ./version.conf
 else
 include $(ASUSWRTVERSIONCONFDIR)/version.conf
 endif
-EXTENDNO:=$(EXTENDNO)_blackfuel
 
 export BRANCH := $(shell git branch)
 
