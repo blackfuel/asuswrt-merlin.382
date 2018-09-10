@@ -82,6 +82,12 @@ else
 include $(ASUSWRTVERSIONCONFDIR)/version.conf
 endif
 
+ifeq ($(EXTENDNO),)
+EXTENDNO:=blackfuel
+else
+EXTENDNO:=$(EXTENDNO)-blackfuel
+endif
+
 export BRANCH := $(shell git branch)
 
 ifneq ($(RCNO),)
