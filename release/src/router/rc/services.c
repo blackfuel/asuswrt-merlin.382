@@ -3086,7 +3086,7 @@ ddns_updated_main(int argc, char *argv[])
 	nvram_set("ddns_hostname_old", nvram_safe_get("ddns_hostname_x"));
 	nvram_set("ddns_updated", "1");
 
-	logmessage("ddns", "ddns update ok");
+//	logmessage("ddns", "ddns update ok");
 
 #ifdef RTCONFIG_LETSENCRYPT
 	if (nvram_match("le_rc_notify", "1")) {
@@ -3162,7 +3162,6 @@ start_ddns(void)
 	passwd = nvram_safe_get("ddns_passwd_x");
 	host = nvram_safe_get("ddns_hostname_x");
 	unlink("/tmp/ddns.cache");
-	system("rm -f /tmp/inadyn/cache/*"); /* */
 
 	if (strcmp(server, "WWW.DYNDNS.ORG")==0)
 		service = "default@dyndns.org";
@@ -3255,6 +3254,7 @@ start_ddns(void)
 		if( (fp = fopen(INADYNCONF, "w"))) {
 			chmod(INADYNCONF, 0600);
 			fprintf(fp, "ca-trust-file = /etc/ssl/certs/ca-certificates.crt\n");
+			fprintf(fp, "iterations = 1\n");
 
 			if (asus_ddns == 11) {
 				fprintf(fp, "custom namecheap {\n");
@@ -3310,9 +3310,9 @@ start_ddns(void)
 			else
 				loglevel = "notice";
 
-			char *argv[] = { "/usr/sbin/inadyn", "-1",
+			char *argv[] = { "/usr/sbin/inadyn",
 			                 "-e", "/sbin/ddns_updated",
-			                 "-f", "/etc/inadyn.conf",
+					"--exec-nochg", "/sbin/ddns_updated",
 			                 "--cache-dir=/tmp/inadyn.cache",
 			                 "-l", loglevel,
 			                 NULL };
@@ -3340,6 +3340,9 @@ stop_ddns(void)
 		eval("iptables-restore", "/tmp/filter_rules");
 		nvram_unset("ddns_tunbkrnet");
 	}
+
+	system("rm -f /tmp/inadyn.cache/*"); /* */
+
 #ifdef RTCONFIG_OPENVPN
 	update_ovpn_profie_remote();
 #endif
@@ -3424,7 +3427,7 @@ asusddns_reg_domain(int reg)
 	) {
 		logmessage("asusddns", "clear ddns cache file for server/hostname change");
 		unlink("/tmp/ddns.cache");
-		system("rm -f /tmp/inadyn/cache/*"); /* */
+		system("rm -f /tmp/inadyn.cache/*"); /* */
 	}
 	else if (!(fp = fopen("/tmp/ddns.cache", "r")) && (ddns_cache = nvram_get("ddns_cache"))) {
 		if ((fp = fopen("/tmp/ddns.cache", "w+"))) {
@@ -3468,7 +3471,6 @@ asusddns_reg_domain(int reg)
 
 		char *argv[] = { "/usr/sbin/inadyn", "-1",
 				"-e", "/sbin/ddns_updated",
-				"-f", "/etc/inadyn.conf",
 				"--cache-dir=/tmp/inadyn.cache",
 				"-l", loglevel,
 			NULL };
@@ -3550,7 +3552,6 @@ _dprintf("%s: do inadyn to unregister! unit = %d wan_ifname = %s nserver = %s ho
 
 		char *argv[] = { "/usr/sbin/inadyn", "-1",
 				"-e", "/sbin/ddns_updated",
-				"-f", "/etc/inadyn.conf",
 				"--cache-dir=/tmp/inadyn.cache",
 				"-l", loglevel,
 			NULL };
