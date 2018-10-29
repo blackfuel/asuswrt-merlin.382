@@ -4249,8 +4249,8 @@ zstd-stage:
 		DESTDIR="" \
 		LIBDIR="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		INCLUDEDIR="$(STAGEDIR)/usr/include" \
-		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
+		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -DBACKTRACE_ENABLE=0 -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -DBACKTRACE_ENABLE=0 -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		LIBS="-lpthread" \
 		$(MAKE) -C zstd $(PARALLEL_BUILD) install
@@ -7254,9 +7254,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/archive/v1.3.5.tar.gz"; \
+			URL="https://github.com/facebook/zstd/releases/download/v1.3.7/zstd-1.3.7.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.3.5+git"; \
+			VERSION="1.3.7+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
@@ -7264,7 +7264,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
-			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.3.2.tar.xz"; \
+			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.4.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
@@ -7305,9 +7305,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.3.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.4.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgcrypt.git"; \
-			VERSION="1.8.3+git"; \
+			VERSION="1.8.4+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgcrypt"; \
 		elif [ "$$PACKAGE_DIR" = "cryptsetup-gcrypt" ] || \
