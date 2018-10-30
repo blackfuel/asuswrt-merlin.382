@@ -2548,6 +2548,10 @@ void write_ftpd_conf()
 	FILE *fp;
 	char maxuser[16];
 	int passive_port;
+#ifdef RTCONFIG_HTTPS
+	unsigned long long sn;
+	char t[32];
+#endif
 
 	/* write /etc/vsftpd.conf */
 	fp=fopen("/etc/vsftpd.conf", "w");
@@ -2635,17 +2639,54 @@ void write_ftpd_conf()
 		fprintf(fp, "xferlog_file=/var/log/vsftpd.log\n");
 	}
 
+#ifdef RTCONFIG_HTTPS
 	if(nvram_get_int("ftp_tls")){
 		fprintf(fp, "ssl_enable=YES\n");
-		fprintf(fp, "rsa_cert_file=/jffs/ssl/ftp.crt\n");
-		fprintf(fp, "rsa_private_key_file=/jffs/ssl/ftp.key\n");
+		fprintf(fp, "rsa_cert_file=%s\n", HTTPD_CERT);
+		fprintf(fp, "rsa_private_key_file=%s\n", HTTPD_KEY);
 
-		if(!check_if_file_exist("/jffs/ssl/ftp.key")||!check_if_file_exist("/jffs/ssl/ftp.crt")){
-			eval("gencert.sh", "ftp");
+		if(!f_exists(HTTPD_CERT) || !f_exists(HTTPD_KEY)
+#ifdef RTCONFIG_LETSENCRYPT
+			|| !cert_key_match(HTTPD_CERT, HTTPD_KEY)
+#endif
+			) {
+#ifdef RTCONFIG_LETSENCRYPT
+			if(nvram_match("le_enable", "1")) {
+				cp_le_cert(LE_FULLCHAIN, HTTPD_CERT);
+				cp_le_cert(LE_KEY, HTTPD_KEY);
+			}
+			else if(nvram_match("le_enable", "2")) {
+				unlink(HTTPD_CERT);
+				unlink(HTTPD_KEY);
+				if(f_exists(UPLOAD_CERT) && f_exists(UPLOAD_KEY)) {
+					eval("cp", UPLOAD_CERT, HTTPD_CERT);
+					eval("cp", UPLOAD_KEY, HTTPD_KEY);
+				}
+			}
+#else
+			if(f_exists(UPLOAD_CERT) && f_exists(UPLOAD_KEY)){
+				eval("cp", UPLOAD_CERT, HTTPD_CERT);
+				eval("cp", UPLOAD_KEY, HTTPD_KEY);
+			}
+#endif
+		}
+
+		// Is it valid now?  Otherwise, generate one.
+		if(!f_exists(HTTPD_CERT) || !f_exists(HTTPD_KEY)
+#ifdef RTCONFIG_LETSENCRYPT
+                        || !cert_key_match(HTTPD_CERT, HTTPD_KEY)
+#endif
+		) {
+			f_read("/dev/urandom", &sn, sizeof(sn));
+			sprintf(t, "%llu", sn & 0x7FFFFFFFFFFFFFFFULL);
+			eval("gencert.sh", t);
 		}
 	} else {
 		fprintf(fp, "ssl_enable=NO\n");
 	}
+#else
+	fprintf(fp, "ssl_enable=NO\n");
+#endif	// HTTPS
 
 	append_custom_config("vsftpd.conf", fp);
 	fclose(fp);
@@ -2861,7 +2902,7 @@ void create_custom_passwd(void)
 				memset(char_user, 0, sizeof(char_user));
 				ascii_to_char_safe(char_user, follow_account->name, sizeof(char_user));
 
-				fprintf(fps, "%s:%s:0:0:99999:7:0:0\n", char_user, output);
+				fprintf(fps, "%s:%s:0:0:99999:7:0:0:\n", char_user, output);
 				fprintf(fpp, "%s:x:%d:%s::/dev/null:/dev/null\n", char_user, uid, PMS_GRP_DGID);
 				uid++;
 			}
@@ -3076,7 +3117,7 @@ start_samba(void)
 #else
 	char *cpu_list = "1";
 #endif
-#if (defined(RTCONFIG_BCMARM) || defined(RTCONFIG_SOC_IPQ8064) || defined(RTCONFIG_SAMBA36X)) && defined(SMP)
+#if (defined(RTCONFIG_BCMARM) || defined(RTCONFIG_SOC_IPQ8064))
 	int cpu_num = sysconf(_SC_NPROCESSORS_CONF);
 	int taskset_ret = -1;
 #endif
@@ -3222,7 +3263,7 @@ start_samba(void)
 #endif
 
 #if defined(SMP)
-#if defined(RTCONFIG_BCMARM) || defined(RTCONFIG_SOC_IPQ8064) || defined(RTCONFIG_SAMBA36X)
+#if defined(RTCONFIG_BCMARM) || defined(RTCONFIG_SOC_IPQ8064)
 #if 0
 	if(cpu_num > 1)
 		taskset_ret = cpu_eval(NULL, "1", "ionice", "-c1", "-n0", smbd_cmd, "-D", "-s", "/etc/smb.conf");
@@ -3243,7 +3284,7 @@ start_samba(void)
 #ifdef RTCONFIG_ALPINE
 		cpu_eval(NULL, "3", smbd_cmd, "-D", "-s", "/etc/smb.conf");
 #elif defined(RTCONFIG_LANTIQ)
-		cpu_eval(NULL, "2", smbd_cmd, "-D", "-s", "/etc/smb.conf");
+		cpu_eval(NULL, "1", smbd_cmd, "-D", "-s", "/etc/smb.conf");
 #else
 		xstart(smbd_cmd, "-D", "-s", "/etc/smb.conf");
 #endif

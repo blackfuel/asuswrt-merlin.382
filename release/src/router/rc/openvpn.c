@@ -77,6 +77,7 @@ void start_ovpn_client(int clientNum)
 	long int nvl;
 	int pid;
 	int userauth, useronly;
+	char cpulist[2];
 	int taskset_ret;
 	int i;
 	char prefix[16];
@@ -236,8 +237,8 @@ void start_ovpn_client(int clientNum)
 
 	strlcpy(buffer2, nvram_pf_safe_get(prefix, "comp"), sizeof (buffer2));
 	if (strcmp(buffer2, "-1")) {
-		if (!strcmp(buffer2, "lz4")) {
-			fprintf(fp, "compress lz4\n");
+		if (!strcmp(buffer2, "lz4") || !strcmp(buffer2, "lz4-v2")) {
+			fprintf(fp, "compress %s\n", buffer2);
 		} else if (!strcmp(buffer2, "yes")) {
 			fprintf(fp, "compress lzo\n");
 		} else if (!strcmp(buffer2, "adaptive")) {
@@ -489,7 +490,13 @@ void start_ovpn_client(int clientNum)
         // Start the VPN client
 	sprintf(buffer, "/etc/openvpn/vpnclient%d", clientNum);
 	sprintf(buffer2, "/etc/openvpn/client%d", clientNum);
-	taskset_ret = cpu_eval(NULL, (clientNum % 2 == 0 ? CPU0 : CPU1), buffer, "--cd", buffer2, "--config", "config.ovpn");
+
+	// Spread clients on cpu 1,0 or 1,2,3,0 (in that order)
+	i = sysconf(_SC_NPROCESSORS_CONF) - 1;
+	if (i < 0) i = 0;
+	snprintf(cpulist, sizeof(cpulist), "%d", (clientNum & i));
+
+	taskset_ret = cpu_eval(NULL, cpulist, buffer, "--cd", buffer2, "--config", "config.ovpn");
 
 	vpnlog(VPN_LOG_INFO,"Starting OpenVPN client %d", clientNum);
 
@@ -501,6 +508,7 @@ void start_ovpn_client(int clientNum)
 	}
 	vpnlog(VPN_LOG_EXTRA,"Done starting openvpn");
 
+#if 0
 	// watchdog
 	sprintf(buffer, "/etc/openvpn/client%d/vpnc-watchdog%d.sh", clientNum, clientNum);
 	if ((fp = fopen(buffer, "w"))) {
@@ -525,7 +533,7 @@ void start_ovpn_client(int clientNum)
 		_eval(argv, NULL, 0, NULL);
 		vpnlog(VPN_LOG_EXTRA,"Done adding cron job");
 	}
-
+#endif
 
 	vpnlog(VPN_LOG_INFO,"VPN GUI client backend complete.");
 }
@@ -544,6 +552,7 @@ void stop_ovpn_client(int clientNum)
 
 	vpnlog(VPN_LOG_INFO,"Stopping VPN GUI client backend.");
 
+#if 0
 	// Remove cron job
 	vpnlog(VPN_LOG_EXTRA,"Removing cron job");
 	argv[0] = "cru";
@@ -553,7 +562,7 @@ void stop_ovpn_client(int clientNum)
 	argv[3] = NULL;
 	_eval(argv, NULL, 0, NULL);
 	vpnlog(VPN_LOG_EXTRA,"Done removing cron job");
-
+#endif
 
 	// Stop the VPN client
 	vpnlog(VPN_LOG_EXTRA,"Stopping OpenVPN client.");
@@ -625,6 +634,7 @@ void start_ovpn_server(int serverNum)
 	enum { TLS, SECRET } cryptMode = TLS;
 	int nvi, ip[4], nm[4];
 	int pid;
+	char cpulist[2];
 	int taskset_ret;
 	int valid = 0;
 	int userauth = 0, useronly = 0;
@@ -672,7 +682,7 @@ void start_ovpn_server(int serverNum)
 	// Build interface name
 	snprintf(iface, sizeof (iface), "%s%d", buffer, serverNum+SERVER_IF_START);
 
-	if(is_intf_up(iface) && ifType == TAP) {
+	if(is_intf_up(iface) > 0 && ifType == TAP) {
 		eval("brctl", "delif", nvram_safe_get("lan_ifname"), iface);
 	}
 
@@ -866,9 +876,9 @@ void start_ovpn_server(int serverNum)
 	//compression
 	strlcpy(buffer, nvram_pf_safe_get(prefix, "comp"), sizeof (buffer));
 	if (strcmp(buffer, "-1")) {
-		if (!strcmp(buffer, "lz4")) {
-			fprintf(fp, "compress lz4\n");
-			fprintf(fp_client, "compress lz4\n");
+                if (!strcmp(buffer, "lz4") || !strcmp(buffer, "lz4-v2")) {
+			fprintf(fp, "compress %s\n", buffer);
+			fprintf(fp_client, "compress %s\n", buffer);
 		} else if (!strcmp(buffer, "yes")) {
 			fprintf(fp, "compress lzo\n");
 			fprintf(fp_client, "comp-lzo yes\n");
@@ -1417,7 +1427,12 @@ void start_ovpn_server(int serverNum)
 	sprintf(buffer, "/etc/openvpn/vpnserver%d", serverNum);
 	sprintf(buffer2, "/etc/openvpn/server%d", serverNum);
 
-	taskset_ret = cpu_eval(NULL, (serverNum == 1 ? CPU1 : CPU0), buffer, "--cd", buffer2, "--config", "config.ovpn");
+	// Spread servers on cpu 1,0 or 1,2 (in that order)
+	i = sysconf(_SC_NPROCESSORS_CONF) - 1;
+	if (i < 0) i = 0;
+	snprintf(cpulist, sizeof(cpulist), "%d", (serverNum & i));
+
+	taskset_ret = cpu_eval(NULL, cpulist, buffer, "--cd", buffer2, "--config", "config.ovpn");
 
 	vpnlog(VPN_LOG_INFO,"Starting OpenVPN server %d", serverNum);
 	if (taskset_ret)

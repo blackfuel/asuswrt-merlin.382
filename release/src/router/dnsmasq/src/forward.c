@@ -38,9 +38,7 @@ int send_from(int fd, int nowild, char *packet, size_t len,
 #elif defined(IP_SENDSRCADDR)
     char control[CMSG_SPACE(sizeof(struct in_addr))];
 #endif
-#ifdef HAVE_IPV6
     char control6[CMSG_SPACE(sizeof(struct in6_pktinfo))];
-#endif
   } control_u;
   
   iov[0].iov_base = packet;
@@ -79,7 +77,6 @@ int send_from(int fd, int nowild, char *packet, size_t len,
 #endif
 	}
       else
-#ifdef HAVE_IPV6
 	{
 	  struct in6_pktinfo p;
 	  p.ipi6_ifindex = iface; /* Need iface for IPv6 to handle link-local addrs */
@@ -89,9 +86,6 @@ int send_from(int fd, int nowild, char *packet, size_t len,
 	  cmptr->cmsg_type = daemon->v6pktinfo;
 	  cmptr->cmsg_level = IPPROTO_IPV6;
 	}
-#else
-      (void)iface; /* eliminate warning */
-#endif
     }
   
   while (retry_send(sendmsg(fd, &msg, 0)));
@@ -118,6 +112,7 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp, unsigne
   unsigned int matchlen = 0;
   struct server *serv;
   unsigned int flags = 0;
+  static struct all_addr zero;
   
   for (serv = daemon->servers; serv; serv=serv->next)
     if (qtype == F_DNSSECOK && !(serv->flags & SERV_DO_DNSSEC))
@@ -129,17 +124,22 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp, unsigne
 	*type = SERV_FOR_NODOTS;
 	if (serv->flags & SERV_NO_ADDR)
 	  flags = F_NXDOMAIN;
-	else if (serv->flags & SERV_LITERAL_ADDRESS) 
+	else if (serv->flags & SERV_LITERAL_ADDRESS)
 	  { 
-	    if (sflag & qtype)
+	    /* literal address = '#' -> return all-zero address for IPv4 and IPv6 */
+	    if ((serv->flags & SERV_USE_RESOLV) && (qtype & (F_IPV6 | F_IPV4)))
+	      {
+		memset(&zero, 0, sizeof(zero));
+		flags = qtype;
+		*addrpp = &zero;
+	      }
+	    else if (sflag & qtype)
 	      {
 		flags = sflag;
 		if (serv->addr.sa.sa_family == AF_INET) 
 		  *addrpp = (struct all_addr *)&serv->addr.in.sin_addr;
-#ifdef HAVE_IPV6
 		else
 		  *addrpp = (struct all_addr *)&serv->addr.in6.sin6_addr;
-#endif 
 	      }
 	    else if (!flags || (flags & F_NXDOMAIN))
 	      flags = F_NOERR;
@@ -184,15 +184,20 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp, unsigne
 		      flags = F_NXDOMAIN;
 		    else if (serv->flags & SERV_LITERAL_ADDRESS)
 		      {
-			if (sflag & qtype)
+			 /* literal address = '#' -> return all-zero address for IPv4 and IPv6 */
+			if ((serv->flags & SERV_USE_RESOLV) && (qtype & (F_IPV6 | F_IPV4)))
+			  {			    
+			    memset(&zero, 0, sizeof(zero));
+			    flags = qtype;
+			    *addrpp = &zero;
+			  }
+			else if (sflag & qtype)
 			  {
 			    flags = sflag;
 			    if (serv->addr.sa.sa_family == AF_INET) 
 			      *addrpp = (struct all_addr *)&serv->addr.in.sin_addr;
-#ifdef HAVE_IPV6
 			    else
 			      *addrpp = (struct all_addr *)&serv->addr.in6.sin6_addr;
-#endif
 			  }
 			else if (!flags || (flags & F_NXDOMAIN))
 			  flags = F_NOERR;
@@ -214,12 +219,16 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp, unsigne
 
   if (flags)
     {
-      int logflags = 0;
-      
-      if (flags == F_NXDOMAIN || flags == F_NOERR)
-	logflags = F_NEG | qtype;
-  
-      log_query(logflags | flags | F_CONFIG | F_FORWARD, qdomain, *addrpp, NULL);
+       if (flags == F_NXDOMAIN || flags == F_NOERR)
+	 log_query(flags | qtype | F_NEG | F_CONFIG | F_FORWARD, qdomain, NULL, NULL);
+       else
+	 {
+	   /* handle F_IPV4 and F_IPV6 set on ANY query to 0.0.0.0/:: domain. */
+	   if (flags & F_IPV4)
+	     log_query((flags | F_CONFIG | F_FORWARD) & ~F_IPV6, qdomain, *addrpp, NULL);
+	   if (flags & F_IPV6)
+	     log_query((flags | F_CONFIG | F_FORWARD) & ~F_IPV4, qdomain, *addrpp, NULL);
+	 }
     }
   else if ((*type) & SERV_USE_RESOLV)
     {
@@ -281,20 +290,17 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 	  
 	  if (forward->sentto->addr.sa.sa_family == AF_INET) 
 	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, "retry", (struct all_addr *)&forward->sentto->addr.in.sin_addr, "dnssec");
-#ifdef HAVE_IPV6
 	  else
 	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV6, "retry", (struct all_addr *)&forward->sentto->addr.in6.sin6_addr, "dnssec");
-#endif
+
   
 	  if (forward->sentto->sfd)
 	    fd = forward->sentto->sfd->fd;
 	  else
 	    {
-#ifdef HAVE_IPV6
 	      if (forward->sentto->addr.sa.sa_family == AF_INET6)
 		fd = forward->rfd6->fd;
 	      else
-#endif
 		fd = forward->rfd4->fd;
 	    }
 	  
@@ -454,7 +460,6 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 		fd = start->sfd->fd;
 	      else 
 		{
-#ifdef HAVE_IPV6
 		  if (start->addr.sa.sa_family == AF_INET6)
 		    {
 		      if (!forward->rfd6 &&
@@ -464,7 +469,6 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 		      fd = forward->rfd6->fd;
 		    }
 		  else
-#endif
 		    {
 		      if (!forward->rfd4 &&
 			  !(forward->rfd4 = allocate_rfd(AF_INET)))
@@ -520,11 +524,9 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 		  if (start->addr.sa.sa_family == AF_INET)
 		    log_query(F_SERVER | F_IPV4 | F_FORWARD, daemon->namebuff, 
 			      (struct all_addr *)&start->addr.in.sin_addr, NULL); 
-#ifdef HAVE_IPV6
 		  else
 		    log_query(F_SERVER | F_IPV6 | F_FORWARD, daemon->namebuff, 
 			      (struct all_addr *)&start->addr.in6.sin6_addr, NULL);
-#endif 
 		  start->queries++;
 		  forwarded = 1;
 		  forward->sentto = start;
@@ -767,11 +769,8 @@ void reply_query(int fd, int family, time_t now)
   daemon->srv_save = NULL;
   
   /* Determine the address of the server replying  so that we can mark that as good */
-  serveraddr.sa.sa_family = family;
-#ifdef HAVE_IPV6
-  if (serveraddr.sa.sa_family == AF_INET6)
+  if ((serveraddr.sa.sa_family = family) == AF_INET6)
     serveraddr.in6.sin6_flowinfo = 0;
-#endif
   
   header = (struct dns_header *)daemon->packet;
 
@@ -857,7 +856,6 @@ void reply_query(int fd, int family, time_t now)
 	    fd = start->sfd->fd;
 	  else
 	    {
-#ifdef HAVE_IPV6
 	      if (start->addr.sa.sa_family == AF_INET6)
 		{
 		  /* may have changed family */
@@ -866,7 +864,6 @@ void reply_query(int fd, int family, time_t now)
 		  fd = forward->rfd6->fd;
 		}
 	      else
-#endif
 		{
 		  /* may have changed family */
 		  if (!forward->rfd4)
@@ -881,10 +878,8 @@ void reply_query(int fd, int family, time_t now)
 	  
 	  if (start->addr.sa.sa_family == AF_INET) 
 	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, "retry", (struct all_addr *)&start->addr.in.sin_addr, "dnssec");
-#ifdef HAVE_IPV6
 	  else
 	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV6, "retry", (struct all_addr *)&start->addr.in6.sin6_addr, "dnssec");
-#endif
 	  
 	  return;
 	}
@@ -1037,7 +1032,7 @@ void reply_query(int fd, int family, time_t now)
 		    status = STAT_ABANDONED;
 		  else
 		    {
-		      int fd, type = SERV_DO_DNSSEC;
+		      int querytype, fd, type = SERV_DO_DNSSEC;
 		      struct frec *next = new->next;
 		      char *domain;
 		      
@@ -1078,9 +1073,7 @@ void reply_query(int fd, int family, time_t now)
 		      
 		      new->sentto = server;
 		      new->rfd4 = NULL;
-#ifdef HAVE_IPV6
 		      new->rfd6 = NULL;
-#endif
 		      new->flags &= ~(FREC_DNSKEY_QUERY | FREC_DS_QUERY | FREC_HAS_EXTRADATA);
 		      new->forwardall = 0;
 		      
@@ -1090,15 +1083,24 @@ void reply_query(int fd, int family, time_t now)
 		      if (status == STAT_NEED_KEY)
 			{
 			  new->flags |= FREC_DNSKEY_QUERY; 
-			  nn = dnssec_generate_query(header, ((unsigned char *) header) + server->edns_pktsz,
-						     daemon->keyname, forward->class, T_DNSKEY, &server->addr, server->edns_pktsz);
+			  querytype = T_DNSKEY;
 			}
 		      else 
 			{
 			  new->flags |= FREC_DS_QUERY;
-			  nn = dnssec_generate_query(header,((unsigned char *) header) + server->edns_pktsz,
-						     daemon->keyname, forward->class, T_DS, &server->addr, server->edns_pktsz);
+			  querytype = T_DS;
 			}
+
+		      nn = dnssec_generate_query(header,((unsigned char *) header) + server->edns_pktsz,
+						 daemon->keyname, forward->class, querytype, server->edns_pktsz);
+
+		      if (server->addr.sa.sa_family == AF_INET) 
+			log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, daemon->keyname, (struct all_addr *)&(server->addr.in.sin_addr),
+				  querystr("dnssec-query", querytype));
+		      else
+			log_query(F_NOEXTRA | F_DNSSEC | F_IPV6, daemon->keyname, (struct all_addr *)&(server->addr.in6.sin6_addr),
+				  querystr("dnssec-query", querytype));
+  
 		      if ((hash = hash_questions(header, nn, daemon->namebuff)))
 			memcpy(new->hash, hash, HASH_SIZE);
 		      new->new_id = get_id();
@@ -1115,14 +1117,12 @@ void reply_query(int fd, int family, time_t now)
 		      else
 			{
 			  fd = -1;
-#ifdef HAVE_IPV6
 			  if (server->addr.sa.sa_family == AF_INET6)
 			    {
 			      if (new->rfd6 || (new->rfd6 = allocate_rfd(AF_INET6)))
 				fd = new->rfd6->fd;
 			    }
 			  else
-#endif
 			    {
 			      if (new->rfd4 || (new->rfd4 = allocate_rfd(AF_INET)))
 				fd = new->rfd4->fd;
@@ -1258,9 +1258,7 @@ void receive_query(struct listener *listen, time_t now)
   struct cmsghdr *cmptr;
   union {
     struct cmsghdr align; /* this ensures alignment */
-#ifdef HAVE_IPV6
     char control6[CMSG_SPACE(sizeof(struct in6_pktinfo))];
-#endif
 #if defined(HAVE_LINUX_NETWORK)
     char control[CMSG_SPACE(sizeof(struct in_pktinfo))];
 #elif defined(IP_RECVDSTADDR) && defined(HAVE_SOLARIS_NETWORK)
@@ -1271,12 +1269,8 @@ void receive_query(struct listener *listen, time_t now)
 		 CMSG_SPACE(sizeof(struct sockaddr_dl))];
 #endif
   } control_u;
-#ifdef HAVE_IPV6
    /* Can always get recvd interface for IPv6 */
   int check_dst = !option_bool(OPT_NOWILD) || listen->family == AF_INET6;
-#else
-  int check_dst = !option_bool(OPT_NOWILD);
-#endif
 
   /* packet buffer overwritten */
   daemon->srv_save = NULL;
@@ -1327,7 +1321,6 @@ void receive_query(struct listener *listen, time_t now)
       if (source_addr.in.sin_port == 0)
 	return;
     }
-#ifdef HAVE_IPV6
   else
     {
       /* Source-port == 0 is an error, we can't send back to that. */
@@ -1335,13 +1328,12 @@ void receive_query(struct listener *listen, time_t now)
 	return;
       source_addr.in6.sin6_flowinfo = 0;
     }
-#endif
   
   /* We can be configured to only accept queries from at-most-one-hop-away addresses. */
   if (option_bool(OPT_LOCAL_SERVICE))
     {
       struct addrlist *addr;
-#ifdef HAVE_IPV6
+
       if (listen->family == AF_INET6) 
 	{
 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
@@ -1350,7 +1342,6 @@ void receive_query(struct listener *listen, time_t now)
 	      break;
 	}
       else
-#endif
 	{
 	  struct in_addr netmask;
 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
@@ -1419,7 +1410,6 @@ void receive_query(struct listener *listen, time_t now)
 	}
 #endif
       
-#ifdef HAVE_IPV6
       if (listen->family == AF_INET6)
 	{
 	  for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr))
@@ -1435,7 +1425,6 @@ void receive_query(struct listener *listen, time_t now)
 		if_index = p.p->ipi6_ifindex;
 	      }
 	}
-#endif
       
       /* enforce available interface configuration */
       
@@ -1499,11 +1488,9 @@ void receive_query(struct listener *listen, time_t now)
       if (listen->family == AF_INET) 
 	log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
 		  (struct all_addr *)&source_addr.in.sin_addr, types);
-#ifdef HAVE_IPV6
       else
 	log_query(F_QUERY | F_IPV6 | F_FORWARD, daemon->namebuff, 
 		  (struct all_addr *)&source_addr.in6.sin6_addr, types);
-#endif
 
 #ifdef HAVE_AUTH
       /* find queries for zones we're authoritative for, and answer them directly */
@@ -1632,9 +1619,9 @@ static int tcp_key_recurse(time_t now, int status, struct dns_header *header, si
 	  new_status = STAT_ABANDONED;
 	  break;
 	}
-	 
+
       m = dnssec_generate_query(new_header, ((unsigned char *) new_header) + 65536, keyname, class, 
-				new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS, &server->addr, server->edns_pktsz);
+				new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS, server->edns_pktsz);
       
       *length = htons(m);
 
@@ -1667,30 +1654,30 @@ static int tcp_key_recurse(time_t now, int status, struct dns_header *header, si
 	      (type == SERV_HAS_DOMAIN && !hostname_isequal(domain, server->domain)) ||
 	      (server->flags & (SERV_LITERAL_ADDRESS | SERV_LOOP)))
 	    continue;
-	    
-	  retry:
-	    /* may need to make new connection. */
-	    if (server->tcpfd == -1)
-	      {
-		if ((server->tcpfd = socket(server->addr.sa.sa_family, SOCK_STREAM, 0)) == -1)
-		  continue; /* No good, next server */
-		
+
+	retry:
+	  /* may need to make new connection. */
+	  if (server->tcpfd == -1)
+	    {
+	      if ((server->tcpfd = socket(server->addr.sa.sa_family, SOCK_STREAM, 0)) == -1)
+		continue; /* No good, next server */
+	      
 #ifdef HAVE_CONNTRACK
-		/* Copy connection mark of incoming query to outgoing connection. */
-		if (have_mark)
-		  setsockopt(server->tcpfd, SOL_SOCKET, SO_MARK, &mark, sizeof(unsigned int));
+	      /* Copy connection mark of incoming query to outgoing connection. */
+	      if (have_mark)
+		setsockopt(server->tcpfd, SOL_SOCKET, SO_MARK, &mark, sizeof(unsigned int));
 #endif	
-		
-		if (!local_bind(server->tcpfd,  &server->source_addr, server->interface, 0, 1) ||
-		    connect(server->tcpfd, &server->addr.sa, sa_len(&server->addr)) == -1)
-		  {
-		    close(server->tcpfd);
-		    server->tcpfd = -1;
-		    continue; /* No good, next server */
-		  }
-		
-		server->flags &= ~SERV_GOT_TCP;
-	      }
+	      
+	      if (!local_bind(server->tcpfd,  &server->source_addr, server->interface, 0, 1) ||
+		  connect(server->tcpfd, &server->addr.sa, sa_len(&server->addr)) == -1)
+		{
+		  close(server->tcpfd);
+		  server->tcpfd = -1;
+		  continue; /* No good, next server */
+		}
+	      
+	      server->flags &= ~SERV_GOT_TCP;
+	    }
 	  
 	  if (!read_write(server->tcpfd, packet, m + sizeof(u16), 0) ||
 	      !read_write(server->tcpfd, &c1, 1, 1) ||
@@ -1707,6 +1694,14 @@ static int tcp_key_recurse(time_t now, int status, struct dns_header *header, si
 	      else
 		continue;
 	    }
+
+
+	  if (server->addr.sa.sa_family == AF_INET) 
+	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, keyname, (struct all_addr *)&(server->addr.in.sin_addr),
+		      querystr("dnssec-query", new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS));
+	  else
+	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV6, keyname, (struct all_addr *)&(server->addr.in6.sin6_addr),
+		      querystr("dnssec-query", new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS));
 	  
 	  server->flags |= SERV_GOT_TCP;
 	  
@@ -1771,11 +1766,10 @@ unsigned char *tcp_request(int confd, time_t now,
   if (option_bool(OPT_CONNTRACK))
     {
       struct all_addr local;
-#ifdef HAVE_IPV6		      
+		      
       if (local_addr->sa.sa_family == AF_INET6)
 	local.addr.addr6 = local_addr->in6.sin6_addr;
       else
-#endif
 	local.addr.addr4 = local_addr->in.sin_addr;
       
       have_mark = get_incoming_mark(&peer_addr, &local, 1, &mark);
@@ -1786,7 +1780,7 @@ unsigned char *tcp_request(int confd, time_t now,
   if (option_bool(OPT_LOCAL_SERVICE))
     {
       struct addrlist *addr;
-#ifdef HAVE_IPV6
+
       if (peer_addr.sa.sa_family == AF_INET6) 
 	{
 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
@@ -1795,7 +1789,6 @@ unsigned char *tcp_request(int confd, time_t now,
 	      break;
 	}
       else
-#endif
 	{
 	  struct in_addr netmask;
 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
@@ -1850,11 +1843,9 @@ unsigned char *tcp_request(int confd, time_t now,
 	  if (peer_addr.sa.sa_family == AF_INET) 
 	    log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
 		      (struct all_addr *)&peer_addr.in.sin_addr, types);
-#ifdef HAVE_IPV6
 	  else
 	    log_query(F_QUERY | F_IPV6 | F_FORWARD, daemon->namebuff, 
 		      (struct all_addr *)&peer_addr.in6.sin6_addr, types);
-#endif
 	  
 #ifdef HAVE_AUTH
 	  /* find queries for zones we're authoritative for, and answer them directly */
@@ -2030,11 +2021,9 @@ unsigned char *tcp_request(int confd, time_t now,
 		      if (last_server->addr.sa.sa_family == AF_INET)
 			log_query(F_SERVER | F_IPV4 | F_FORWARD, daemon->namebuff, 
 				  (struct all_addr *)&last_server->addr.in.sin_addr, NULL); 
-#ifdef HAVE_IPV6
 		      else
 			log_query(F_SERVER | F_IPV6 | F_FORWARD, daemon->namebuff, 
 				  (struct all_addr *)&last_server->addr.in6.sin6_addr, NULL);
-#endif 
 
 #ifdef HAVE_DNSSEC
 		      if (option_bool(OPT_DNSSEC_VALID) && !checking_disabled && (last_server->flags & SERV_DO_DNSSEC))
@@ -2133,9 +2122,7 @@ static struct frec *allocate_frec(time_t now)
       f->sentto = NULL;
       f->rfd4 = NULL;
       f->flags = 0;
-#ifdef HAVE_IPV6
       f->rfd6 = NULL;
-#endif
 #ifdef HAVE_DNSSEC
       f->dependent = NULL;
       f->blocking_query = NULL;
@@ -2195,11 +2182,8 @@ static void free_frec(struct frec *f)
   f->rfd4 = NULL;
   f->sentto = NULL;
   f->flags = 0;
-  
-#ifdef HAVE_IPV6
   free_rfd(f->rfd6);
   f->rfd6 = NULL;
-#endif
 
 #ifdef HAVE_DNSSEC
   if (f->stash)

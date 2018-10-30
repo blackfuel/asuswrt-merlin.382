@@ -39,14 +39,15 @@ var dnsfilter_rule_list_row = dnsfilter_rule_list.split('<');
 
 var modes_array = [[ "0", "No Filtering" ],
 		  [ "11", "Router" ],
+		  [ "14", "CleanBrowsing Security" ],
+		  [ "15", "CleanBrowsing Adult" ],
+		  [ "16", "CleanBrowsing Family" ],
+		  [ "12", "Comodo Secure DNS" ],
 		  [ "1",  "OpenDNS Home" ],
 		  [ "7",  "OpenDNS Family" ],
-		  [ "2",  "Norton Safe" ],
-		  [ "3",  "Norton Family" ],
-		  [ "4",  "Norton Children" ],
+		  [ "13", "Quad9" ],
 		  [ "5",  "Yandex Safe" ],
 		  [ "6",  "Yandex Family" ],
-		  [ "12", "Comodo Secure DNS" ],
 		  [ "8",  "Custom 1" ],
 		  [ "9",  "Custom 2" ],
 		  [ "10", "Custom 3" ]];
@@ -170,9 +171,9 @@ function show_dnsfilter_list(){
 					}
 				}
 			}
-			code += '</td><td id="client_info_'+i+'" style="width:60%;border:0px;">';
+			code += '</td><td id="client_info_'+i+'" style="width:65%;text-align:left;border:0;">';
 			code += '<div>' + clientName + '</div>';
-			code += '<div style="font-weight:bold;cursor:pointer;text-decoration:underline;font-family:Lucida Console;" onclick="document.form.destIP.value=this.innerHTML;">' + clientMac + '</div>';
+			code += '<div>' + clientMac + '</div>';
 			code += '</td></tr></table>';
 			code += '</td>';
 
@@ -371,7 +372,7 @@ function showhide_settings(state) {
 		<td bgcolor="#4D595D" valign="top">
 		<div>&nbsp;</div>
 		<div class="formfonttitle">DNS-based Filtering</div>
-		<div style="margin-left:5px;margin-top:10px;margin-bottom:10px"><img src="/images/New_ui/export/line_export.png"></div>
+		<div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 
 		<div id="dnsfilter_desc" style="margin-bottom:10px;">
 			<table width="700px" style="margin-left:25px;">
@@ -387,15 +388,21 @@ function showhide_settings(state) {
 							are currently supported (some of which offer multiple levels of
 							protection):
 							<ul>
-								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="http://www.opendns.com/home-internet-security/">OpenDNS</a>
-								<ul><li>Home = Regular OpenDNS server (manually configurable through their portal)
-								<li>Family = Family Shield (pre-configured to block adult content)</ul>
-								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://dns.norton.com/">Norton Connect Safe</a> (for home usage only)
-								<ul><li>Safe = Malicious content<li>Family = Malicious + Sexual content<li>Children = Malicious + Sexual + Mature content</ul>
-								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="http://dns.yandex.com"><#YandexDNS#></a>
-								<ul><li>Safe = Malicious content<li>Family = Malicious + Sexual content</ul>
-								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="http://www.comodo.com/secure-dns/">Comodo Secure DNS</a>
-								<ul><li>Protects against malicious content</ul>
+								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://cleanbrowsing.org/">CleanBrowsing</a>
+									<ul><li>Security = Malicious content
+									    <li>Adult = Malicious + Sexual content
+									    <li>Family = Malicious + Sexual + proxy/VPN + Mixed content
+									</ul>
+								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://www.comodo.com/secure-dns/">Comodo Secure DNS</a>
+								    <ul><li>Protects against malicious content</ul>
+								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://www.opendns.com/home-internet-security/">OpenDNS</a>
+								    <ul><li>Home = Regular OpenDNS server (configurable through their portal)
+								        <li>Family = Family Shield (pre-configured to block adult content)
+								    </ul>
+								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://www.quad9.net">Quad9</a>
+								    <ul><li>Protects against malicious content</ul>
+								<li><a target="_blank" style="font-weight: bolder; cursor:pointer;text-decoration: underline;" href="https://dns.yandex.com"><#YandexDNS#></a>
+								    <ul><li>Safe = Malicious content<li>Family = Malicious + Sexual content</ul>
 							</ul>
 							<br>"No Filtering" will disable/bypass the filter, and "Router" will force clients to use the DNS provided
 							    by the router's DHCP server (or, the router itself if it's not defined).

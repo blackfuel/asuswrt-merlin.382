@@ -1,30 +1,62 @@
 Asuswrt-Merlin 384/NG Changelog
 ===============================
 
-General changes in the 384/NG branch vs 380.xx:
-   - Clear your browser cache after upgrading from 380.xx to 384.xx.
-   - It's generally recommended to do a factory default reset
-     when coming from 380 to 384/NG.
-   - HDD spindown settings moved to the System settings page
-   - SSL certificate management moved to the DDNS page for models
-     that support Let's Encrypt
-   - Nvram settings now have maximum lengths enforced, to protect
-     against buffer overruns.  This means that some very long
-     lists of settings might no longer be possible on 384.xx.
+384.8-ax (xx-xxx-xxxx)
+  - NEW: Added RT-AX88U support (based on GPL 384_4730).
+         Note that for the time being, the RT-AX88U
+         firmware will be developped in parallel, with
+         the suffix "-ax" added to the version string,
+         until Asus unifies the code on their end.
+         This special build will also contain the changes
+         from the non-ax release of the same version
+         number (384.8 in this case).
 
 
-384.7 (xx-xxx-xxxx)
-  - NOTE: The RT-AC3200 and RT-AC56U are not supported by this release,
-          Asus hasn't released any updated code for these models.
+384.8 (xx-xxx-xxxx)
+  - NEW: Merged with GPL + binary blobs from 384_32799
+         for AC68U/AC88U/AC3100/AC5300.
+  - NEW: Merged binary blobs from 384_32797 for RT-AC86U.
+  - NEW: Add LZ4 V2 option to OpenVPN compression
+         (more effective at handling already compressed
+         data)
+  - NEW: Added "extend" support to SNMP.
+  - NEW: Added CleanBrowsing to DNSFilter supported services.
+  - CHANGED: Updated dnsmasq to 2.80-7-g24b8760 (themiron)
+  - CHANGED: Removed watchdog from OpenVPN clients, to avoid
+             conflicting with more advanced configurations.
+  - CHANGED: Vsftpd TLS mode will now reuse the web server
+             certificate (including any Let's Encrypt generated
+             one).
+  - CHANGED: SSL crypto/cipher hardening for httpd (themiron)
+  - CHANGED: Syslog will now ignore bwdpi debug output (themiron)
+  - FIXED: CVE-2018-15599 in dropbear
+  - FIXED: Namecheap DDNS service not updating
+
+
+384.7_2 (21-Oct-2018)
+  - FIXED: Namecheap DDNS service not working
+  - FIXED: CVE-2018-15599 security issue in Dropbear
+  - FIXED: Potential buffer overrun in httpd
+
+
+384.7 (7-Oct-2018)
+  - NOTE: The RT-AC3200 and RT-AC56U are not supported by this
+          release, Asus hasn't released any updated code yet for
+          these models.
+
+  - NOTE: Important changes to DDNS, please read below.
+
+  - NOTE: Important changes to DNSFilter, please read below.
+
   - NEW: Merged with GPL 384_21152.
   - NEW: Merged RT-AC87U binary blobs + SDK from 382_50702.
-  - NEW: Replaced old ez-ipupdate DDNS client with inadyn.
+  - NEW: Replaced old ez-ipupdate DDNS client with In-a-Dyn.
          A plugin was developed to fully support Asus's DDNS
          service.
-         Custom services can now be configured through ddns-start
-         inadyn.conf.add, or inadyn.postconf.  See the inadyn
-         documentation as many custom services can be defined
-         for it.
+         Custom services can now be configured through ddns-start,
+         inadyn.conf, inadyn.conf.add or inadyn.postconf.  See the
+         In-a-Dyn documentation as many custom services can be
+         defined for it.
   - NEW: Added support for freedns.afraid.org DDNS service to webui.
   - NEW: Added option to retrieve WAN IP from either the local
          interface (like before) or through a remote server
@@ -35,13 +67,14 @@ General changes in the 384/NG branch vs 380.xx:
          remove part of the security benefits of DNSSEC, so it
          should not be used unless you have a very specific reason
          to do so.
+  - NEW: Added Quad9 to DNSFilter supported services.
   - CHANGED: Updated curl to 7.61.1.
   - CHANGED: Updated wget to 1.19.5.
   - CHANGED: Updated openssl to 1.0.2p.
-  - CHANGED: Updated dnsmasq to v2.80test4 (themiron).
-  - CHANGED: Updated nano to 3.0 + backported fixes from upstream.
+  - CHANGED: Updated dnsmasq to v2.80test8 (themiron).
+  - CHANGED: Updated nano to 3.1.
   - CHANGED: All DDNS services now use HTTPS.
-  - CHANGED: Replaced Google Domains DDNS script with inadyn's own
+  - CHANGED: Replaced Google Domains DDNS script with In-a-Dyn's own
              plugin.
   - CHANGED: Moved DNSFilter to the LAN section, to make it clear
              that it's unrelated to Trend Micro's engine.
@@ -51,8 +84,21 @@ General changes in the 384/NG branch vs 380.xx:
   - FIXED: Invalid dnsmasq config when setting DNSFilter to Router
            mode and having IPv6 enabled (themiron).
   - FIXED: dnsmasq crashing on RT-AC86U with IPv6 Stateful mode
-           (themiron)
-  - REMOVED: Ez-ipupdate DDNS client (replaced with inadyn)
+           (themiron).
+  - FIXED: client table would be shown twice on the VPN Status
+           page if the only connections to an OVPN server
+           were invalid clients (like a port scanner)
+  - FIXED: DDNS forced updates after "x" days wouldn't be
+           initiated.
+  - FIXED: CERT VU#598349 vulnerability (DHCP client could
+           claim the special "wpad" hostname)
+  - REMOVED: Ez-ipupdate DDNS client (replaced with In-a-Dyn).
+             Update your scripts if you were relying on it.
+  - REMOVED: Norton Safe DNSFilter services (being discontinued
+             by Symantec in November).  Configured clients will
+             be automatically migrated to OpenDNS Family - make
+             sure to edit your DNSFIlter settings if you desire
+             to use a different service.
 
 
 384.6 (25-July-2018)

@@ -1,3 +1,17 @@
+version 2.81
+	Impove cache behaviour for TCP connections. For ease of
+	implementaion, dnsmasq has always forked a new process to handle
+	each incoming TCP connection. A side-effect of this is that
+	any DNS queries answered from TCP connections are not cached:
+	when TCP connections were rare, this was not a problem.
+	With the coming of DNSSEC, it's now the case that some
+	DNSSEC queries have answers which spill to TCP, and if,
+	for instance, this applies to the keys for the root then
+	those never get cached, and performance is very bad.
+	This fix passes cache entries back from the TCP child process to
+	the main server process, and fixes the problem.
+
+
 version 2.80
 	Add support for RFC 4039 DHCP rapid commit. Thanks to Ashram Method
 	for the initial patch and motivation.
@@ -52,8 +66,23 @@ version 2.80
 	Add --dhcp-name-match config option. 
 
 	Add --caa-record config option.
-	
 
+	Implement --address=/example.com/# as (more efficient) syntactic
+	sugar for --address=/example.com/0.0.0.0 and
+	--address=/example.com/::
+	Returning null addresses is a useful technique for ad-blocking.
+	Thanks to Peter Russell for the suggestion.
+	
+	Change anti cache-snooping behaviour with queries with the
+	recursion-desired bit unset. Instead to returning SERVFAIL, we
+	now always forward, and never answer from the cache. This
+	allows "dig +trace" command to work. 
+	
+	Include in the example config file a formulation which
+	stops DHCP clients from claiming the DNS name "wpad".
+	This is a fix for the CERT Vulnerability VU#598349.
+
+	
 version 2.79
 	Fix parsing of CNAME arguments, which are confused by extra spaces.
 	Thanks to Diego Aguirre for spotting the bug.

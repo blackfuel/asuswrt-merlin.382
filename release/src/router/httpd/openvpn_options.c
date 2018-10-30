@@ -594,6 +594,8 @@ add_option (char *p[], int line, int unit)
 				nvram_pf_set(prefix, "comp", "yes");
 			else if (streq (p[1], "lz4"))
 				nvram_pf_set(prefix, "comp", "lz4");
+			else if (streq (p[1], "lz4-v2"))
+				nvram_pf_set(prefix, "comp", "lz4-v2");
 		} else {
 			nvram_pf_set(prefix, "comp", "no");
 		}
@@ -734,8 +736,8 @@ void parse_openvpn_status(int unit){
 					fprintf(fpo, "NoUsername\n");
 			}
 		}
-		fclose(fpi);
-		fclose(fpo);
+		if(fpi) fclose(fpi);
+		if(fpo) fclose(fpo);
 	}
 }
 
