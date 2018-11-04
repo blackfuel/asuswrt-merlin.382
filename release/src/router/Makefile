@@ -7231,9 +7231,9 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_61_1/curl-7.61.1.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_62_0/curl-7.62.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.61.1+git"; \
+			VERSION="7.62.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
@@ -7273,7 +7273,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.4.8.tar.gz"; \
+			URL="https://www.torproject.org/dist/tor-0.3.4.9.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
@@ -7312,9 +7312,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
-			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.178.tgz"; \
+			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.181.tgz"; \
 			URL2="git://sourceware.org/git/lvm2.git"; \
-			VERSION="2.02.178+git"; \
+			VERSION="2.02.181+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
@@ -7327,9 +7327,9 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.4.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.5.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.0.4+git"; \
+			VERSION="2.0.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
