@@ -29,8 +29,17 @@ Asuswrt-Merlin 384/NG Changelog
              one).
   - CHANGED: SSL crypto/cipher hardening for httpd (themiron)
   - CHANGED: Syslog will now ignore bwdpi debug output (themiron)
+  - CHANGED: Reworked Wireless Log page, adding a new button to
+             view low-level details (what stock firmware shows
+             on its Wireless Log page), and removed redundant
+             option to display DFS channel details.
   - FIXED: CVE-2018-15599 in dropbear
   - FIXED: Namecheap DDNS service not updating
+  - FIXED: UOPNP port forwarding not working in CGNAT/double NAT
+           scenario even if proper ports were forwarded upstream.
+  - FIXED: Pages based on table.js (like the port trigger one)
+           would fail to work properly under Firefox
+           (Michael Ziminsky)
 
 
 384.7_2 (21-Oct-2018)
