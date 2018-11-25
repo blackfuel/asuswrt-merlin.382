@@ -1281,12 +1281,13 @@ void start_dnsmasq(void)
 	}
 #endif
 	if (!is_routing_enabled()
-		&& !repeater_mode()
+		&& (repeater_mode()
 #if defined(RTCONFIG_BCMWL6) && defined(RTCONFIG_PROXYSTA)
-		&& !psr_mode() && !mediabridge_mode()
+		|| psr_mode() || mediabridge_mode()
 #elif defined(RTCONFIG_REALTEK)
-		&& !mediabridge_mode()
+		|| mediabridge_mode()
 #endif
+		)
 #ifdef RTCONFIG_DPSTA
 		&& !(dpsta_mode() && nvram_get_int("re_mode") == 0)
 #endif
@@ -4638,12 +4639,15 @@ void start_upnp(void)
 						httpx_port = nvram_get_int("misc_httpsport_x") ? : 8443;
 						fprintf(f, "deny %d 0.0.0.0/0 0-65535\n", httpx_port);
 					}
-					if (enable != 1)
 #endif
+#if 0
+					if (enable != 1)
+
 					{
 						httpx_port = nvram_get_int("misc_httpport_x") ? : 8080;
 						fprintf(f, "deny %d 0.0.0.0/0 0-65535\n", httpx_port);
 					}
+#endif
 				}
 
 #ifdef RTCONFIG_WEBDAV
@@ -13951,7 +13955,7 @@ firmware_check_main(int argc, char *argv[])
 #endif
 
 #ifdef CONFIG_BCMWL5
-#if defined(RTAC68U) || defined(RTAC88U) || defined(RTAC3100) || defined(RTAC5300) || defined(RTAC86U) // kludge
+#if !defined(RTAC3200) && !defined(RTAC56U) && !defined(RTAC87U)	// Kludge
 	fw_check_pre();
 #endif
 #endif

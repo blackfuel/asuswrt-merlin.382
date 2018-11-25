@@ -1257,7 +1257,7 @@ endif
 endif
 
 #add for snmpd
-SNMPD_CFLAGS += -D$(BUILD_NAME)
+#SNMPD_CFLAGS += -D$(BUILD_NAME)
 ifeq ($(BUILD_NAME), $(filter $(BUILD_NAME), RT-N66U RT-AC66U RT-AC68U))
 SNMPD_CFLAGS += -DDUAL_BAND
 endif
@@ -5745,6 +5745,7 @@ curl-aarch64/Makefile: curl-aarch64-unpack curl-aarch64/configure
 	--disable-telnet \
 	--disable-manual \
 	--disable-libcurl-option \
+	--disable-threaded-resolver \
 	--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
 	)
 
@@ -6963,6 +6964,7 @@ curl-7.21.7/Makefile: curl-7.21.7-unpack curl-7.21.7/configure
 	--disable-telnet \
 	--disable-manual \
 	--disable-libcurl-option \
+	--disable-threaded-resolver \
 	--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
 	)
 
