@@ -7305,7 +7305,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.32/util-linux-2.32.1.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.tar.xz"; \
 			PACKAGE_NAME="util-linux"; \
 		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
 			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
