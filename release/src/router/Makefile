@@ -7223,9 +7223,9 @@ strace-clean:
 		VERSION=""; \
 		SOURCE_VERSION=""; \
 		if [ "$$PACKAGE_DIR" = "nettle" ] || [ "$$PACKAGE_DIR" = "nettle-aarch64" ]; then \
-			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.tar.gz"; \
+			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.1.tar.gz"; \
 			URL2="https://git.lysator.liu.se/nettle/nettle.git"; \
-			VERSION="3.4+git"; \
+			VERSION="3.4.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="nettle"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ] || [ "$$PACKAGE_DIR" = "curl-7.21.7" ] || \
@@ -7239,9 +7239,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
-			URL="https://ftp.gnu.org/gnu/wget/wget-1.19.5.tar.lz"; \
+			URL="https://ftp.gnu.org/gnu/wget/wget-1.20.tar.lz"; \
 			URL2="https://gitlab.com/gnuwget/wget.git"; \
-			VERSION="1.19.5+git"; \
+			VERSION="1.20+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="wget"; \
 		elif [ "$$PACKAGE_DIR" = "jpeg" ] || [ "$$PACKAGE_DIR" = "jpeg-aarch64" ]; then \
@@ -7329,9 +7329,9 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.5.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.6.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.0.5+git"; \
+			VERSION="2.0.6+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
