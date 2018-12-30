@@ -10520,7 +10520,6 @@ int init_main(int argc, char *argv[])
 
 			stop_lan();
 			stop_vlan();
-			stop_logger();
 
 #if defined(RTCONFIG_ALPINE) || defined(RTCONFIG_LANTIQ)
 			_dprintf("sync during rebooting...\n");
@@ -10544,6 +10543,7 @@ int init_main(int argc, char *argv[])
 #endif
 				}
 #endif
+				stop_logger();
 #if defined(RTCONFIG_QCA) && defined(RTCONFIG_QCA8033)
 				stop_lan_port();
 				start_lan_port(5);
@@ -10560,6 +10560,7 @@ int init_main(int argc, char *argv[])
 
 		case SIGUSR2:		/* START */
 			nvram_unset("shutdown_started");
+			stop_logger();
 			start_logger();
 #if defined(RTCONFIG_QCA)
 			logmessage("INIT", "firmware version: %s_%s_%s\n", nvram_safe_get("firmver"), nvram_safe_get("buildno"), nvram_safe_get("extendno"));

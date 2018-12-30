@@ -1,6 +1,56 @@
 Asuswrt-Merlin 384/NG Changelog
 ===============================
 
+384.9 (xx-xxx-xxxx)
+  - NEW: TemporarilY reorganized code in separate branches, to handle
+         Asus's currently scattered firmware source code releases.
+         The GPL situation for this release is as follow:
+     o RT-AX88U: Merged GPL 384_5247
+     o RT-AC68U, RT-AC86U: Merged GPL 384_45149
+     o RT-AC3200: GPL 384_45149 + updated binary blobs from Asus
+     o RT-AC88U, RT-AC3100, RT-AC5300: GPL 384_32799
+
+  - NEW: Added NFS client support (V2 and V3) to the
+         RT-AC86U and RT-AX88U (already present in older models)
+  - CHANGED: Updated wget to 1.20.
+  - CHANGED: Updated nano to 3.2.
+  - CHANGED: Updated curl to 7.62.0.
+  - CHANGED: Updated Chart.js to 2.7.3.
+  - CHANGED: Optimized some JS files to reduce their size
+  - CHANGED: OpenVPN clients can now accept CNs up to 255 chars
+             when using it to validate the certificate.
+  - CHANGED: No longer reset the OpenVPN client's description,
+             policy mode and existing rules when uploading an
+             .ovpn config file.
+  - FIXED: Firmware update checks would not run at boot time
+           on the RT-AX88U.
+  - FIXED: Name resolution issues for /etc/hosts entries on
+           HND models (themiron)
+  - FIXED: Syslog not properly copied to JFFS on reboot
+           (John Bacho)
+  - FIXED: Volumes not properly unmounted on HND platform
+           (John Bacho)
+  - FIXED: Added missing TEE Netfilter target on the RT-AC86U
+  - FIXED: SSH brute force protection didn't work in Dual WAN
+           load balancing mode.
+  - FIXED: httpd crashes on RT-AC86U (themiron)
+
+
+384.8_2 (8-Dec-2018)
+  - CHANGED: Updated miniupnpd to 20181205.
+  - CHANGED: Push LAN domain to OpenVPN clients as DNS suffix
+             for the connection.
+  - FIXED: Cannot save custom settings on OpenVPN server page
+           on non-HND models.
+  - FIXED: Some webui pages fail to load properly in French
+  - FIXED: dnsmasq fails to start when certain options are
+           configured (themiron)
+  - FIXED: Non-functionnal Show Password option on OpenVPN/PPTP
+           server page for RT-AX88U (removed)
+  - FIXED: Persistent SSL cert was wiped at boot time in
+           some specific scenarios.
+
+
 384.8 (2-Dec-2018)
   - NOTE: Asus has put the RT-AC56U on their End of Life
           list, meaning no further firmware releases from
@@ -34,7 +84,7 @@ Asuswrt-Merlin 384/NG Changelog
              view low-level details (what stock firmware shows
              on its Wireless Log page), and removed redundant
              option to display DFS channel details.
-  - CHANGED: Updated dnsmasq to 2.80-7-g24b8760 (themiron)
+  - CHANGED: Update dnsmasq to 2.80-11-g59e4703 (themiron)
   - CHANGED: Updated nettle to 3.4
   - CHANGED: Updated net-snmp to 5.8
   - CHANGED: Updated openssl to 1.0.2q

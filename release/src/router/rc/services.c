@@ -8061,6 +8061,10 @@ start_services(void)
 void
 stop_logger(void)
 {
+#if defined(RTCONFIG_JFFS2LOG) && (defined(RTCONFIG_JFFS2)||defined(RTCONFIG_BRCM_NAND_JFFS2))
+		eval("cp", "/tmp/syslog.log", "/tmp/syslog.log-1", "/jffs");
+#endif
+
 	if (pids("klogd"))
 		killall("klogd", SIGTERM);
 	if (pids("syslogd"))
@@ -12440,11 +12444,11 @@ retry_wps_enr:
  	}
 	else if (strncmp(script, "clearvpnserver", 14) == 0)
 	{
-		reset_ovpn_setting(OVPN_TYPE_SERVER, nvram_get_int("vpn_server_unit"));
+		reset_ovpn_setting(OVPN_TYPE_SERVER, nvram_get_int("vpn_server_unit"), 1);
 	}
         else if (strncmp(script, "clearvpnclient", 14) == 0)
 	{
-                reset_ovpn_setting(OVPN_TYPE_CLIENT, nvram_get_int("vpn_client_unit"));
+                reset_ovpn_setting(OVPN_TYPE_CLIENT, nvram_get_int("vpn_client_unit"), 1);
 	}
 #endif
 #ifdef RTCONFIG_YANDEXDNS
