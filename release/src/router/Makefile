@@ -7233,15 +7233,15 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_62_0/curl-7.62.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_63_0/curl-7.63.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.62.0+git"; \
+			VERSION="7.63.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
-			URL="https://ftp.gnu.org/gnu/wget/wget-1.20.tar.lz"; \
+			URL="https://ftp.gnu.org/gnu/wget/wget-1.20.1.tar.lz"; \
 			URL2="https://gitlab.com/gnuwget/wget.git"; \
-			VERSION="1.20+git"; \
+			VERSION="1.20.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="wget"; \
 		elif [ "$$PACKAGE_DIR" = "jpeg" ] || [ "$$PACKAGE_DIR" = "jpeg-aarch64" ]; then \
@@ -7269,9 +7269,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/releases/download/v1.3.7/zstd-1.3.7.tar.gz"; \
+			URL="https://github.com/facebook/zstd/releases/download/v1.3.8/zstd-1.3.8.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.3.7+git"; \
+			VERSION="1.3.8+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
@@ -7299,9 +7299,9 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
 			URL="http://rpm5.org/files/popt/popt-1.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgpg-error" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.32.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.33.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
-			VERSION="1.32+git"; \
+			VERSION="1.33+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
@@ -7345,7 +7345,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "rng-tools" ]; then \
 			URL="https://downloads.sourceforge.net/project/gkernel/rng-tools/5/rng-tools-5.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libcap" ]; then \
-			URL="https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.25.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.26.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "rtl-sdr" ]; then \
 			URL="git://git.osmocom.org/rtl-sdr.git"; \
 			VERSION="0.5.3+git"; \
