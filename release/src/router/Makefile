@@ -6629,7 +6629,7 @@ tor/Makefile: tor-unpack
 		)
 
 tor-install:
-	install -D tor/src/or/tor $(INSTALLDIR)/tor/usr/sbin/Tor
+	install -D tor/src/app/tor $(INSTALLDIR)/tor/usr/sbin/Tor
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/tor/usr/sbin/Tor
 	install -D tor/src/tools/tor-gencert $(INSTALLDIR)/tor/usr/sbin/Tor-gencert
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/tor/usr/sbin/Tor-gencert
@@ -7275,13 +7275,13 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.4.9.tar.gz"; \
+			URL="https://www.torproject.org/dist/tor-0.3.5.7.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
 			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.4.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
-			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz"; \
+			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.17.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
 			URL="http://http.debian.net/debian/pool/main/d/dnscrypt-proxy/dnscrypt-proxy_1.9.5.orig.tar.gz"; \
 			URL2="https://github.com/dyne/dnscrypt-proxy"; \
@@ -7305,7 +7305,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.1.tar.xz"; \
 			PACKAGE_NAME="util-linux"; \
 		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
 			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
@@ -7314,9 +7314,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
-			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.181.tgz"; \
+			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.183.tgz"; \
 			URL2="git://sourceware.org/git/lvm2.git"; \
-			VERSION="2.02.181+git"; \
+			VERSION="2.02.183+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
