@@ -8,7 +8,7 @@
 <meta HTTP-EQUIV="Expires" CONTENT="-1">
 <link rel="shortcut icon" href="images/favicon.png">
 <link rel="icon" href="images/favicon.png">
-<title><#Web_Title#> - QoS Statistics</title>
+<title><#Web_Title#> - Classification</title>
 <link rel="stylesheet" type="text/css" href="index_style.css"> 
 <link rel="stylesheet" type="text/css" href="form_style.css">
 <link rel="stylesheet" type="text/css" href="usp_style.css">
@@ -20,8 +20,50 @@
 <script type="text/javascript" src="/general.js"></script>
 <script type="text/javascript" src="/popup.js"></script>
 <script type="text/javascript" src="/js/table/table.js"></script>
-<script>
 
+<style>
+.tableApi_table th {
+        height: 22px;
+        text-align: left;
+}
+.tableApi_table td {
+        text-align: left;
+}
+.data_tr {
+        height: 32px;
+}
+span.cat0{
+	background-color:#B3645B;
+}
+span.cat1{
+	background-color:#B98F53;
+}
+span.cat2{
+	background-color:#C6B36A;
+}
+span.cat3{
+	background-color:#849E75;
+}
+span.cat4{
+	background-color:#2B6692;
+}
+span.cat5{
+	background-color:#7C637A;
+}
+span.cat6{
+	background-color:#4C8FC0;
+}
+span.cat7{
+	background-color:#6C604F;
+}
+span.catrow{
+	padding: 4px 8px 4px 8px; color: white !important;
+	border-radius: 5px; border: 1px #2C2E2F solid;
+	white-space: nowrap;
+}
+</style>
+
+<script>
 var qos_type ="<% nvram_get("qos_type"); %>";
 
 if ("<% nvram_get("qos_enable"); %>" == 0) {	// QoS disabled
@@ -36,17 +78,15 @@ if ("<% nvram_get("qos_enable"); %>" == 0) {	// QoS disabled
 	var qos_mode = 0;
 }
 
-
 if (qos_mode == 2) {
 	var bwdpi_app_rulelist = "<% nvram_get("bwdpi_app_rulelist"); %>".replace(/&#60/g, "<");
-	var category_title = ["Net Control Packets", "<#Adaptive_Game#>", "<#Adaptive_Stream#>","<#Adaptive_Message#>", "<#Adaptive_WebSurf#>","<#Adaptive_FileTransfer#>", "<#Adaptive_Others#>", "Default"];
-	var cat_id_array = [[9,20], [8], [4], [0,5,6,15,17], [13,24], [1,3,14], [7,10,11,21,23], []];
-
 	var bwdpi_app_rulelist_row = bwdpi_app_rulelist.split("<");
 	if (bwdpi_app_rulelist == "" || bwdpi_app_rulelist_row.length != 9){
 		bwdpi_app_rulelist = "9,20<8<4<0,5,6,15,17<13,24<1,3,14<7,10,11,21,23<<";
 		bwdpi_app_rulelist_row = bwdpi_app_rulelist.split("<");
 	}
+	var category_title = ["Net Control Packets", "<#Adaptive_Game#>", "<#Adaptive_Stream#>","<#Adaptive_Message#>", "<#Adaptive_WebSurf#>","<#Adaptive_FileTransfer#>", "<#Adaptive_Others#>", "Default"];
+	var cat_id_array = [[9,20], [8], [4], [0,5,6,15,17], [13,24], [1,3,14], [7,10,11,21,23], []];
 } else {
 	var category_title = ["", "Highest", "High", "Medium", "Low", "Lowest"];
 }
@@ -115,7 +155,7 @@ function initial(){
 function get_qos_class(category, appid){
 	var i, j, catlist, rules;
 
-	if (category == 0 && appid == 0)
+	if ((category == 0 && appid == 0) || (qos_mode != 2))
 		return 7;
 
 	for (i=0; i < bwdpi_app_rulelist_row.length-2; i++){
@@ -139,15 +179,30 @@ function get_qos_class(category, appid){
 	return 7;
 }
 
+function compIPV6(input) {
+	input = input.replace(/\b(?:0+:){2,}/, ':');
+	return input.replace(/(^|:)0{1,4}/g, ':');
+}
+
 
 function draw_conntrack_table(){
 	var i, label;
 
-	if (qos_mode !=2) return;
-
 	for (i=0; i < bwdpi_conntrack.length; i++) {
 		label = bwdpi_conntrack[i][5];
-		bwdpi_conntrack[i][5] = "<span style=\"padding: 4px 8px 4px 8px; color: white; background-color: " + color[get_qos_class(bwdpi_conntrack[i][7], bwdpi_conntrack[i][6])] + ";\">"+label +"</span>";
+		if (label.length > 27)
+			size = "style=\"font-size: 75%;\"";
+		else
+			size = "";
+
+		bwdpi_conntrack[i][5] = "<span title=\"" + label +"\" class=\"catrow cat" + get_qos_class(bwdpi_conntrack[i][7], bwdpi_conntrack[i][6]) + "\"" + size + ">" + label + "</span>";
+		if (bwdpi_conntrack[i][1].indexOf(":") >= 0) {
+			bwdpi_conntrack[i][1] = compIPV6(bwdpi_conntrack[i][1]);
+		}
+		if (bwdpi_conntrack[i][3].indexOf(":") >= 0) {
+			bwdpi_conntrack[i][3] = compIPV6(bwdpi_conntrack[i][3]);
+		}
+
 	}
 
 	// Remove cat and appid cols
@@ -163,32 +218,33 @@ function draw_conntrack_table(){
 			{
 				"title" : "Proto",
 				"sort" : "str",
-				"width" : "8%"
+				"width" : "5%"
 			},
 			{
 				"title" : "Source",
 				"sort" : "ip",
-				"width" : "25%"
+				"width" : "28%"
 			},
 			{
 				"title" : "SPort",
 				"sort" : "num",
-				"width" : "8%"
+				"width" : "6%"
 			},
 			{
 				"title" : "Destination",
 				"sort" : "ip",
-				"width" : "25%"
+				"width" : "28%"
 			},
 			{
 				"title" : "DPort",
 				"sort" : "num",
-				"width" : "8%"
+				"width" : "6%"
 			},
 			{
 				"title" : "Application",
 				"sort" : "str",
-				"width" : "26%"
+				"defaultSort" : "increase",
+				"width" : "27%"
 			}
                 ]
         }
@@ -306,7 +362,7 @@ function draw_chart(data_array, ctx, pie) {
 			unit = " GB";
 		}
 
-		code += '<tr><td style="word-wrap:break-word;padding-left:5px;padding-right:5px;background-color:'+color[i]+';margin-right:10px;line-height:20px;">' + label + '</td>';
+		code += '<tr><td style="word-wrap:break-word;padding-left:5px;padding-right:5px;border:1px #2C2E2F solid; border-radius:5px;background-color:'+color[i]+';margin-right:10px;line-height:20px;">' + label + '</td>';
 		code += '<td style="padding-left:5px;">' + value.toFixed(2) + unit + '</td>';
 		rate = comma(data_array[i][2]);
 		code += '<td style="padding-left:20px;">' + rate.replace(/([0-9,])([a-zA-Z])/g, '$1 $2') + '</td>';
@@ -373,7 +429,7 @@ function draw_chart(data_array, ctx, pie) {
                 <tr bgcolor="#4D595D">
                 <td valign="top">
 	                <div>&nbsp;</div>
-		        <div class="formfonttitle">QoS - Traffic classification Statistics</div>
+		        <div class="formfonttitle">Traffic classification</div>
 			<div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 
 			<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -391,8 +447,8 @@ function draw_chart(data_array, ctx, pie) {
 			</table>
 			<br>
 
-			<div id="limiter_notice" style="display:none;font-size:125%;color:#FFCC00;">Statistics not available in Bandwidth Limiter mode.</div>
-			<div id="no_qos_notice" style="display:none;font-size:125%;color:#FFCC00;">QoS is not enabled.</div>
+			<div id="limiter_notice" style="display:none;font-size:125%;color:#FFCC00;">Note: Statistics not available in Bandwidth Limiter mode.</div>
+			<div id="no_qos_notice" style="display:none;font-size:125%;color:#FFCC00;">Note: QoS is not enabled.</div>
 			<div id="tqos_notice" style="display:none;font-size:125%;color:#FFCC00;">Note: Traditional QoS only classifies uploaded traffic.</div>
 			<table>
 				<tr id="dl_tr">

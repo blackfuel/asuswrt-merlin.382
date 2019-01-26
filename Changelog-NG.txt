@@ -2,25 +2,40 @@ Asuswrt-Merlin 384/NG Changelog
 ===============================
 
 384.9 (xx-xxx-xxxx)
-  - NEW: TemporarilY reorganized code in separate branches, to handle
+  - NEW: Temporarily reorganized code in separate branches, to handle
          Asus's currently scattered firmware source code releases.
          The GPL situation for this release is as follow:
      o RT-AX88U: Merged GPL 384_5247
-     o RT-AC3200: GPL 384_45149 + updated binary blobs from Asus
-     o RT-AC87U: not supported in this release
-     o Other models: 384_45149
+     o Other models: Merged GPL 384_45149.
+     o Special binary blobs provided by Asus for the RT-AC87U
+       and RT-AC3200 (compatible with 384_45149).
 
   - NEW: Added NFS client support (V2 and V3) to the
          RT-AC86U and RT-AX88U (already present in older models)
   - NEW: Report the number of spatial streams used by
          wireless clients for models supporting it
-  - NEW: Display tracked connections on the QoS Stats page (Adaptive QoS).
-         Thanks to FreshJr for his help in deciphering the packet mark
-         values.
+  - NEW: Display tracked connections on the QoS Stats page (now
+         relabeled "Classification").
+         Fields can be sorted by clicking on the column headers.
+         Thanks to FreshJr for his help in deciphering the packet
+         mark values.
+
+  - NEW: Implemented ipsec.postconf and strongswan.postconf scripts.
+  - KNOWN ISSUE: dcd process crashing on RT-AC86U (bug in Trend
+                 Micro's code, outside of my control).
+  - KNOWN ISSUE: IPv6s on Tracked Connections have their last
+                 two bytes set to 00 (bug in Trend Micro's
+                 code truncating the last two bytes).
+  - KNOWN ISSUE: No IPS events logged (bug in Asus's code,
+                 IPS should work, just fails to log hits)
+  - KNOWN ISSUE: Users failing to read changelogs will
+                 probably complain about the above issues.
+                 (Outside of my control).
   - CHANGED: Updated wget to 1.20.
   - CHANGED: Updated nano to 3.2.
   - CHANGED: Updated curl to 7.62.0.
   - CHANGED: Updated Chart.js to 2.7.3.
+  - CHANGED: Updated dnsmasq to 2.80-32-g28cfe36 (themiron)
   - CHANGED: Optimized some JS files to reduce their size
   - CHANGED: OpenVPN clients can now accept CNs up to 255 chars
              when using it to validate the certificate.
@@ -51,6 +66,7 @@ Asuswrt-Merlin 384/NG Changelog
            reboot.
   - FIXED: "Strict" DNS mode wasn't working properly with OpenVPN
            clients
+  - FIXED: Cannot upload JFFS backup on HND models
 
 
 384.8_2 (8-Dec-2018)
