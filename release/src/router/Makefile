@@ -7233,9 +7233,9 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_63_0/curl-7.63.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_64_0/curl-7.64.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.63.0+git"; \
+			VERSION="7.64.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
@@ -7329,9 +7329,9 @@ strace-clean:
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.0/cryptsetup-2.0.6.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.1/cryptsetup-2.1.0.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.0.6+git"; \
+			VERSION="2.1.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
