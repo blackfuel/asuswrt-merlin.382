@@ -5067,6 +5067,7 @@ cryptsetup-gcrypt-configure:
 		--enable-static-cryptsetup \
 		--enable-libargon2 \
 		--with-libgcrypt-prefix=$(STAGEDIR)/usr \
+		--with-luks2-lock-path=/tmp/cryptsetup \
 		)
 
 cryptsetup-gcrypt-stage: cryptsetup-gcrypt-configure
@@ -5130,6 +5131,7 @@ cryptsetup-openssl-configure:
 		--with-crypto_backend=openssl \
 		--enable-static-cryptsetup \
 		--enable-libargon2 \
+		--with-luks2-lock-path=/tmp/cryptsetup \
 		)
 
 cryptsetup-openssl-stage: cryptsetup-openssl-configure
@@ -5193,6 +5195,7 @@ cryptsetup-nettle-configure:
 		--with-crypto_backend=nettle \
 		--enable-static-cryptsetup \
 		--enable-libargon2 \
+		--with-luks2-lock-path=/tmp/cryptsetup \
 		)
 
 cryptsetup-nettle-stage: cryptsetup-nettle-configure
@@ -5256,6 +5259,7 @@ cryptsetup-kernel-configure:
 		--with-crypto_backend=kernel \
 		--enable-static-cryptsetup \
 		--enable-libargon2 \
+		--with-luks2-lock-path=/tmp/cryptsetup \
 		)
 
 cryptsetup-kernel-stage: cryptsetup-kernel-configure
