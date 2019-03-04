@@ -4762,6 +4762,11 @@ libgcrypt-install:
 	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libgcrypt.so* $(INSTALLDIR)/libgcrypt/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
 	chmod u+w $(INSTALLDIR)/libgcrypt/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/libgcrypt/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libgcrypt.so*
+ifneq ($(HND_ROUTER),y)
+	install -D $(shell dirname $(shell which $(CXX)))/../lib/librt.so.0 $(TARGETDIR)/lib/librt.so.0
+else
+	install -D $(TOOLCHAIN)/arm-buildroot-linux-gnueabi/sysroot/lib/librt-2.22.so $(INSTALLDIR)/lib/librt.so.1
+endif
 
 ### rng-tools
 
