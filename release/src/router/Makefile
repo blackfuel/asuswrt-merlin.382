@@ -3838,7 +3838,8 @@ quagga/stamp-h1:
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="$(CFLAGS) -Os -Wall -ffunction-sections -fdata-sections -fPIC" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	$(CONFIGURE) --enable-shared=lib --disable-ripngd --disable-ospfd --disable-doc --disable-ospfclient \
+	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --enable-shared --disable-static \
+	--disable-ripngd --disable-ospfd --disable-doc --disable-ospfclient \
 	--disable-ospf6d --disable-bgpd --disable-bgp-announce --disable-babeld \
 	--disable-silent-rules \
 	--disable-isisd
@@ -3853,22 +3854,20 @@ quagga-clean:
 
 quagga-install:
 	install -d $(INSTALLDIR)/quagga/usr/lib
-	quagga/libtool --mode=install install -c quagga/lib/libzebra.la $(INSTALLDIR)/quagga/usr/lib
-	quagga/libtool --finish $(INSTALLDIR)/quagga/usr/lib
-ifneq ($(HND_ROUTER),y)
-	rm -f $(INSTALLDIR)/quagga/usr/lib/libzebra.a
+	libtool --mode=install install -c quagga/lib/libzebra.la $(INSTALLDIR)/quagga/usr/lib
+	libtool --finish $(INSTALLDIR)/quagga/usr/lib
 	rm -f $(INSTALLDIR)/quagga/usr/lib/libzebra.la
-endif
+	$(STRIP)  $(INSTALLDIR)/quagga/usr/lib/libzebra.so
 	install -d $(INSTALLDIR)/quagga/usr/sbin
-	install -d $(INSTALLDIR)/quagga/usr/local/etc
-	quagga/libtool --mode=install install -c quagga/zebra/zebra $(INSTALLDIR)/quagga/usr/sbin
-	install -c -m 777 quagga/zebra/zebra.conf.sample $(INSTALLDIR)/quagga/usr/local/etc/zebra.conf
-	quagga/libtool --mode=install install -c quagga/ripd/ripd $(INSTALLDIR)/quagga/usr/sbin
-	install -c -m 777 quagga/ripd/ripd.conf.sample $(INSTALLDIR)/quagga/usr/local/etc/ripd.conf
-	quagga/libtool --mode=install install -c quagga/watchquagga/watchquagga $(INSTALLDIR)/quagga/usr/sbin
+	libtool --mode=install install -c quagga/zebra/zebra $(INSTALLDIR)/quagga/usr/sbin
+	libtool --mode=install install -c quagga/ripd/ripd $(INSTALLDIR)/quagga/usr/sbin
+	libtool --mode=install install -c quagga/watchquagga/watchquagga $(INSTALLDIR)/quagga/usr/sbin
 	$(STRIP) $(INSTALLDIR)/quagga/usr/sbin/zebra
 	$(STRIP) $(INSTALLDIR)/quagga/usr/sbin/ripd
 	$(STRIP) $(INSTALLDIR)/quagga/usr/sbin/watchquagga
+	install -d $(INSTALLDIR)/quagga/rom/etc
+	install -c -m 600 quagga/zebra/zebra.conf.sample $(INSTALLDIR)/quagga/rom/etc/zebra.conf
+	install -c -m 600 quagga/ripd/ripd.conf.sample $(INSTALLDIR)/quagga/rom/etc/ripd.conf
 ifneq ($(HND_ROUTER),y)
 	install -D $(shell dirname $(shell which $(CXX)))/../lib/librt.so.0 $(TARGETDIR)/lib/librt.so.0
 else
@@ -7182,20 +7181,17 @@ ncurses-6.0-clean:
 	-@$(MAKE) -C ncurses-6.0 distclean
 	@rm -f ncurses-6.0/Makefile
 
-ncurses-6.0-install:
+ncurses-6.0-install: ncurses-6.0
 ifeq ($(RTCONFIG_BCMARM),y)
 	install -D ncurses-6.0/lib/libncursesw.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncursesw.so.6.0
+	ln -sf libncursesw.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncursesw.so.6
+	ln -sf libncursesw.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncursesw.so
 else
 	install -D ncurses-6.0/lib/libncurses.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncurses.so.6.0
+	ln -sf libncurses.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncurses.so.6
+	ln -sf libncurses.so.6.0 $(INSTALLDIR)/ncurses-6.0/usr/lib/libncurses.so
 endif
-
 	$(STRIP) $(INSTALLDIR)/ncurses-6.0/usr/lib/*.so.*
-
-ifeq ($(RTCONFIG_BCMARM),y)
-	cd $(INSTALLDIR)/ncurses-6.0/usr/lib && ln -sf libncursesw.so.6.0 libncursesw.so.6
-else
-	cd $(INSTALLDIR)/ncurses-6.0/usr/lib && ln -sf libncurses.so.6.0 libncurses.so.6
-endif
 
 ### strace
 
@@ -7686,7 +7682,7 @@ endif
 
 FFMPEG_FILTER_CONFIG= $(foreach c, $(2), --$(1)="$(c)")
 
-FFMPEG_DECODERS:=aac ac3 atrac3 h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpegvideo png wmav1 wmav2
+FFMPEG_DECODERS:=aac ac3 atrac3 h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpeg4aac mpegvideo png wmav1 wmav2
 FFMPEG_CONFIGURE_DECODERS:=$(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
 
 FFMPEG_PARSERS:=aac ac3 h264 mpeg4video mpegaudio mpegvideo
@@ -7695,34 +7691,28 @@ FFMPEG_CONFIGURE_PARSERS:=$(call FFMPEG_FILTER_CONFIG,enable-parser,$(FFMPEG_PAR
 FFMPEG_PROTOCOLS:=file
 FFMPEG_CONFIGURE_PROTOCOLS:=$(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
-FFMPEG_DISABLED_DEMUXERS:=aa acm act adf adp ads adx afc aix amr amrnb amrwb apc ape apng aptx aptx_hd aqtitle asf_o ass ast avr bethsoftvid bfi bfstm bit bmv boa brstm c93 cdxl cine codec2 codec2raw concat data daud dcstr dfa dirac dnxhd dsf dsicin dss dtshd dvbsub dvbtxt dxa epaf ffmetadata fits frm fsb g722 g723_1 g726 g726le g729 gdv genh gif gsm gxf hevc hls hnm ico idcin idf iff ilbc image2 image2pipe image_bmp_pipe image_dds_pipe image_dpx_pipe image_exr_pipe image_j2k_pipe image_jpeg_pipe image_jpegls_pipe image_pam_pipe image_pbm_pipe image_pcx_pipe image_pgm_pipe image_pgmyuv_pipe image_pictor_pipe image_png_pipe image_ppm_pipe image_psd_pipe image_qdraw_pipe image_sgi_pipe image_sunrast_pipe image_svg_pipe image_tiff_pipe image_webp_pipe image_xpm_pipe ingenient ipmovie ircam ivf ivr jacosub jv live_flv lmlm4 loas lrc lvf lxf mgsts microdvd mjpeg_2000 mlv mm mmf mpjpeg mpl2 mpsub msf msnwc_tcp mtaf mtv musx mv mxf mxg nistsphere nsp nsv nut oma paf pjs pmp pva pvf rawvideo realtext redspark rl2 roq rpl rsd rso s337m sami sbc sbg scc sdr2 sds sdx segafilm shorten siff sln smacker smjpeg smush sol spdif srt stl str subviewer subviewer1 sup svag tak tedcaptions thp threedostr tiertexseq tta tty txd ty v210 v210x vag vivo vmd vobsub voc vpk vplayer wc3 webm_dash_manifest webvtt wsaud wsd wsvqa wtv wve xa xbin xmv xvag xwma yuv4mpegpipe
+FFMPEG_DISABLED_DEMUXERS:=amr apc ape ass bethsoftvid bfi c93 daud dnxhd dsicin dxa ffm gsm gxf idcin iff image2 image2pipe ingenient ipmovie lmlm4 mm mmf msnwc_tcp mtv mxf nsv nut oma pva rawvideo rl2 roq rpl segafilm shorten siff smacker sol str thp tiertexseq tta txd vmd voc wc3 wsaud wsvqa xa yuv4mpegpipe
 FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,disable-demuxer,$(FFMPEG_DISABLED_DEMUXERS))
 
-ffmpeg/stamp-h1: $(if $(FFMPEG_ZLIB_REQD),zlib,)
+ffmpeg/stamp-h1: zlib
 	cd ffmpeg && symver_asm_label=no symver_gnu_asm=no symver=no CC=$(CC) LDFLAGS="-ldl"\
 		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux \
-		--cross-prefix=$(CROSS_COMPILE) --enable-gpl \
-		$(if $(MEDIA_SERVER_STATIC),,--disable-static --enable-shared) --enable-small \
-		--disable-runtime-cpudetect --disable-mipsfpu --disable-mipsdsp --disable-mipsdspr2 \
-		--disable-programs --disable-doc \
-		--disable-avdevice --disable-swresample --disable-swscale --disable-postproc \
-		--disable-avfilter --enable-pthreads --disable-network \
-		--disable-encoders \
-		--disable-decoders $(FFMPEG_CONFIGURE_DECODERS) \
-		--disable-hwaccels \
-		--disable-muxers \
+		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --disable-doc \
+		--enable-pthreads --enable-small --disable-encoders --disable-filters \
+		--disable-muxers --disable-devices --disable-ffmpeg --disable-ffplay \
+		--disable-ffserver --disable-ffprobe --disable-avdevice --disable-swscale \
+		--disable-hwaccels --disable-network --disable-bsfs --disable-mpegaudio-hp \
 		--enable-demuxers $(FFMPEG_CONFIGURE_DEMUXERS) \
+		--disable-decoders $(FFMPEG_CONFIGURE_DECODERS) \
 		--disable-parsers $(FFMPEG_CONFIGURE_PARSERS) \
-		--disable-bsfs \
 		--disable-protocols $(FFMPEG_CONFIGURE_PROTOCOLS) \
-		--disable-devices --disable-filters \
-		--extra-cflags="-Os $(EXTRACFLAGSx) -ffunction-sections -fdata-sections -fPIC $(if $(FFMPEG_ZLIB_REQD),-I$(TOP)/zlib,)" \
+		--extra-cflags="-Os $(EXTRACFLAGSx) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
 		--extra-ldflags="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-		$(if $(FFMPEG_ZLIB_REQD),--extra-libs="-L$(TOP)/zlib -lz" --enable-zlib,--disable-zlib) \
-		--disable-debug --prefix=''
+		--extra-libs="-L$(TOP)/zlib -lz" \
+		--enable-zlib --disable-debug --prefix=''
 	touch $@
 
-ffmpeg: ffmpeg/stamp-h1 $(if $(FFMPEG_ZLIB_REQD),zlib,)
+ffmpeg: ffmpeg/stamp-h1 zlib
 	$(MAKE) -C ffmpeg all $(PARALLEL_BUILD)
 
 ffmpeg-clean:
@@ -7732,12 +7722,12 @@ ffmpeg-clean:
 ffmpeg-install: ffmpeg
 	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
-	install -D ffmpeg/libavformat/libavformat.so.58 $(INSTALLDIR)/ffmpeg/usr/lib/libavformat.so.58
-	install -D ffmpeg/libavcodec/libavcodec.so.58 $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.58
-	install -D ffmpeg/libavutil/libavutil.so.56 $(INSTALLDIR)/ffmpeg/usr/lib/libavutil.so.56
-	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavformat.so.58
-	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.58
-	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavutil.so.56
+	install -D ffmpeg/libavformat/libavformat.so.52 $(INSTALLDIR)/ffmpeg/usr/lib/libavformat.so.52
+	install -D ffmpeg/libavcodec/libavcodec.so.52 $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.52
+	install -D ffmpeg/libavutil/libavutil.so.50 $(INSTALLDIR)/ffmpeg/usr/lib/libavutil.so.50
+	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavformat.so.52
+	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.52
+	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavutil.so.50
 endif
 
 .PHONY: ffmpeg
@@ -8354,36 +8344,16 @@ openvpn: shared openssl lzo openpam zlib openvpn/Makefile
 	$(MAKE) -C $@ $(PARALLEL_BUILD)
 
 openvpn/Makefile:
-ifeq ($(HND_ROUTER),y)
-	cd $(SRCBASE) && rm -f kernel
-	( cd openvpn ; ./autogen.sh && export OPENSSL_CFLAGS="-I$(TOP)/openssl -I$(LINUX_INC_DIR)/include"; \
-		export OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl"; \
-		CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(RTCONFIG_HTTPS),-I$(TOP)/openssl/include/openssl) $(if $(RTCONFIG_BCMARM),-I$(SRCBASE)/shared/bcmwifi/include) -I$(LINUX_INC_DIR)/include" \
-		LDFLAGS="$(EXTRALDFLAGS) -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram $(shell if [[ "$(HND_ROUTER)" = "y" ]] ; then echo "-L$(TOP)/wlcsm -lwlcsm"; else echo ""; fi) -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) $(if $(RTCONFIG_HTTPS),-L$(TOP)/openssl -lcrypto -lssl) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -L$(TOP)/openpam/lib/libpam/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include -I$(TOP)/openpam/include -I$(TOP)/shared -I$(SRCBASE)/include -I$(LINUX_INC_DIR)/include" \
-		IPROUTE="/bin/ip" IFCONFIG="/sbin/ifconfig" ROUTE="/sbin/route" \
-		$(CONFIGURE) --enable-shared --bindir=/usr/sbin --libdir=/usr/lib \
-			--disable-debug --enable-management --disable-small \
-			--disable-selinux --disable-socks \
-			--enable-plugin-auth-pam --enable-iproute2 \
-			ac_cv_lib_resolv_gethostbyname=no \
-	)
-	#cd openvpn; sed -i 's/build_libtool_libs=no/build_libtool_libs=yes/g' libtool;
-	cd $(SRCBASE) && ln -sf ../../../../../../../kernel kernel
-else
-	( cd openvpn ; ./autogen.sh && export OPENSSL_CFLAGS="-I$(TOP)/openssl"; \
-		export OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl"; \
-		CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(RTCONFIG_BCMARM),-I$(SRCBASE)/shared/bcmwifi/include) $(if $(RTCONFIG_HTTPS),-I$(TOP)/openssl/include/openssl)" \
-		LDFLAGS="$(EXTRALDFLAGS) -L$(TOP)/nvram$(BCMEX)${EX7} ${EXTRA_NV_LDFLAGS} -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) $(if $(RTCONFIG_HTTPS),-L$(TOP)/openssl -lcrypto -lssl) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -L$(TOP)/openpam/lib/libpam/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include -I$(TOP)/openpam/include -I$(TOP)/shared -I$(SRCBASE)/include" \
-		IPROUTE="/usr/sbin/ip" IFCONFIG="/sbin/ifconfig" ROUTE="/sbin/route" \
+	( cd openvpn ; ./autogen.sh && OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
+		OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl" \
+		CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(RTCONFIG_BCMARM),-I$(SRCBASE)/shared/bcmwifi/include)" \
+		LDFLAGS="$(EXTRALDFLAGS) -L$(TOP)/nvram$(BCMEX)${EX7} ${EXTRA_NV_LDFLAGS} -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -L$(TOP)/openpam/lib/libpam/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include  -I$(TOP)/openpam/include -I$(TOP)/shared -I$(SRCBASE)/include" \
+		IPROUTE="$(if $(RTCONFIG_HND_ROUTER),/bin/ip,/usr/sbin/ip)" IFCONFIG="/sbin/ifconfig" ROUTE="/sbin/route" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
-			--disable-debug --enable-management --disable-small \
-			--disable-selinux --disable-socks \
-			--enable-plugin-auth-pam --enable-iproute2 \
+			--disable-debug --enable-management --enable-plugin-auth-pam --enable-iproute2 \
 			ac_cv_lib_resolv_gethostbyname=no \
 	)
-endif
 
 openvpn-clean:
 	[ ! -f openvpn/Makefile ] || $(MAKE) -C openvpn clean
@@ -10241,7 +10211,7 @@ inadyn/Makefile:
 		OpenSSL_CFLAGS="-I$(TOP)/openssl" \
 		OpenSSL_LIBS="-L$(TOP)/openssl -lcrypto" \
 		CFLAGS="$(EXTRACFLAGS) -Os -I$(TOP)/shared -I$(SRCBASE)/include -I$(SRCBASE)/shared/bcmwifi/include -DTYPEDEF_FLOAT_T -I$(STAGEDIR)/usr/include -ffunction-sections -fdata-sections -fPIC -DASUSWRT $(if $(RTCONFIG_LETSENCRYPT),-DASUS_LE,)" \
-		LDFLAGS="$(LDFLAGS) $(shell if [[ "$(HND_ROUTER)" = "y" ]] ; then echo "-L$(TOP)/wlcsm -lwlcsm"; else echo ""; fi) -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		LDFLAGS="$(LDFLAGS) $(EXTRA_NV_LDFLAGS) -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		--prefix="" --enable-openssl
 
 inadyn: shared nvram${BCMEX}$(EX7) libconfuse inadyn/Makefile
@@ -10347,7 +10317,7 @@ ipset_arm/stamp-h1: libmnl
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	libmnl_CFLAGS="-I$(TOP)/libmnl/staged/usr/include" \
 	libmnl_LIBS="-L$(TOP)/libmnl/staged/usr/lib -lmnl" \
-	$(CONFIGURE) --prefix=/usr --with-kmod=$(if $(RTCONFIG_HND_ROUTER),no,yes) --with-kbuild=$(LINUXDIR)
+	$(CONFIGURE) --prefix=/usr --with-kmod=no --with-kbuild=$(LINUXDIR)
 	touch ipset_arm/stamp-h1
 
 ipset_arm: ipset_arm/stamp-h1
