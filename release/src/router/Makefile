@@ -7344,7 +7344,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "setserial" ]; then \
 			URL="https://downloads.sourceforge.net/project/setserial/setserial/2.17/setserial-2.17.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "ntp" ]; then \
-			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p12.tar.gz"; \
+			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p13.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "argp-standalone" ]; then \
 			URL="https://www.lysator.liu.se/~nisse/misc/argp-standalone-1.3.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "rng-tools" ]; then \
