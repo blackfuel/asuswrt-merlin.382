@@ -701,9 +701,9 @@ ASUSWRT_DIR:=`echo $${PWD%/release\/src*}`
 ASUSWRT_ADDON:=../asuswrt-merlin-addon
 ASUSWRT_ADDON_DIR:=$(ASUSWRT_DIR)/$(ASUSWRT_ADDON)
 BLACKFUEL_DIR:=$(ASUSWRT_DIR)/blackfuel-addon
-BLACKFUEL_OPTIMIZED_ARMV7:=-march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer -fno-caller-saves -mfloat-abi=soft
-BLACKFUEL_OPTIMIZED_ARMV8_32:=-march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
-BLACKFUEL_OPTIMIZED_ARMV8_64:=-march=armv8-a+crypto -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER
+BLACKFUEL_OPTIMIZED_ARMV7:=-march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer -mfloat-abi=soft
+BLACKFUEL_OPTIMIZED_ARMV8_32:=-march=armv8-a -fomit-frame-pointer -DHND_ROUTER
+BLACKFUEL_OPTIMIZED_ARMV8_64:=-march=armv8-a -fomit-frame-pointer -DHND_ROUTER
 BLACKFUEL_OPTIMIZED_COPTS:=$(if $(RTCONFIG_HND_ROUTER),$(BLACKFUEL_OPTIMIZED_ARMV8_64),$(BLACKFUEL_OPTIMIZED_ARMV7))
 BLACKFUEL_CURRENT_ARCH:=$(if $(RTCONFIG_HND_ROUTER),CURRENT_ARCH="aarch64",)
 BLACKFUEL_OPTIMIZED_CC:=$(if $(RTCONFIG_HND_ROUTER),$(CROSS_COMPILE_64)gcc,$(TOOLS)/bin/$(CC))
@@ -1428,6 +1428,7 @@ obj-$(RTCONFIG_SAMBA36X) += libiconv-1.14
 obj-$(RTCONFIG_TELENET) += lanauth
 obj-y += inadyn
 obj-y += libconfuse
+obj-$(RTCONFIG_OPENSSL11) += openssl-1.1.x
 
 ifneq ($(HND_ROUTER),y)
 obj-y += cstats
@@ -2766,7 +2767,7 @@ openssl/Makefile:
 	cd openssl && \
 	./Configure $(HOSTCONFIG) -DOPENSSL_NO_BUF_FREELISTS --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err
 #	-I$(TOP)/cryptodev-linux -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS
 #	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
 #	no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
@@ -10389,6 +10390,37 @@ portmap: portmap/Makefile
 portmap-install:
 	install -D portmap/portmap $(INSTALLDIR)/portmap/usr/sbin/portmap
 	$(STRIP) $(INSTALLDIR)/portmap/usr/sbin/portmap
+
+openssl-1.1.x/Makefile:
+	cd openssl-1.1.x && \
+	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections \
+	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
+	$(if $(filter y,$(HND_ROUTER)),,-DOPENSSL_PREFER_CHACHA_OVER_GCM)
+	-@$(MAKE) -C openssl-1.1.x depend clean
+	@touch $@
+
+openssl-1.1.x: openssl-1.1.x/Makefile
+	$(MAKE) -C openssl-1.1.x
+
+openssl-1.1.x-clean:
+	[ ! -f openssl-1.1.x/Makefile ] || $(MAKE) -C openssl-1.1.x clean
+	@rm -f openssl-1.1.x/Makefile
+
+openssl-1.1.x-install:
+	$(SEP)
+	if [ -f openssl-1.1.x/Makefile ] ; then \
+		install -D openssl-1.1.x/libcrypto.so.1.1 $(INSTALLDIR)/openssl-1.1.x/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1.x/libssl.so.1.1 $(INSTALLDIR)/openssl-1.1.x/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1.x/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1.x/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1.x/apps/openssl $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl11 ; \
+		$(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl11 ; \
+		chmod 0500 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl11 ; \
+	fi
+
+openssl-1.1.x-stage:
+	 $(MAKE) -C openssl-1.1.x install_sw INSTALL_PREFIX=$(STAGEDIR)
 # End merlin components
 
 readline-6.2/Makefile: readline-6.2/configure
