@@ -1428,7 +1428,12 @@ obj-$(RTCONFIG_SAMBA36X) += libiconv-1.14
 obj-$(RTCONFIG_TELENET) += lanauth
 obj-y += inadyn
 obj-y += libconfuse
+ifeq ($(RTCONFIG_OPENSSL11),y)
 obj-$(RTCONFIG_OPENSSL11) += openssl-1.1.x
+OPENSSLDIR=openssl-1.1.x
+else
+OPENSSLDIR=openssl
+endif
 
 ifneq ($(HND_ROUTER),y)
 obj-y += cstats
@@ -1445,8 +1450,10 @@ obj-$(RTCONFIG_NFS) += nfs-utils-1.3.4
 obj-$(RTCONFIG_NFS) += portmap
 # End merlin add-ons
 
+BLACKFUEL_OPENSSLDIR=$(OPENSSLDIR)$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
+
 ifeq ($(RTCONFIG_TOR),y)
-obj-y += openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
+obj-y += $(BLACKFUEL_OPENSSLDIR)
 obj-y += zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += libevent-2.0.21$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += liblz4
@@ -2510,6 +2517,7 @@ define CleanBlackfuel
 		rm -rf "$(TOP)/json-c" "$(TOP)/json-c-aarch64"; \
 		rm -rf "$(TOP)/ncurses-6.0" "$(TOP)/ncurses-aarch64"; \
 		rm -rf "$(TOP)/openssl-aarch64" && cp -a "$(TOP)/openssl" "$(TOP)/openssl-aarch64"; \
+		rm -rf "$(TOP)/openssl-1.1.x-aarch64" && cp -a "$(TOP)/openssl-1.1.x" "$(TOP)/openssl-1.1.x-aarch64"; \
 		rm -rf "$(TOP)/libevent-2.0.21-aarch64" && cp -a "$(TOP)/libevent-2.0.21" "$(TOP)/libevent-2.0.21-aarch64"; \
 		rm -rf "$(TOP)/libusb-0.1.12-aarch64" && cp -a "$(TOP)/libusb-0.1.12" "$(TOP)/libusb-0.1.12-aarch64"; \
 		rm -rf "$(TOP)/libusb10-aarch64" && cp -a "$(TOP)/libusb10" "$(TOP)/libusb10-aarch64"; \
@@ -2844,7 +2852,7 @@ endif
 openssl-stage:
 	$(MAKE) -C openssl install_sw INSTALL_PREFIX=$(STAGEDIR)
 
-mssl: openssl
+mssl: $(OPENSSLDIR)
 
 mssl-install:
 	$(MAKE) -C mssl INSTALLDIR=$(INSTALLDIR)/mssl install
@@ -6531,10 +6539,10 @@ wget/Makefile: wget/Makefile.in
 		--disable-opie --disable-ntlm --disable-debug --disable-nls --disable-rpath \
 		$(if $(RTCONFIG_IPV6),,--disable-ipv6) --disable-iri --without-included-regex  \
 		--disable-dependency-tracking \
-		CFLAGS="-O3 -Wall $(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -I$(STAGEDIR)/usr/include" \
-		LDFLAGS="-Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)"
+		CFLAGS="-O3 -Wall $(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="-Wl,--gc-sections -L$(TOP)/$(OPENSSLDIR) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)"
 
-wget: openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) wget-unpack wget/Makefile
+wget: $(BLACKFUEL_OPENSSLDIR) zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) wget-unpack wget/Makefile
 	$(MAKE) -C $@
 
 wget-clean:
@@ -8341,15 +8349,15 @@ openpam-clean:
 	[ ! -f openpam/Makefile ] || $(MAKE) -C openpam distclean
 	@rm -f openpam/Makefile
 
-openvpn: shared openssl lzo openpam zlib openvpn/Makefile
+openvpn: shared $(OPENSSLDIR) lzo openpam zlib openvpn/Makefile
 	$(MAKE) -C $@ $(PARALLEL_BUILD)
 
 openvpn/Makefile:
-	( cd openvpn ; ./autogen.sh && OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
-		OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl" \
+	( cd openvpn ; ./autogen.sh && OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+		OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
 		CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(RTCONFIG_BCMARM),-I$(SRCBASE)/shared/bcmwifi/include)" \
 		LDFLAGS="$(EXTRALDFLAGS) -L$(TOP)/nvram$(BCMEX)${EX7} ${EXTRA_NV_LDFLAGS} -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -L$(TOP)/openpam/lib/libpam/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include  -I$(TOP)/openpam/include -I$(TOP)/shared -I$(SRCBASE)/include" \
+		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include  -I$(TOP)/openpam/include -I$(TOP)/shared -I$(SRCBASE)/include" \
 		IPROUTE="$(if $(RTCONFIG_HND_ROUTER),/bin/ip,/usr/sbin/ip)" IFCONFIG="/sbin/ifconfig" ROUTE="/sbin/route" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 			--disable-debug --enable-management --enable-plugin-auth-pam --enable-iproute2 \
@@ -8774,8 +8782,8 @@ net-snmp-5.7.2/stamp-h1:
 	cd $(TOP)/net-snmp-5.7.2 && $(CONFIGURE) --prefix=$(INSTALLDIR)/net-snmp-5.7.2/usr \
 		--disable-embedded-perl --with-perl-modules=no --disable-debugging --enable-mini-agent \
 		--with-transports=UDP --without-kmem-usage --disable-applications --disable-mib-loading \
-		--disable-scripts --disable-mibs --disable-manuals --with-openssl=$(TOP)/openssl \
-		--with-ldflags="-L$(TOP)/openssl" --with-libs="$(EXTRA_FLAG)" \
+		--disable-scripts --disable-mibs --disable-manuals --with-openssl=$(TOP)/$(OPENSSLDIR) \
+		--with-ldflags="-L$(TOP)/$(OPENSSLDIR)" --with-libs="$(EXTRA_FLAG) -pthread" \
 		--with-cflags="$(SNMPD_CFLAGS)" --with-default-snmp-version="3" \
 		--with-sys-location=Unknown --with-logfile=/var/log/snmpd.log \
 		--with-persistent-directory=/var/net-snmp --with-sys-contact=root@localhost \
@@ -9508,19 +9516,19 @@ norton${BCMEX}-clean:
 .PHONY : email-3.1.3 email-3.1.3-clean
 
 ifeq ($(RTCONFIG_NOTIFICATION_CENTER),y)
-email-3.1.3/stamp-h1: openssl
+email-3.1.3/stamp-h1: $(OPENSSLDIR)
 	cd $(TOP)/email-3.1.3 && \
 	$(CONFIGURE) --with-ssl --sysconfdir=/etc \
-		CFLAGS="-I$(SRCBASE)/router/openssl/include -I$(TOP)/nt_center/lib -I$(TOP)/sqlite -DRTCONFIG_NOTIFICATION_CENTER" \
-		LDFLAGS="-L$(SRCBASE)/router/openssl -L$(TOP)/nt_center/lib -L$(TOP)/sqlite/.libs" \
+		CFLAGS="-I$(SRCBASE)/router/$(OPENSSLDIR)/include -I$(TOP)/nt_center/lib -I$(TOP)/sqlite -DRTCONFIG_NOTIFICATION_CENTER" \
+		LDFLAGS="-L$(SRCBASE)/router/$(OPENSSLDIR) -L$(TOP)/nt_center/lib -L$(TOP)/sqlite/.libs" \
 		LIBS="-lnt -lsqlite3 -lpthread -lcrypto -lssl $(if $(RTCONFIG_QCA), -ldl)"
 	touch $@
 else
-email-3.1.3/stamp-h1: openssl
+email-3.1.3/stamp-h1: $(OPENSSLDIR)
 	cd $(TOP)/email-3.1.3 && \
 	$(CONFIGURE) --with-ssl --sysconfdir=/etc \
-		CFLAGS=-I$(SRCBASE)/router/openssl/include \
-		LDFLAGS="-L$(SRCBASE)/router/openssl" \
+		CFLAGS=-I$(SRCBASE)/router/$(OPENSSLDIR)/include \
+		LDFLAGS="-L$(SRCBASE)/router/$(OPENSSLDIR)" \
 		LIBS="-lcrypto -lssl $(if $(RTCONFIG_QCA), -ldl)"
 	touch $@
 endif
@@ -10209,10 +10217,10 @@ inadyn/Makefile:
 	cd inadyn && $(CONFIGURE) \
 		confuse_CFLAGS="-I$(TOP)/libconfuse/src" \
 		confuse_LIBS="-L$(TOP)/libconfuse/src/.libs -lconfuse" \
-		OpenSSL_CFLAGS="-I$(TOP)/openssl" \
-		OpenSSL_LIBS="-L$(TOP)/openssl -lcrypto" \
+		OpenSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+		OpenSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto" \
 		CFLAGS="$(EXTRACFLAGS) -Os -I$(TOP)/shared -I$(SRCBASE)/include -I$(SRCBASE)/shared/bcmwifi/include -DTYPEDEF_FLOAT_T -I$(STAGEDIR)/usr/include -ffunction-sections -fdata-sections -fPIC -DASUSWRT $(if $(RTCONFIG_LETSENCRYPT),-DASUS_LE,)" \
-		LDFLAGS="$(LDFLAGS) $(EXTRA_NV_LDFLAGS) -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		LDFLAGS="$(LDFLAGS) $(EXTRA_NV_LDFLAGS) -L$(TOP)/nvram$(BCMEX)$(EX7) -lnvram -L$(TOP)/shared -lshared $(if $(RTCONFIG_QTN),-L$(TOP)/libqcsapi_client -lqcsapi_client) -ffunction-sections -fdata-sections -Wl,--gc-sections -pthread" \
 		--prefix="" --enable-openssl
 
 inadyn: shared nvram${BCMEX}$(EX7) libconfuse inadyn/Makefile
@@ -10421,6 +10429,10 @@ openssl-1.1.x-install:
 
 openssl-1.1.x-stage:
 	 $(MAKE) -C openssl-1.1.x install_sw INSTALL_PREFIX=$(STAGEDIR)
+
+libvpn: $(OPENSSLDIR) shared nvram$(BCMEX)$(EX7)
+	@$(SEP)
+	$(MAKE) -C libvpn
 # End merlin components
 
 readline-6.2/Makefile: readline-6.2/configure
