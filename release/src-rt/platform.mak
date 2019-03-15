@@ -11,10 +11,10 @@ ifeq ($(RTCONFIG_BCMARM),y)
 
 ifeq ($(HND_ROUTER),y)
 export PRIVATE_EXTRACFLAGS := $(BRCM_COMMON_CFLAGS) -DHND_ROUTER -DLINUX26 -DLINUX_2_6_36 -DCONFIG_BCMWL5
-export EXTRACFLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fomit-frame-pointer -fno-caller-saves -DHND_ROUTER -DCONFIG_BCMWL5
+export EXTRACFLAGS := -march=armv8-a -fomit-frame-pointer -DHND_ROUTER -DCONFIG_BCMWL5 -D__ARM_ARCH_8A__
 else
  ifeq ($(EXTRACFLAGS),)
-export EXTRACFLAGS := -march=armv7-a -mtune=cortex-a9 -fomit-frame-pointer -fno-caller-saves -mfloat-abi=soft -DBCMWPA2 -DBCMARM
+export EXTRACFLAGS := -DBCMWPA2 -DBCMARM -fno-delete-null-pointer-checks -marm
  endif
 endif
 
