@@ -1404,7 +1404,7 @@ obj-y += asm1042
 endif
 
 obj-$(RTCONFIG_QUICKSEC) += quicksec-7.0
-obj-$(RTCONFIG_STRONGSWAN) += strongswan-5.2.1
+obj-$(RTCONFIG_STRONGSWAN) += strongswan
 
 ifneq ($(RTCONFIG_4M_SFP),y)
 obj-y += netstat-nat
@@ -6746,64 +6746,7 @@ openssl-aarch64-stage:
 endif
 
 ### strongswan-5.2.1
-
-##strongswan/IPSEC
-strongswan-5.2.1/stamp-h1:
-	cd strongswan-5.2.1 && \
-	autoreconf -i -f && \
-	$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
-	PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
-	CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -fPIC -I$(STAGEDIR)/usr/include" \
-	CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -fPIC -I$(STAGEDIR)/usr/include" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
-	LIBS="-lssl -lcrypto -lpthread -ldl -lm" \
-	$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
-	--prefix=/usr/ \
-	--sysconfdir=/etc/ \
-	--localstatedir=/var/ \
-	--bindir=/usr/sbin \
-	--libdir=/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
-	--libexecdir=/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
-	--with-ipsecdir=/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec \
-	--with-user=admin \
-	--disable-gmp \
-	--enable-openssl \
-	--enable-agent \
-	--enable-eap-peap \
-	--enable-eap-md5 \
-	--enable-eap-mschapv2 \
-	--enable-eap-identity \
-	--with-strongswan-conf=/etc/strongswan.conf \
-	--enable-md4 \
-	--enable-acert \
-	--enable-cmd \
-	--enable-eap-tls \
-	--enable-libipsec
-	touch $@
-
-strongswan-5.2.1: strongswan-5.2.1/stamp-h1
-	$(MAKE) $(PARALLEL_BUILD) -C strongswan-5.2.1
-
-strongswan-5.2.1-install: strongswan-5.2.1
-	@$(SEP)
-	@$(MAKE) -C strongswan-5.2.1 install DESTDIR=$(INSTALLDIR)/strongswan-5.2.1/ ; chmod 755 $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)
-	@rm -rf $(INSTALLDIR)/strongswan-5.2.1/usr/etc
-	@rm -f $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/*.la
-	@rm -f $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/plugins/*.la
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/*.so
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/starter
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/stroke
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/scepclient
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/charon
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/strongswan-5.2.1/usr/$(BLACKFUEL_OPTIMIZED_LIB)/ipsec/plugins/*.so
-	mv $(INSTALLDIR)/strongswan-5.2.1/etc $(INSTALLDIR)/strongswan-5.2.1/usr/
-
-strongswan-5.2.1-clean:
-	-@$(MAKE) -C strongswan-5.2.1 clean
-	@rm -f strongswan-5.2.1/stamp-h1
-	@rm -rf $(INSTALLDIR)/strongswan-5.2.1/
-	@rm -rf $(TARGETDIR)/usr/sbin/strongswan-5.2.1/*
-	@rm -rf $(TARGETDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/strongswan-5.2.1/*
+# (deleted)
 
 ### libargon2
 
@@ -8696,6 +8639,49 @@ endif
 usbclient-clean:
 	-@$(MAKE) -C usbclient clean
 	rm -rf usbclient/stamp-h1
+
+##strongswan/IPSEC
+strongswan/stamp-h1: $(OPENSSLDIR)
+	cd strongswan && autoreconf -i -f && \
+	$(CONFIGURE) \
+	--prefix=/usr/ --sysconfdir=/etc/ --localstatedir=/var/ \
+	--bindir=/usr/sbin --libdir=/usr/lib \
+	--libexecdir=/usr/lib --with-ipsecdir=/usr/lib/ipsec --with-user=admin \
+	--disable-gmp --enable-openssl --enable-agent --enable-eap-peap \
+	--enable-eap-md5 --enable-eap-mschapv2 --enable-eap-identity \
+	--with-strongswan-conf=/etc/strongswan.conf --enable-md4 --enable-acert \
+	--enable-cmd --enable-eap-tls --enable-libipsec \
+	CFLAGS="-O3 -I$(TOP)/$(OPENSSLDIR)/include $(if $(RTCONFIG_HND_ROUTER),-DHND_ROUTER,)" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(STAGEDIR)/usr/lib" \
+	LIBS="-lssl -lcrypto -lpthread -ldl -lm"
+	touch $@
+
+strongswan: strongswan/stamp-h1
+	$(MAKE) $(PARALLEL_BUILD) -C strongswan
+
+strongswan-install: strongswan
+	@$(SEP)
+	@$(MAKE) -C strongswan install DESTDIR=$(INSTALLDIR)/strongswan/ ; chmod 755 $(INSTALLDIR)/strongswan/usr/lib
+	@rm -rf $(INSTALLDIR)/strongswan/usr/etc
+	@rm -f $(INSTALLDIR)/strongswan/usr/lib/ipsec/*.la
+	@rm -f $(INSTALLDIR)/strongswan/usr/lib/ipsec/plugins/*.la
+	@rm -f $(INSTALLDIR)/strongswan/usr/lib/ipsec/*.a
+	@rm -f $(INSTALLDIR)/strongswan/usr/lib/ipsec/plugins/*.a
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/*.so
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/starter
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/stroke
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/scepclient
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/charon
+	$(STRIP) $(INSTALLDIR)/strongswan/usr/lib/ipsec/plugins/*.so
+
+	mv $(INSTALLDIR)/strongswan/etc $(INSTALLDIR)/strongswan/usr/
+
+strongswan-clean:
+	-@$(MAKE) -C strongswan clean
+	@rm -f strongswan/stamp-h1
+	@rm -rf $(INSTALLDIR)/strongswan/
+	@rm -rf $(TARGETDIR)/usr/sbin/strongswan/*
+	@rm -rf $(TARGETDIR)/usr/lib/strongswan/*
 
 sw-hw-auth:
 	cd sw-hw-auth && \
