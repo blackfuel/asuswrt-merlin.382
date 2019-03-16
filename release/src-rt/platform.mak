@@ -14,7 +14,7 @@ export PRIVATE_EXTRACFLAGS := $(BRCM_COMMON_CFLAGS) -DHND_ROUTER -DLINUX26 -DLIN
 export EXTRACFLAGS := -march=armv8-a -fomit-frame-pointer -DHND_ROUTER -DCONFIG_BCMWL5 -D__ARM_ARCH_8A__
 else
  ifeq ($(EXTRACFLAGS),)
-export EXTRACFLAGS := -DBCMWPA2 -DBCMARM -fno-delete-null-pointer-checks -marm
+export EXTRACFLAGS := -DBCMWPA2 -DBCMARM -fno-delete-null-pointer-checks -marm 
  endif
 endif
 
