@@ -6621,7 +6621,7 @@ endif
 
 ### tor
 
-tor: openssl$(if $(RTCONFIG_HND_ROUTER),-aarch64,) zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) libevent-2.0.21$(if $(RTCONFIG_HND_ROUTER),-aarch64,) zstd tor/Makefile
+tor: $(BLACKFUEL_OPENSSLDIR) zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) libevent-2.0.21$(if $(RTCONFIG_HND_ROUTER),-aarch64,) zstd tor/Makefile
 	@$(SEP)
 	$(MAKE) -C $@ $(PARALLEL_BUILD)
 
@@ -6629,14 +6629,14 @@ tor/Makefile: tor-unpack
 	(cd tor ; \
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
-		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(STAGEDIR)/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/$(OPENSSLDIR) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
 		--disable-silent-rules \
 		--enable-static-libevent \
 		--with-libevent-dir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
-		--with-openssl-dir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
+		--with-openssl-dir=$(TOP)/$(OPENSSLDIR) \
 		--with-zlib-dir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
 		--disable-asciidoc \
 		--disable-unittests \
