@@ -4873,19 +4873,19 @@ util-linux/configure:
 util-linux-configure:
 	@[ ! -d util-linux ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/libuuid.so" ] || ( \
 		cd util-linux ; \
+		$(if $(RTCONFIG_HND_ROUTER),,cp -p $(BLACKFUEL_DIR)/packages/util-linux/files/unsupported.c sys-utils/chcpu.c;) \
 		$(BLACKFUEL_COMPATIBILE_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/pkgconfig" \
-		CFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
-		CPPFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include -lm" \
+		CFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 $(if $(RTCONFIG_HND_ROUTER),,-DHAVE_POSIX_FALLOCATE=1) -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
-		LIBS="-lm $(if $(RTCONFIG_BCMARM),-lncursesw,-lncurses) -L$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
+		LIBS="-lm $(if $(RTCONFIG_BCMARM),-lncursesw,-lncurses)" \
 		$(BLACKFUEL_COMPATIBILE_CONFIGURE) \
 		--prefix="$(STAGEDIR)/usr" \
 		--libdir="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
 		--enable-shared \
 		--enable-static \
 		$(if $(RTCONFIG_HND_ROUTER),,--disable-tls) \
-		$(if $(RTCONFIG_HND_ROUTER),,--disable-chcpu) \
 		--disable-rpath \
 		--disable-silent-rules \
 		--disable-bash-completion \
@@ -6539,8 +6539,12 @@ wget/Makefile: wget/Makefile.in
 		--disable-opie --disable-ntlm --disable-debug --disable-nls --disable-rpath \
 		$(if $(RTCONFIG_IPV6),,--disable-ipv6) --disable-iri --without-included-regex  \
 		--disable-dependency-tracking \
-		CFLAGS="-O3 -Wall $(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
-		LDFLAGS="-Wl,--gc-sections -L$(TOP)/$(OPENSSLDIR) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)"
+		OPENSSL_LIBS="-L$(TOP)/$(BLACKFUEL_OPENSSLDIR) -lcrypto -lssl" \
+		OPENSSL_CFLAGS="-I$(TOP)/$(BLACKFUEL_OPENSSLDIR)/include" \
+		ZLIB_CFLAGS="-I$(TOP)zlib" \
+		ZLIB_LIBS="-L$(TOP)/zlib -lz "\
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="$(EXTRALDFLAGS) -Wl,--gc-sections -pthread"
 
 wget: $(BLACKFUEL_OPENSSLDIR) zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) wget-unpack wget/Makefile
 	$(MAKE) -C $@
@@ -6629,14 +6633,14 @@ tor/Makefile: tor-unpack
 	(cd tor ; \
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
-		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/$(OPENSSLDIR) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(BLACKFUEL_OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -I$(TOP)/$(BLACKFUEL_OPENSSLDIR)/include -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/$(BLACKFUEL_OPENSSLDIR) -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(BLACKFUEL_OPTIMIZED_CONFIGURE) \
 		--disable-silent-rules \
 		--enable-static-libevent \
 		--with-libevent-dir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
-		--with-openssl-dir=$(TOP)/$(OPENSSLDIR) \
+		--with-openssl-dir=$(TOP)/$(BLACKFUEL_OPENSSLDIR) \
 		--with-zlib-dir=$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB) \
 		--disable-asciidoc \
 		--disable-unittests \
@@ -7190,15 +7194,15 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_64_0/curl-7.64.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_64_1/curl-7.64.1.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.64.0+git"; \
+			VERSION="7.64.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
-			URL="https://ftp.gnu.org/gnu/wget/wget-1.20.1.tar.lz"; \
+			URL="https://ftp.gnu.org/gnu/wget/wget-1.20.3.tar.lz"; \
 			URL2="https://gitlab.com/gnuwget/wget.git"; \
-			VERSION="1.20.1+git"; \
+			VERSION="1.20.3+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="wget"; \
 		elif [ "$$PACKAGE_DIR" = "jpeg" ] || [ "$$PACKAGE_DIR" = "jpeg-aarch64" ]; then \
@@ -7226,13 +7230,13 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/releases/download/v1.3.8/zstd-1.3.8.tar.gz"; \
+			URL="https://github.com/facebook/zstd/releases/download/v1.4.0/zstd-1.4.0.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.3.8+git"; \
+			VERSION="1.4.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://www.torproject.org/dist/tor-0.3.5.8.tar.gz"; \
+			URL="https://dist.torproject.org/tor-0.4.0.5.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
@@ -7262,7 +7266,7 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.1.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.2.tar.xz"; \
 			PACKAGE_NAME="util-linux"; \
 		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
 			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
@@ -7271,9 +7275,9 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
-			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.183.tgz"; \
+			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.185.tgz"; \
 			URL2="git://sourceware.org/git/lvm2.git"; \
-			VERSION="2.02.183+git"; \
+			VERSION="2.02.185+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
@@ -7344,9 +7348,9 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "powstatd" ]; then \
 			URL="http://deb.debian.org/debian/pool/main/p/powstatd/powstatd_1.5.1.orig.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "liblz4" ]; then \
-			URL="https://github.com/lz4/lz4/archive/v1.8.3.tar.gz"; \
+			URL="https://github.com/lz4/lz4/archive/v1.9.1.tar.gz"; \
 			URL2="https://github.com/lz4/lz4.git"; \
-			VERSION="1.8.3+git"; \
+			VERSION="1.9.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lz4"; \
 		elif [ "$$PACKAGE_DIR" = "strace" ] || [ "$$PACKAGE_DIR" = "strace-aarch64" ]; then \
