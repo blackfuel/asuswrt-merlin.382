@@ -1458,7 +1458,7 @@ ifeq ($(RTCONFIG_TOR),y)
 obj-y += $(BLACKFUEL_OPENSSLDIR)
 obj-y += zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += libevent-2.0.21$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
-obj-y += liblz4
+obj-y += liblz4$(if $(RTCONFIG_HND_ROUTER),-aarch64,)
 obj-y += xzutils
 obj-y += zstd
 obj-y += tor
@@ -2557,7 +2557,7 @@ define CleanBlackfuel
 		rm -rf "$(TOP)/freetype"; \
 		rm -rf "$(TOP)/bzip2"; \
 		rm -rf "$(TOP)/powstatd"; \
-		rm -rf "$(TOP)/liblz4"; \
+		rm -rf "$(TOP)/liblz4" "$(TOP)/liblz4-aarch64"; \
 		rm -rf "$(TOP)/strace"; \
 		rm -rf "$(TOP)/strongswan-5.2.1/*.a" "$(TOP)/strongswan-5.2.1/*.o" ; \
 		sed -r -i 's/(\| arm-\*  \| armbe-\* \| armle-\* \| )/\| aarch64-\* \1/g' $$(find $(TOP)/ -name 'config.sub' -print0 | xargs -0 -I '{}' grep -FL 'aarch64-*' '{}') || true; \
@@ -4258,7 +4258,7 @@ xzutils-install:
 
 ### zstd
 
-zstd: liblz4 xzutils zstd/Makefile
+zstd: liblz4$(if $(RTCONFIG_HND_ROUTER),-aarch64,) xzutils zstd/Makefile
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
 zstd/Makefile:
@@ -6414,37 +6414,38 @@ zlib-aarch64-install:
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/zlib-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
 endif
 
-### liblz4
+### liblz4-aarch64
 
-liblz4: liblz4-unpack
+ifeq ($(HND_ROUTER),y)
+liblz4-aarch64: liblz4-aarch64-unpack
 	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
 
-liblz4-stage:
-	@echo liblz4
-	@[ ! -d liblz4 ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/liblz4.so" ] || ( cd liblz4 ; \
+liblz4-aarch64-stage:
+	@echo liblz4-aarch64
+	@[ ! -d liblz4-aarch64 ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/liblz4.so" ] || ( cd liblz4-aarch64 ; \
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
-		$(MAKE) $(PARALLEL_BUILD) \
-		CC=$(BLACKFUEL_OPTIMIZED_CC) \
-		AR=$(BLACKFUEL_OPTIMIZED_AR) \
-		LD=$(BLACKFUEL_OPTIMIZED_LINKER) \
-		RANLIB=$(BLACKFUEL_OPTIMIZED_RANLIB) \
+		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
 		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		DESTDIR="" \
 		PREFIX="$(STAGEDIR)/usr" \
 		LIBDIR="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
+		BINDIR="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_BIN)" \
 		INCLUDEDIR="$(STAGEDIR)/usr/include" \
-		install \
-		)
+		INSTALL_PROGRAM="install" \
+		INSTALL_DATA="install" \
+		INSTALL_DIR="install -d" \
+		$(MAKE) $(PARALLEL_BUILD) install )
 
-liblz4-clean:
-	-@$(MAKE) -C liblz4 clean
+liblz4-aarch64-clean:
+	-@$(MAKE) -C liblz4-aarch64 clean
 
-liblz4-install:
-	install -d $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
-	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/liblz4.so* $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
-	chmod u+w $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
+liblz4-aarch64-install:
+	install -d $(INSTALLDIR)/liblz4-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/liblz4.so* $(INSTALLDIR)/liblz4-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
+	chmod u+w $(INSTALLDIR)/liblz4-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
+	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/liblz4-aarch64/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
+endif
 
 ### ncurses-aarch64
 
@@ -7107,6 +7108,37 @@ nettle-clean:
 	@rm -f nettle/stamp-h1
 	@rm -rf nettle/include nettle/lib
 
+### liblz4
+
+liblz4: liblz4-unpack
+	@[ ! -d $@ ] || ( $(SEP); $(MAKE) $@-stage )
+
+liblz4-stage:
+	@echo liblz4
+	@[ ! -d liblz4 ] || [ -f "$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/liblz4.so" ] || ( cd liblz4 ; \
+		$(BLACKFUEL_COMPATIBILE_TOOLCHAIN) \
+		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/pkgconfig" \
+		CFLAGS="$(BLACKFUEL_COMPATIBILE_COPTS) -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
+		DESTDIR="" \
+		PREFIX="$(STAGEDIR)/usr" \
+		LIBDIR="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)" \
+		BINDIR="$(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_BIN)" \
+		INCLUDEDIR="$(STAGEDIR)/usr/include" \
+		INSTALL_PROGRAM="install" \
+		INSTALL_DATA="install" \
+		INSTALL_DIR="install -d" \
+		$(MAKE) $(PARALLEL_BUILD) install )
+
+liblz4-clean:
+	-@$(MAKE) -C liblz4 clean
+
+liblz4-install:
+	install -d $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
+	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_COMPATIBILE_LIB)/liblz4.so* $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_COMPATIBILE_LIB)/
+	chmod u+w $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_COMPATIBILE_LIB)/*
+	$(BLACKFUEL_COMPATIBILE_STRIP) $(INSTALLDIR)/liblz4/usr/$(BLACKFUEL_COMPATIBILE_LIB)/*
+
 ### ncurses-6.0
 
 ncurses-6.0/Makefile: ncurses-6.0-unpack
@@ -7349,7 +7381,7 @@ strace-clean:
 			URL="http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "powstatd" ]; then \
 			URL="http://deb.debian.org/debian/pool/main/p/powstatd/powstatd_1.5.1.orig.tar.gz"; \
-		elif [ "$$PACKAGE_DIR" = "liblz4" ]; then \
+		elif [ "$$PACKAGE_DIR" = "liblz4" ] || [ "$$PACKAGE_DIR" = "liblz4-aarch64" ]; then \
 			URL="https://github.com/lz4/lz4/archive/v1.9.1.tar.gz"; \
 			URL2="https://github.com/lz4/lz4.git"; \
 			VERSION="1.9.1+git"; \
