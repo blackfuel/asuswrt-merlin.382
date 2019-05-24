@@ -7196,9 +7196,9 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_64_1/curl-7.64.1.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_65_0/curl-7.65.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.64.1+git"; \
+			VERSION="7.65.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
@@ -7242,7 +7242,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
-			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.4.1.tar.xz"; \
+			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.4.2.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
 			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.17.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
@@ -7262,9 +7262,9 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
 			URL="http://rpm5.org/files/popt/popt-1.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgpg-error" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.35.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.36.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
-			VERSION="1.35+git"; \
+			VERSION="1.36+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
