@@ -2724,9 +2724,9 @@ cyassl-install:
 
 ifeq ($(RTCONFIG_OPENVPN),y)
 ifneq ($(RTCONFIG_TRANSMISSION),openssl)
-OPENSSL_CIPHERS:=enable-rc5 no-rc4
+OPENSSL_CIPHERS:=enable-rc5 no-rc4 no-ssl3
 else
-OPENSSL_CIPHERS:=enable-rc5
+OPENSSL_CIPHERS:=enable-rc5 no-ssl3
 endif
 else
 ifneq ($(RTCONFIG_TRANSMISSION),openssl)
