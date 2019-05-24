@@ -6544,8 +6544,8 @@ wget/Makefile: wget/Makefile.in
 		--disable-dependency-tracking \
 		OPENSSL_LIBS="-L$(TOP)/$(BLACKFUEL_OPENSSLDIR) -lcrypto -lssl" \
 		OPENSSL_CFLAGS="-I$(TOP)/$(BLACKFUEL_OPENSSLDIR)/include" \
-		ZLIB_CFLAGS="-I$(TOP)zlib" \
-		ZLIB_LIBS="-L$(TOP)/zlib -lz "\
+		ZLIB_CFLAGS="-I$(TOP)zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,)" \
+		ZLIB_LIBS="-L$(TOP)/zlib$(if $(RTCONFIG_HND_ROUTER),-aarch64,) -lz "\
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="$(EXTRALDFLAGS) -Wl,--gc-sections -pthread"
 
