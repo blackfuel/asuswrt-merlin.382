@@ -6711,7 +6711,7 @@ fsbuild-aarch64:
 	#-cd $(INSTALL_DIR)/lib/public && rm -f libgcc_s.so && ln -sf libgcc_s.so.1 libgcc_s.so
 
 ifeq ($(HND_ROUTER),y)
-openssl-aarch64: openssl-aarch64/Makefile fsbuild
+openssl-aarch64: openssl-aarch64/Makefile fsbuild-aarch64
 else
 openssl-aarch64: openssl-aarch64/Makefile
 endif
