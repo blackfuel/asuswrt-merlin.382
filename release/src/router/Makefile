@@ -7358,9 +7358,9 @@ strace-clean:
 			SOURCE_VERSION="c11f2870fd18ff781ca06ce84b6d43541f3293dd"; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
-			URL="https://tls.mbed.org/download/mbedtls-2.16.0-gpl.tgz"; \
+			URL="https://tls.mbed.org/download/mbedtls-2.16.1-gpl.tgz"; \
 			URL2="https://github.com/ARMmbed/mbedtls.git"; \
-			VERSION="2.16.0+git"; \
+			VERSION="2.16.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="mbedtls"; \
 		elif [ "$$PACKAGE_DIR" = "apcupsd" ]; then \
