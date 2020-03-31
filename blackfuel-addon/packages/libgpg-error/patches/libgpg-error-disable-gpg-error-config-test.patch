@@ -1,0 +1,32 @@
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -339,13 +339,6 @@
+ 
+ gpg-error-config: gpgrt-config gpg-error-config-old
+ 	@echo $(ECHO_N) "Confirm gpg-error-config works... $(ECHO_C)"
+-	@if ./gpg-error-config-test.sh --old-new; then \
+-	  echo "good";                                         \
+-	else                                                   \
+-	  echo "no";                                           \
+-	  echo "***  Please report to <https://bugs.gnupg.org> with gpg-error-config-test.log"; \
+-	  exit 1; \
+-	fi
+ 	cp gpg-error-config-old $@
+ 
+ install-data-local:
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -1744,13 +1744,6 @@
+ 
+ gpg-error-config: gpgrt-config gpg-error-config-old
+ 	@echo $(ECHO_N) "Confirm gpg-error-config works... $(ECHO_C)"
+-	@if ./gpg-error-config-test.sh --old-new; then \
+-	  echo "good";                                         \
+-	else                                                   \
+-	  echo "no";                                           \
+-	  echo "***  Please report to <https://bugs.gnupg.org> with gpg-error-config-test.log"; \
+-	  exit 1; \
+-	fi
+ 	cp gpg-error-config-old $@
+ 
+ install-data-local:

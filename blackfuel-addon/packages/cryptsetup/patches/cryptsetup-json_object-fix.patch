@@ -1,6 +1,6 @@
 --- a/lib/luks2/luks2.h
 +++ b/lib/luks2/luks2.h
-@@ -84,7 +84,7 @@
+@@ -94,7 +94,7 @@
  /*
   * LUKS2 header in-memory.
   */
@@ -9,7 +9,7 @@
  struct luks2_hdr {
  	size_t		hdr_size;
  	uint64_t	seqid;
-@@ -95,7 +95,7 @@
+@@ -105,7 +105,7 @@
  	uint8_t		salt1[LUKS2_SALT_L];
  	uint8_t		salt2[LUKS2_SALT_L];
  	char		uuid[LUKS2_UUID_L];
@@ -18,7 +18,28 @@
  };
  
  struct luks2_keyslot_params {
-@@ -162,9 +162,9 @@
+@@ -173,15 +173,15 @@
+ 	int reenc_keyslot;
+ 
+ 	/* already running reencryption */
+-	json_object *jobj_segs_hot;
+-	json_object *jobj_segs_post;
++	struct json_object *jobj_segs_hot;
++	struct json_object *jobj_segs_post;
+ 
+ 	/* backup segments */
+-	json_object *jobj_segment_new;
++	struct json_object *jobj_segment_new;
+ 	int digest_new;
+-	json_object *jobj_segment_old;
++	struct json_object *jobj_segment_old;
+ 	int digest_old;
+-	json_object *jobj_segment_moved;
++	struct json_object *jobj_segment_moved;
+ 
+ 	struct volume_key *vks;
+ 
+@@ -247,9 +247,9 @@
  		      struct luks2_hdr *hdr,
  		      const char *backup_file);
  
@@ -31,3 +52,64 @@
  
  int LUKS2_keyslot_cipher_incompatible(struct crypt_device *cd, const char *cipher_spec);
  
+@@ -371,34 +371,34 @@
+ /*
+  * Generic LUKS2 segment
+  */
+-uint64_t json_segment_get_offset(json_object *jobj_segment, unsigned blockwise);
+-const char *json_segment_type(json_object *jobj_segment);
+-uint64_t json_segment_get_iv_offset(json_object *jobj_segment);
+-uint64_t json_segment_get_size(json_object *jobj_segment, unsigned blockwise);
+-const char *json_segment_get_cipher(json_object *jobj_segment);
+-int json_segment_get_sector_size(json_object *jobj_segment);
+-bool json_segment_is_backup(json_object *jobj_segment);
+-json_object *json_segments_get_segment(json_object *jobj_segments, int segment);
+-unsigned json_segments_count(json_object *jobj_segments);
+-void json_segment_remove_flag(json_object *jobj_segment, const char *flag);
+-uint64_t json_segments_get_minimal_offset(json_object *jobj_segments, unsigned blockwise);
+-json_object *json_segment_create_linear(uint64_t offset, const uint64_t *length, unsigned reencryption);
+-json_object *json_segment_create_crypt(uint64_t offset, uint64_t iv_offset, const uint64_t *length, const char *cipher, uint32_t sector_size, unsigned reencryption);
+-int json_segments_segment_in_reencrypt(json_object *jobj_segments);
++uint64_t json_segment_get_offset(struct json_object *jobj_segment, unsigned blockwise);
++const char *json_segment_type(struct json_object *jobj_segment);
++uint64_t json_segment_get_iv_offset(struct json_object *jobj_segment);
++uint64_t json_segment_get_size(struct json_object *jobj_segment, unsigned blockwise);
++const char *json_segment_get_cipher(struct json_object *jobj_segment);
++int json_segment_get_sector_size(struct json_object *jobj_segment);
++bool json_segment_is_backup(struct json_object *jobj_segment);
++struct json_object *json_segments_get_segment(struct json_object *jobj_segments, int segment);
++unsigned json_segments_count(struct json_object *jobj_segments);
++void json_segment_remove_flag(struct json_object *jobj_segment, const char *flag);
++uint64_t json_segments_get_minimal_offset(struct json_object *jobj_segments, unsigned blockwise);
++struct json_object *json_segment_create_linear(uint64_t offset, const uint64_t *length, unsigned reencryption);
++struct json_object *json_segment_create_crypt(uint64_t offset, uint64_t iv_offset, const uint64_t *length, const char *cipher, uint32_t sector_size, unsigned reencryption);
++int json_segments_segment_in_reencrypt(struct json_object *jobj_segments);
+ 
+ int LUKS2_segments_count(struct luks2_hdr *hdr);
+ 
+ int LUKS2_segment_first_unused_id(struct luks2_hdr *hdr);
+ 
+-int LUKS2_segment_set_flag(json_object *jobj_segment, const char *flag);
++int LUKS2_segment_set_flag(struct json_object *jobj_segment, const char *flag);
+ 
+-json_object *LUKS2_get_segment_by_flag(struct luks2_hdr *hdr, const char *flag);
++struct json_object *LUKS2_get_segment_by_flag(struct luks2_hdr *hdr, const char *flag);
+ 
+ int LUKS2_get_segment_id_by_flag(struct luks2_hdr *hdr, const char *flag);
+ 
+ int LUKS2_segments_set(struct crypt_device *cd,
+ 	struct luks2_hdr *hdr,
+-	json_object *jobj_segments,
++	struct json_object *jobj_segments,
+ 	int commit);
+ 
+ uint64_t LUKS2_segment_offset(struct luks2_hdr *hdr,
+@@ -594,7 +594,7 @@
+ int LUKS2_assembly_multisegment_dmd(struct crypt_device *cd,
+ 	struct luks2_hdr *hdr,
+ 	struct volume_key *vks,
+-	json_object *jobj_segments,
++	struct json_object *jobj_segments,
+ 	struct crypt_dm_active_device *dmd);
+ 
+ crypt_reencrypt_info LUKS2_reencrypt_status(struct crypt_device *cd,

@@ -3035,6 +3035,8 @@ endif
 
 dnsmasq:  $(if $(RTCONFIG_DNSSEC),nettle,)
 	@$(SEP)
+	@echo Nettle version is aaa$(LIBNETTLE_MAJOR)bbb$(LIBNETTLE_MAJOR)ccc
+	-sed -i 's/\&nettle_secp_256r1/nettle_get_secp_256r1\(\)/g;s/\&nettle_secp_384r1/nettle_get_secp_384r1\(\)/g' dnsmasq/src/crypto.c
 	@$(MAKE) -C dnsmasq \
 	COPTS="-DHAVE_BROKEN_RTC -DHAVE_LEASEFILE_EXPIRE -DNO_ID -DNO_AUTH -DNO_INOTIFY -DNO_DUMPFILE -DNO_GMP \
 		$(if $(RTCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6) \
@@ -4707,6 +4709,8 @@ libgpg-error-configure:
 		--disable-rpath \
 		--enable-threads=posix \
 		--disable-silent-rules \
+		--disable-languages \
+		--disable-doc \
 		--disable-tests \
 		)
 
@@ -5018,6 +5022,7 @@ lvm2-stage:
 		rm -fv $(STAGEDIR)/usr/lib/libdevmapper.so*; \
 		cp -dfv lvm2/libdm/ioctl/libdevmapper.a $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/; \
 		cp -dfv lvm2/libdm/ioctl/libdevmapper.so* $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/; \
+		cp -dfv lvm2/libdm/dm-tools/dmsetup $(STAGEDIR)/usr/bin/;\
 		)
 
 lvm2-clean:
@@ -5027,20 +5032,10 @@ lvm2-clean:
 lvm2-install:
 	install -d $(INSTALLDIR)/lvm2/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
 	install -d $(INSTALLDIR)/lvm2/usr/bin/
-	install -d $(INSTALLDIR)/lvm2/usr/sbin/
 	cp -df $(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libdevmapper.so* $(INSTALLDIR)/lvm2/usr/$(BLACKFUEL_OPTIMIZED_LIB)/
 	chmod u+w $(INSTALLDIR)/lvm2/usr/$(BLACKFUEL_OPTIMIZED_LIB)/*
-	install -D $(STAGEDIR)/usr/sbin/dmsetup $(INSTALLDIR)/lvm2/usr/bin/
-	install -D $(STAGEDIR)/usr/sbin/lvm $(INSTALLDIR)/lvm2/usr/bin/
-	install -D $(STAGEDIR)/usr/sbin/lvmconf $(INSTALLDIR)/lvm2/usr/sbin/
-	install -D $(STAGEDIR)/usr/sbin/lvmdump $(INSTALLDIR)/lvm2/usr/sbin/
-	for FILE in $(STAGEDIR)/usr/sbin/*; do \
-		if [ -h "$$FILE" ] && [ "`readlink $$FILE`" = "lvm" ]; then \
-			cp -df "$$FILE" "$(INSTALLDIR)/lvm2/usr/bin/"; \
-		fi; \
-	done
+	install -D $(STAGEDIR)/usr/bin/dmsetup $(INSTALLDIR)/lvm2/usr/bin/
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/lvm2/usr/bin/dmsetup
-	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/lvm2/usr/bin/lvm
 	$(BLACKFUEL_OPTIMIZED_STRIP) $(INSTALLDIR)/lvm2/usr/$(BLACKFUEL_OPTIMIZED_LIB)/libdevmapper.so*
 
 ### cryptsetup-gcrypt
@@ -5065,7 +5060,7 @@ cryptsetup-gcrypt-configure:
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
 		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(TOP)/lvm2/libdm -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		LIBS="-lpthread -lgpg-error -luuid -lblkid -ldl -lrt -lgcrypt -largon2 -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
@@ -5130,7 +5125,7 @@ cryptsetup-openssl-configure:
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
 		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(TOP)/lvm2/libdm -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		LIBS="-lpthread -lssl -lcrypto -lz -luuid -lblkid -ldl -lrt -largon2 -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
@@ -5194,7 +5189,7 @@ cryptsetup-nettle-configure:
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
 		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(TOP)/lvm2/libdm -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		LIBS="-lpthread -luuid -lblkid -ldl -lrt -lnettle -largon2 -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
@@ -5258,7 +5253,7 @@ cryptsetup-kernel-configure:
 		$(BLACKFUEL_OPTIMIZED_TOOLCHAIN) \
 		PKG_CONFIG_PATH="$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)/pkgconfig" \
 		CFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE" \
-		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(STAGEDIR)/usr/include" \
+		CPPFLAGS="$(BLACKFUEL_OPTIMIZED_COPTS) -pthread -ffunction-sections -fdata-sections -O3 -pipe -Wall -fPIC -std=gnu99 -DCLOCK_MONOTONIC_RAW=4 -D_GNU_SOURCE -I$(TOP)/lvm2/libdm -I$(STAGEDIR)/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		LIBS="-lpthread -luuid -lblkid -ldl -lrt -largon2 -L$(STAGEDIR)/usr/$(BLACKFUEL_OPTIMIZED_LIB)" \
 		$(if $(RTCONFIG_HND_ROUTER),,ac_cv_func_posix_fallocate=yes) \
@@ -7218,9 +7213,9 @@ strace-clean:
 		VERSION=""; \
 		SOURCE_VERSION=""; \
 		if [ "$$PACKAGE_DIR" = "nettle" ] || [ "$$PACKAGE_DIR" = "nettle-aarch64" ]; then \
-			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.4.1.tar.gz"; \
+			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.5.1.tar.gz"; \
 			URL2="https://git.lysator.liu.se/nettle/nettle.git"; \
-			VERSION="3.4.1+git"; \
+			VERSION="3.5.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="nettle"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ] || [ "$$PACKAGE_DIR" = "curl-7.21.7" ] || \
@@ -7228,7 +7223,7 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_65_0/curl-7.65.0.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_69_1/curl-7.69.1.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
 			VERSION="7.65.0+git"; \
 			SOURCE_VERSION=""; \
@@ -7258,25 +7253,25 @@ strace-clean:
 			URL="https://ftp.gnu.org/gnu/ncurses/ncurses-6.0.tar.gz"; \
 			PACKAGE_NAME="ncurses"; \
 		elif [ "$$PACKAGE_DIR" = "xzutils" ]; then \
-			URL="https://tukaani.org/xz/xz-5.2.4.tar.xz"; \
+			URL="https://tukaani.org/xz/xz-5.2.5.tar.xz"; \
 			URL2="https://git.tukaani.org/xz.git"; \
-			VERSION="5.2.4+git"; \
+			VERSION="5.2.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/releases/download/v1.4.0/zstd-1.4.0.tar.gz"; \
+			URL="https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.4.0+git"; \
+			VERSION="1.4.4+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://dist.torproject.org/tor-0.4.0.5.tar.gz"; \
+			URL="https://dist.torproject.org/tor-0.4.2.7.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
-			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"; \
+			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.7.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
-			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.4.2.tar.xz"; \
+			URL="http://ftp.debian.org/debian/pool/main/w/whois/whois_5.5.6.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "libsodium" ]; then \
-			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.17.tar.gz"; \
+			URL="https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "dnscrypt" ]; then \
 			URL="http://http.debian.net/debian/pool/main/d/dnscrypt-proxy/dnscrypt-proxy_1.9.5.orig.tar.gz"; \
 			URL2="https://github.com/dyne/dnscrypt-proxy"; \
@@ -7294,13 +7289,13 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "popt" ]; then \
 			URL="http://rpm5.org/files/popt/popt-1.16.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "libgpg-error" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.36.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.37.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgpg-error.git"; \
-			VERSION="1.36+git"; \
+			VERSION="1.37+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgpg-error"; \
 		elif [ "$$PACKAGE_DIR" = "util-linux" ] || [ "$$PACKAGE_DIR" = "util-linux-aarch64" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/util-linux/v2.33/util-linux-2.33.2.tar.xz"; \
+			URL="https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.35/util-linux-2.35.1.tar.xz"; \
 			PACKAGE_NAME="util-linux"; \
 		elif [ "$$PACKAGE_DIR" = "libaio" ]; then \
 			URL="http://http.debian.net/debian/pool/main/liba/libaio/libaio_0.3.111.orig.tar.gz"; \
@@ -7309,24 +7304,24 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libaio"; \
 		elif [ "$$PACKAGE_DIR" = "lvm2" ]; then \
-			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.02.185.tgz"; \
+			URL="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.2.03.08.tgz"; \
 			URL2="git://sourceware.org/git/lvm2.git"; \
-			VERSION="2.02.185+git"; \
+			VERSION="2.03.08+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lvm2"; \
 		elif [ "$$PACKAGE_DIR" = "libgcrypt" ]; then \
-			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.4.tar.bz2"; \
+			URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.5.tar.bz2"; \
 			URL2="https://dev.gnupg.org/source/libgcrypt.git"; \
-			VERSION="1.8.4+git"; \
+			VERSION="1.8.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="libgcrypt"; \
 		elif [ "$$PACKAGE_DIR" = "cryptsetup-gcrypt" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-nettle" ] || \
 			[ "$$PACKAGE_DIR" = "cryptsetup-kernel" ]; then \
-			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.1/cryptsetup-2.1.0.tar.xz"; \
+			URL="https://www.kernel.org/pub/linux/utils/cryptsetup/v2.3/cryptsetup-2.3.1.tar.xz"; \
 			URL2="https://gitlab.com/cryptsetup/cryptsetup.git"; \
-			VERSION="2.1.0+git"; \
+			VERSION="2.3.1+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="cryptsetup"; \
 		elif [ "$$PACKAGE_DIR" = "pps-tools" ]; then \
@@ -7334,7 +7329,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "setserial" ]; then \
 			URL="https://downloads.sourceforge.net/project/setserial/setserial/2.17/setserial-2.17.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "ntp" ]; then \
-			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p13.tar.gz"; \
+			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p14.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "argp-standalone" ]; then \
 			URL="https://www.lysator.liu.se/~nisse/misc/argp-standalone-1.3.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "rng-tools" ]; then \
@@ -7358,9 +7353,9 @@ strace-clean:
 			SOURCE_VERSION="c11f2870fd18ff781ca06ce84b6d43541f3293dd"; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
-			URL="https://tls.mbed.org/download/mbedtls-2.16.1-gpl.tgz"; \
+			URL="https://tls.mbed.org/download/mbedtls-2.16.5-gpl.tgz"; \
 			URL2="https://github.com/ARMmbed/mbedtls.git"; \
-			VERSION="2.16.1+git"; \
+			VERSION="2.16.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="mbedtls"; \
 		elif [ "$$PACKAGE_DIR" = "apcupsd" ]; then \
@@ -7382,9 +7377,9 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "powstatd" ]; then \
 			URL="http://deb.debian.org/debian/pool/main/p/powstatd/powstatd_1.5.1.orig.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "liblz4" ] || [ "$$PACKAGE_DIR" = "liblz4-aarch64" ]; then \
-			URL="https://github.com/lz4/lz4/archive/v1.9.1.tar.gz"; \
+			URL="https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"; \
 			URL2="https://github.com/lz4/lz4.git"; \
-			VERSION="1.9.1+git"; \
+			VERSION="1.9.2+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lz4"; \
 		elif [ "$$PACKAGE_DIR" = "strace" ] || [ "$$PACKAGE_DIR" = "strace-aarch64" ]; then \

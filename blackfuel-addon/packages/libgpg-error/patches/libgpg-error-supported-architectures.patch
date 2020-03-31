@@ -1,7 +1,7 @@
 --- a/src/mkheader.c
 +++ b/src/mkheader.c
-@@ -90,6 +90,11 @@
-     {"armv7-unknown-linux-gnueabihf"  },
+@@ -115,6 +115,11 @@
+     {"armv7a-unknown-linux-gnueabihf" },
      {"armv5-unknown-linux-musleabi"   },
      {"armv6-unknown-linux-musleabihf" },
 +    {"arm-openwrt-linux-gnu", "arm-unknown-linux-gnueabi"},
