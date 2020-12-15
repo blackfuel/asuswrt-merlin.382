@@ -3035,7 +3035,6 @@ endif
 
 dnsmasq:  $(if $(RTCONFIG_DNSSEC),nettle,)
 	@$(SEP)
-	@echo Nettle version is aaa$(LIBNETTLE_MAJOR)bbb$(LIBNETTLE_MAJOR)ccc
 	-sed -i 's/\&nettle_secp_256r1/nettle_get_secp_256r1\(\)/g;s/\&nettle_secp_384r1/nettle_get_secp_384r1\(\)/g' dnsmasq/src/crypto.c
 	@$(MAKE) -C dnsmasq \
 	COPTS="-DHAVE_BROKEN_RTC -DHAVE_LEASEFILE_EXPIRE -DNO_ID -DNO_AUTH -DNO_INOTIFY -DNO_DUMPFILE -DNO_GMP \
@@ -7213,9 +7212,9 @@ strace-clean:
 		VERSION=""; \
 		SOURCE_VERSION=""; \
 		if [ "$$PACKAGE_DIR" = "nettle" ] || [ "$$PACKAGE_DIR" = "nettle-aarch64" ]; then \
-			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.5.1.tar.gz"; \
+			URL="https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz"; \
 			URL2="https://git.lysator.liu.se/nettle/nettle.git"; \
-			VERSION="3.5.1+git"; \
+			VERSION="3.6+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="nettle"; \
 		elif [ "$$PACKAGE_DIR" = "curl" ] || [ "$$PACKAGE_DIR" = "curl-7.21.7" ] || \
@@ -7223,9 +7222,9 @@ strace-clean:
 			if [ "$$PACKAGE_DIR" = "curl-7.21.7" ]; then \
 				PACKAGE_DIR="curl"; \
 			fi; \
-			URL="https://github.com/curl/curl/releases/download/curl-7_69_1/curl-7.69.1.tar.xz"; \
+			URL="https://github.com/curl/curl/releases/download/curl-7_74_0/curl-7.74.0.tar.xz"; \
 			URL2="https://github.com/curl/curl.git"; \
-			VERSION="7.65.0+git"; \
+			VERSION="7.74.0+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="curl"; \
 		elif [ "$$PACKAGE_DIR" = "wget" ]; then \
@@ -7259,13 +7258,13 @@ strace-clean:
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="xzutils"; \
 		elif [ "$$PACKAGE_DIR" = "zstd" ]; then \
-			URL="https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz"; \
+			URL="https://github.com/facebook/zstd/releases/download/v1.4.5/zstd-1.4.5.tar.gz"; \
 			URL2="https://github.com/facebook/zstd.git"; \
-			VERSION="1.4.4+git"; \
+			VERSION="1.4.5+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="zstd"; \
 		elif [ "$$PACKAGE_DIR" = "tor" ]; then \
-			URL="https://dist.torproject.org/tor-0.4.2.7.tar.gz"; \
+			URL="https://dist.torproject.org/tor-0.4.4.6.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "findutils" ]; then \
 			URL="https://ftp.gnu.org/pub/gnu/findutils/findutils-4.7.0.tar.xz"; \
 		elif [ "$$PACKAGE_DIR" = "whois" ]; then \
@@ -7329,7 +7328,7 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "setserial" ]; then \
 			URL="https://downloads.sourceforge.net/project/setserial/setserial/2.17/setserial-2.17.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "ntp" ]; then \
-			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p14.tar.gz"; \
+			URL="https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.8p15.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "argp-standalone" ]; then \
 			URL="https://www.lysator.liu.se/~nisse/misc/argp-standalone-1.3.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "rng-tools" ]; then \
@@ -7349,8 +7348,8 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "transmission-openssl" ] || \
 			[ "$$PACKAGE_DIR" = "transmission-mbedtls" ]; then \
 			URL="git://github.com/transmission/transmission.git"; \
-			VERSION="2.94+git"; \
-			SOURCE_VERSION="c11f2870fd18ff781ca06ce84b6d43541f3293dd"; \
+			VERSION="3.00+git"; \
+			SOURCE_VERSION="bb6b5a062ee594dfd4b7a12a6b6e860c43849bfd"; \
 			PACKAGE_NAME="transmission"; \
 		elif [ "$$PACKAGE_DIR" = "mbedtls" ]; then \
 			URL="https://tls.mbed.org/download/mbedtls-2.16.5-gpl.tgz"; \
@@ -7373,13 +7372,13 @@ strace-clean:
 		elif [ "$$PACKAGE_DIR" = "freetype" ]; then \
 			URL="https://sourceforge.net/projects/freetype/files/freetype2/2.8.1/freetype-2.8.1.tar.bz2"; \
 		elif [ "$$PACKAGE_DIR" = "bzip2" ]; then \
-			URL="http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"; \
+			URL="https://newcontinuum.dl.sourceforge.net/project/bzip2/bzip2-1.0.6.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "powstatd" ]; then \
 			URL="http://deb.debian.org/debian/pool/main/p/powstatd/powstatd_1.5.1.orig.tar.gz"; \
 		elif [ "$$PACKAGE_DIR" = "liblz4" ] || [ "$$PACKAGE_DIR" = "liblz4-aarch64" ]; then \
-			URL="https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"; \
+			URL="https://github.com/lz4/lz4/archive/v1.9.3.tar.gz"; \
 			URL2="https://github.com/lz4/lz4.git"; \
-			VERSION="1.9.2+git"; \
+			VERSION="1.9.3+git"; \
 			SOURCE_VERSION=""; \
 			PACKAGE_NAME="lz4"; \
 		elif [ "$$PACKAGE_DIR" = "strace" ] || [ "$$PACKAGE_DIR" = "strace-aarch64" ]; then \
@@ -7402,9 +7401,9 @@ strace-clean:
 			PACKAGE_NAME="nss"; \
 		elif [ "$$PACKAGE_DIR" = "xtables-addons" ]; then \
 			if [ -n "$(RTCONFIG_HND_ROUTER)" ]; then \
-				URL="https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-2.14.tar.xz"; \
+				URL="https://newcontinuum.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-2.14.tar.xz"; \
 			else \
-				URL="https://ufpr.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-1.47.1.tar.xz"; \
+				URL="https://newcontinuum.dl.sourceforge.net/project/xtables-addons/Xtables-addons/xtables-addons-1.47.1.tar.xz"; \
 			fi; \
 			PACKAGE_NAME="xtables-addons"; \
 		else \
